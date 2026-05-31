@@ -1,0 +1,375 @@
+import Anthropic from '@anthropic-ai/sdk'
+import { RawArticle } from './collector'
+import { Article, Sentiment, ImpactLevel, ArticleTag, EmergingSignals } from '@/types'
+
+const MODEL = 'claude-sonnet-4-5'
+
+function getClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
+
+// ── 1단계: 필터링 + 카테고리 분류 + 태그/영향도 판단 ──
+const FILTER_PROMPT = (lines: string) => `당신은 화웨이 임원용 뉴스 클리핑 에디터다.
+
+아래 기사 목록을 분석하여 JSON 배열로 응답하라.
+
+기사 목록:
+${lines}
+
+각 기사에 대해 판단:
+
+1. relevant: 아래 포함 기준을 충족하고 제외 기준에 해당하지 않으면 true
+
+   포함: 화웨이 관련, AI, Ascend, Cloud, Data Center, Semiconductor, Network, Smartphone, 통신장비, 공급망, 실적, 투자, 파트너십, 중국 IT 산업, AI 서버, 반도체 산업, 미국 대중국 규제, 중국 정부 정책, AI 정책, 수출통제, 보안 규제
+
+   ※ 포함 기준에 해당하면 관대하게 true로 판단할 것. 의심스러우면 true.
+
+   제외(false): 단순 행사·포럼 개최, 인터뷰·홍보성, 체험·리뷰, 칼럼·사설, 단순 마케팅, 스포츠·연예·사회면
+
+   조선일보·중앙일보·동아일보는 정책·정무·산업 영향 기사만 포함
+
+2. category: "자사" | "업계" | "정책"
+   - 자사: 화웨이 직접 관련
+   - 업계: 시장·경쟁사 (NVIDIA/삼성/SK하이닉스/AI서버/반도체/데이터센터/중국IT)
+   - 정책: 정부·규제 (미국규제/중국정책/AI정책/수출통제/보안규제)
+
+3. tag: "AI" | "Cloud" | "Semiconductor" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment"
+
+4. impact_level: "HIGH" | "MEDIUM" | "LOW"
+
+5. sentiment: "positive" | "negative" | "neutral" (화웨이 관점)
+
+6. relevance_score: 0.0~1.0
+
+동일 이슈가 여러 기사면 가장 신뢰도 높은 1건만 relevant:true
+
+응답 형식 (JSON 배열만, 다른 텍스트 없이):
+[{"index":0,"relevant":true,"category":"자사","tag":"AI","impact_level":"HIGH","sentiment":"positive","relevance_score":0.9},...]`
+
+type FilterResult = { index: number; relevant: boolean; category: string; tag: ArticleTag; impact_level: ImpactLevel; sentiment: Sentiment; relevance_score: number }
+
+async function filterBatch(batch: RawArticle[], offset: number): Promise<FilterResult[]> {
+  const lines = batch.map((a, i) => `[${offset + i}] 제목: "${a.title}" | 매체: ${a.media} | 검색키워드: ${a.keyword}`).join('\n')
+  console.log(`[filterBatch] offset=${offset}, batch=${batch.length}건`)
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 4000,
+    messages: [{ role: 'user', content: FILTER_PROMPT(lines) }],
+  })
+  const text = response.content[0].type === 'text' ? response.content[0].text : ''
+  console.log(`[filterBatch] AI 응답 앞부분:`, text.slice(0, 300))
+  try {
+    const parsed: FilterResult[] = JSON.parse(text.match(/\[[\s\S]*\]/)?.[0] ?? '[]')
+    const trueCount = parsed.filter(r => r.relevant).length
+    console.log(`[filterBatch] 파싱 결과: ${parsed.length}건, relevant=true: ${trueCount}건`)
+    return parsed
+  } catch {
+    console.error('[filterBatch] JSON 파싱 실패 → 전체 통과 처리')
+    return batch.map((_, i) => ({
+      index: offset + i, relevant: true, category: '업계', tag: 'AI' as ArticleTag,
+      impact_level: 'MEDIUM' as ImpactLevel, sentiment: 'neutral' as Sentiment, relevance_score: 0.5
+    }))
+  }
+}
+
+export async function filterArticles(
+  articles: RawArticle[],
+  mediaTiers: Record<string, number>
+): Promise<(RawArticle & { mediaTier: number; sentiment: Sentiment; relevanceScore: number; finalCategory: string; tag: ArticleTag; impactLevel: ImpactLevel })[]> {
+  if (articles.length === 0) return []
+
+  // 30개씩 배치 처리 (토큰 한도 초과 방지)
+  const BATCH_SIZE = 30
+  const allResults: FilterResult[] = []
+  for (let i = 0; i < articles.length; i += BATCH_SIZE) {
+    const batch = articles.slice(i, i + BATCH_SIZE)
+    const results = await filterBatch(batch, i)
+    allResults.push(...results)
+    if (i + BATCH_SIZE < articles.length) await new Promise(r => setTimeout(r, 500))
+  }
+
+  return articles
+    .map((article, i) => {
+      const r = allResults.find(x => x.index === i) ?? {
+        relevant: false, category: '업계', tag: 'AI' as ArticleTag,
+        impact_level: 'LOW' as ImpactLevel, sentiment: 'neutral' as Sentiment, relevance_score: 0
+      }
+      const tier = mediaTiers[article.media] ?? 3
+      return {
+        ...article,
+        mediaTier: tier,
+        sentiment: r.sentiment,
+        relevanceScore: r.relevance_score,
+        finalCategory: r.category,
+        tag: r.tag,
+        impactLevel: r.impact_level,
+        _relevant: r.relevant,
+      }
+    })
+    .filter(a => (a as any)._relevant)
+    .map(({ _relevant, ...a }) => a)
+}
+
+// ── 2단계: 요약 + 번역 + Why It Matters ──
+export async function summarizeAndTranslate(
+  articles: (RawArticle & { mediaTier: number; sentiment: Sentiment; relevanceScore: number; finalCategory: string; tag: ArticleTag; impactLevel: ImpactLevel })[]
+): Promise<Partial<Article>[]> {
+  const results: Partial<Article>[] = []
+
+  for (const article of articles) {
+    const prompt = `당신은 화웨이 임원용 뉴스 브리핑 전문 에디터다.
+
+다음 기사를 분석하라.
+
+제목: ${article.title}
+매체: ${article.media}
+카테고리: ${article.finalCategory}
+태그: ${article.tag}
+영향도: ${article.impactLevel}
+
+작성 기준:
+- KR Summary: 임원 관점에서 핵심만 2~3문장. 번호 없이 문장으로.
+- CN Summary: KR Summary의 중국어 간체 번역. 직역 금지, 현지화.
+- title_zh: 기사 제목 중국어 간체 번역 (비즈니스 현지화)
+- why_it_matters_ko: 임원 관점에서 왜 중요한지 1~2문장 (사업 영향 중심)
+- why_it_matters_zh: why_it_matters_ko의 중국어 간체 번역
+
+응답 형식 (JSON만):
+{
+  "title_zh": "중국어 제목",
+  "summary_ko": ["문장1", "문장2", "문장3"],
+  "summary_zh": ["句子1", "句子2", "句子3"],
+  "why_it_matters_ko": "임원 관점 중요성",
+  "why_it_matters_zh": "中文重要性"
+}`
+
+    let success = false
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await getClient().messages.create({
+          model: MODEL,
+          max_tokens: 1200,
+          messages: [{ role: 'user', content: prompt }],
+        })
+        const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+        const parsed = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] ?? '{}')
+
+        results.push({
+          title: article.title,
+          title_zh: parsed.title_zh ?? '',
+          media: article.media,
+          media_tier: article.mediaTier,
+          link: article.link,
+          pub_date: article.pubDate,
+          category: article.finalCategory,
+          keyword: article.keyword,
+          summary_ko: parsed.summary_ko ?? [],
+          summary_zh: parsed.summary_zh ?? [],
+          sentiment: article.sentiment,
+          relevance_score: article.relevanceScore,
+          image_url: article.imageUrl ?? null,
+          tag: article.tag,
+          impact_level: article.impactLevel,
+          why_it_matters_ko: parsed.why_it_matters_ko ?? null,
+          why_it_matters_zh: parsed.why_it_matters_zh ?? null,
+          excluded: false,
+        })
+        success = true
+        break
+      } catch (err) {
+        console.error(`요약 실패 [시도 ${attempt}/3] [${article.title}]:`, err)
+        if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * attempt))
+      }
+    }
+    if (!success) console.error(`요약 최종 실패, 건너뜀: ${article.title}`)
+    await new Promise(r => setTimeout(r, 300))
+  }
+
+  return results
+}
+
+// ── 3단계: Executive Brief 생성 ──
+export async function generateInsight(articles: Partial<Article>[]): Promise<{
+  ko: string[]
+  zh: string[]
+  keyTakeaways: string[]
+  emergingSignals: EmergingSignals
+  tomorrowWatchlist: string[]
+}> {
+  const active = articles.filter(a => !a.excluded)
+
+  const articleSummary = active
+    .map(a => `[${a.category}][${a.tag}][${a.impact_level}] ${a.title}\n  요약: ${a.summary_ko?.join(' ')}`)
+    .join('\n\n')
+
+  const highCount = active.filter(a => a.impact_level === 'HIGH').length
+  const negativeCount = active.filter(a => a.sentiment === 'negative').length
+
+  const prompt = `당신은 화웨이 임원용 Executive Brief를 작성하는 전문 에디터다.
+
+오늘 수집된 기사:
+${articleSummary}
+
+통계: 전체 ${active.length}건 | HIGH ${highCount}건 | 부정 ${negativeCount}건
+
+아래 항목을 작성하라.
+
+1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 핵심 메시지(Key Takeaways) 2~3개를 마지막에 불릿으로 포함.
+2. executive_summary_zh: executive_summary_ko의 중국어 간체 번역 (불릿 포함)
+3. emerging_signals: 반복적으로 나타나는 흐름
+   - positive: 긍정 신호 최대 3개 (한국어)
+   - positive_zh: positive의 중국어 간체 번역
+   - risk: 리스크 신호 최대 3개 (한국어)
+   - risk_zh: risk의 중국어 간체 번역
+4. tomorrow_watchlist: 내일 추가 모니터링 필요 이슈 최대 3개 (한국어)
+
+응답 형식 (JSON만):
+{
+  "executive_summary_ko": ["문장1", "문장2", "• 핵심메시지1", "• 핵심메시지2"],
+  "executive_summary_zh": ["句子1", "句子2", "• 要点1", "• 要点2"],
+  "emerging_signals": {
+    "positive": ["• 긍정신호1", "• 긍정신호2"],
+    "positive_zh": ["• 正面信号1", "• 正面信号2"],
+    "risk": ["• 리스크1", "• 리스크2"],
+    "risk_zh": ["• 风险1", "• 风险2"]
+  },
+  "tomorrow_watchlist": ["• 이슈1", "• 이슈2", "• 이슈3"]
+}`
+
+  try {
+    const response = await getClient().messages.create({
+      model: MODEL,
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }],
+    })
+    const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+
+    let parsed: Record<string, unknown> = {}
+    try {
+      const raw = text.match(/\{[\s\S]*\}/)?.[0] ?? '{}'
+      let jsonStr = raw.replace(/[\x00-\x1F\x7F]/g, m => '\n\r\t'.includes(m) ? m : ' ')
+      try {
+        parsed = JSON.parse(jsonStr)
+      } catch {
+        jsonStr = jsonStr.replace(/"((?:[^"\\]|\\.)*)"/g, (_, inner) => {
+          const fixed = inner.replace(/(?<!\\)"/g, "'")
+          return `"${fixed}"`
+        })
+        parsed = JSON.parse(jsonStr)
+      }
+    } catch (parseErr) {
+      console.error('[generateInsight] JSON 파싱 실패:', parseErr)
+      return {
+        ko: [], zh: [],
+        keyTakeaways: [], emergingSignals: { positive: [], risk: [] }, tomorrowWatchlist: [],
+      }
+    }
+
+    return {
+      ko: (parsed.executive_summary_ko as string[]) ?? [],
+      zh: (parsed.executive_summary_zh as string[]) ?? [],
+      keyTakeaways: [],
+      emergingSignals: (parsed.emerging_signals as EmergingSignals) ?? { positive: [], risk: [] },
+      tomorrowWatchlist: (parsed.tomorrow_watchlist as string[]) ?? [],
+    }
+  } catch (err) {
+    console.error('[generateInsight] API 호출 실패:', err)
+    return { ko: [], zh: [], keyTakeaways: [], emergingSignals: { positive: [], risk: [] }, tomorrowWatchlist: [] }
+  }
+}
+
+// ── 수동 기사 처리: URL + 본문 → 카테고리/요약/번역 한 번에 ──
+export async function processManualArticle(input: {
+  url: string
+  title: string
+  bodyText: string
+  media: string
+  pubDate: string
+}): Promise<Partial<Article>> {
+  const prompt = `당신은 화웨이 임원용 뉴스 브리핑 전문 에디터다.
+
+아래 기사를 분석하여 JSON으로 응답하라.
+
+URL: ${input.url}
+매체: ${input.media}
+제목: ${input.title}
+${input.bodyText.trim()
+  ? `본문 (일부):\n${input.bodyText.slice(0, 3000)}`
+  : '(본문 미수집 - 제목과 URL만으로 분석할 것)'
+}
+
+판단 및 작성:
+1. category: "자사"(화웨이 직접) | "업계"(시장/경쟁사/AI/반도체) | "정책"(정부/규제)
+2. tag: "AI"|"Cloud"|"Semiconductor"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"
+3. impact_level: "HIGH"|"MEDIUM"|"LOW" (임원 관점 중요도)
+4. sentiment: "positive"|"negative"|"neutral" (화웨이 관점)
+5. title_zh: 제목 중국어 간체 번역
+6. summary_ko: 임원 관점 핵심 요약 2~3문장 (배열)
+7. summary_zh: summary_ko의 중국어 간체 번역 (배열)
+8. why_it_matters_ko: 왜 중요한지 1~2문장 (사업 영향 중심)
+9. why_it_matters_zh: why_it_matters_ko의 중국어 간체 번역
+
+중요: 텍스트 값 안에 큰따옴표(")를 사용하지 말 것. 인용이 필요하면 작은따옴표(')로 대체.
+
+응답 형식 (JSON만):
+{
+  "category": "업계",
+  "tag": "AI",
+  "impact_level": "HIGH",
+  "sentiment": "neutral",
+  "title_zh": "중국어 제목",
+  "summary_ko": ["문장1", "문장2"],
+  "summary_zh": ["句子1", "句子2"],
+  "why_it_matters_ko": "중요성",
+  "why_it_matters_zh": "重要性"
+}`
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 1500,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+
+  // JSON 블록 추출 후 파싱 (robust)
+  let parsed: Record<string, unknown> = {}
+  try {
+    const raw = text.match(/\{[\s\S]*\}/)?.[0] ?? '{}'
+    // 제어문자 제거
+    let jsonStr = raw.replace(/[\x00-\x1F\x7F]/g, m => '\n\r\t'.includes(m) ? m : ' ')
+    try {
+      parsed = JSON.parse(jsonStr)
+    } catch {
+      // JSON 스트링 값 내부의 탈출 안 된 따옴표 수정 시도
+      jsonStr = jsonStr.replace(/"((?:[^"\\]|\\.)*)"/g, (_, inner) => {
+        const fixed = inner.replace(/(?<!\\)"/g, "'")
+        return `"${fixed}"`
+      })
+      parsed = JSON.parse(jsonStr)
+    }
+  } catch {
+    console.error('[processManualArticle] JSON 파싱 최종 실패\n원문:', text.slice(0, 500))
+  }
+
+  return {
+    title: input.title,
+    title_zh: (parsed.title_zh as string) ?? '',
+    media: input.media,
+    media_tier: 2,
+    link: input.url,
+    pub_date: input.pubDate,
+    category: (parsed.category as string) ?? '업계',
+    keyword: '수동입력',
+    summary_ko: (parsed.summary_ko as string[]) ?? [],
+    summary_zh: (parsed.summary_zh as string[]) ?? [],
+    sentiment: (parsed.sentiment as Sentiment) ?? 'neutral',
+    relevance_score: 1.0,
+    image_url: null,
+    tag: (parsed.tag as ArticleTag) ?? 'AI',
+    impact_level: (parsed.impact_level as ImpactLevel) ?? 'MEDIUM',
+    why_it_matters_ko: (parsed.why_it_matters_ko as string) ?? null,
+    why_it_matters_zh: (parsed.why_it_matters_zh as string) ?? null,
+    excluded: false,
+    order_index: null,
+  }
+}
