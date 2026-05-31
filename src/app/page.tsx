@@ -198,6 +198,11 @@ export default function Home() {
     </div>
   }
 
+  if (!profile) {
+    if (typeof window !== 'undefined') window.location.href = '/login'
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#c8102e] text-white px-6 py-4 flex items-center justify-between shadow-md">
