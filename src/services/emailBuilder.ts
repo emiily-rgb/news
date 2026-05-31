@@ -111,7 +111,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   <tr><td style="background:#c8102e;padding:20px 24px">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
-        <div style="color:#fff;font-size:22px;font-weight:900;letter-spacing:2px;margin-bottom:6px;font-family:Arial,sans-serif">&#9632; HUAWEI</div>
+        <img src="https://news-git-main-emilys-projects-e6408211.vercel.app/huawei-logo.png" alt="HUAWEI" height="28" style="display:block;margin-bottom:6px;filter:brightness(0) invert(1)" />
         <div style="color:#fff;font-size:18px;font-weight:bold;letter-spacing:0.5px">Executive Daily News Brief</div>
       </td>
       <td style="text-align:right;vertical-align:middle">
