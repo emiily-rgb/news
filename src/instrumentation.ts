@@ -1,6 +1,6 @@
 export async function register() {
-  // 서버사이드에서만 실행
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
+  // 스케줄러 비활성화 — 수동 실행만 사용
+  if (false && process.env.NEXT_RUNTIME === 'nodejs') {
     const cron = (await import('node-cron')).default
 
     // 매일 오전 6시 자동 수집

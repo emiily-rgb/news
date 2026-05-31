@@ -43,7 +43,7 @@ export default function Home() {
   useEffect(() => {
     fetch('/api/runs').then(r => r.json()).then(async (runs: Partial<RunLog>[]) => {
       setPastRuns(runs)
-      const latest = runs.find(r => r.status === 'completed')
+      const latest = runs.find(r => r.status === 'completed' && r.draft_saved_at) ?? runs.find(r => r.status === 'completed')
       if (latest?.id) {
         const res = await fetch(`/api/run/${latest.id}`)
         const data = await res.json()
