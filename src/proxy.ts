@@ -6,6 +6,7 @@ export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   if (pathname.startsWith('/login')) return res
+  if (pathname.match(/\.(png|jpg|jpeg|svg|ico|webp|gif)$/)) return res
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
