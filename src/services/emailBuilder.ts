@@ -25,11 +25,11 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     <tr><td style="padding:0 0 20px 0">
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-left:4px solid #c8102e;border-radius:0 6px 6px 0;padding:16px 20px">
         <tr><td style="font-size:13px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;padding-bottom:10px">오늘의 하이라이트 &amp; PR인사이트 &nbsp;|&nbsp; 今日焦点新闻 &amp; PR洞察</td></tr>
-        ${runLog.insight_ko?.length > 0 ? `<tr><td style="padding-bottom:10px">
-          ${runLog.insight_ko.map(s => `<div style="font-size:13px;color:#222;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
+        ${runLog.insight_zh?.length > 0 ? `<tr><td style="padding-bottom:10px">
+          ${runLog.insight_zh.map(s => `<div style="font-size:13px;color:#222;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
         </td></tr>` : ''}
-        ${runLog.insight_zh?.length > 0 ? `<tr><td style="border-top:1px solid #e0e0e0;padding-top:10px">
-          ${runLog.insight_zh.map(s => `<div style="font-size:13px;color:#444;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
+        ${runLog.insight_ko?.length > 0 ? `<tr><td style="border-top:1px solid #e0e0e0;padding-top:10px">
+          ${runLog.insight_ko.map(s => `<div style="font-size:13px;color:#444;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
         </td></tr>` : ''}
       </table>
     </td></tr>` : ''
@@ -58,6 +58,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         </div>
         ${a.title_zh ? `<a href="${a.link}" style="color:#c8102e;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title_zh}</a>` : `<a href="${a.link}" style="color:#c8102e;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>`}
         <div style="font-size:11px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
+        ${a.image_url ? `<img src="${a.image_url}" alt="" style="width:100%;max-width:600px;height:auto;border-radius:4px;margin-bottom:8px;display:block" />` : ''}
         ${a.summary_zh.length > 0 ? `
         <div>
           ${a.summary_zh.map(s => `<div style="font-size:13px;color:#333;line-height:1.7;margin-bottom:3px">${s}</div>`).join('')}
@@ -92,6 +93,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         </div>
         <a href="${a.link}" style="color:#1a73e8;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>
         <div style="font-size:11px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
+        ${a.image_url ? `<img src="${a.image_url}" alt="" style="width:100%;max-width:600px;height:auto;border-radius:4px;margin-bottom:8px;display:block" />` : ''}
         ${a.summary_ko.length > 0 ? `
         <div>
           ${a.summary_ko.map(s => `<div style="font-size:13px;color:#333;line-height:1.7;margin-bottom:4px">• ${s}</div>`).join('')}
