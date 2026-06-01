@@ -5,11 +5,12 @@ import { collectArticles } from '@/services/collector'
 import { filterArticles, summarizeAndTranslate, generateInsight } from '@/services/ai'
 import { v4 as uuidv4 } from 'uuid'
 
-// 2026년 한국 공휴일 (YYYY-MM-DD, KST)
+// 2026년 한국 공휴일 + 대체공휴일 (YYYY-MM-DD, KST)
 const HOLIDAYS_2026 = new Set([
   '2026-01-01', // 신정
   '2026-01-28', '2026-01-29', '2026-01-30', // 설날 연휴
   '2026-03-01', // 삼일절
+  '2026-03-02', // 삼일절 대체공휴일
   '2026-05-05', // 어린이날
   '2026-05-25', // 부처님오신날
   '2026-06-03', // 전국동시지방선거
@@ -20,21 +21,46 @@ const HOLIDAYS_2026 = new Set([
   '2026-12-25', // 크리스마스
 ])
 
-function isHoliday(): boolean {
-  const kstDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) // YYYY-MM-DD
-  return HOLIDAYS_2026.has(kstDate)
+function getKstDateStr(date: Date): string {
+  return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+}
+
+function isNonWorkingDay(date: Date): boolean {
+  const kstDate = getKstDateStr(date)
+  if (HOLIDAYS_2026.has(kstDate)) return true
+  const dow = new Date(kstDate + 'T00:00:00+09:00').getDay()
+  return dow === 0 || dow === 6  // 일요일=0, 토요일=6
+}
+
+// 오늘 포함 직전 연속 비근무일 수 계산 → 수집 기간 확장에 사용
+function countPrecedingNonWorkingDays(): number {
+  let count = 0
+  const d = new Date()
+  d.setDate(d.getDate() - 1)  // 어제부터 역산
+  while (isNonWorkingDay(d)) {
+    count++
+    d.setDate(d.getDate() - 1)
+    if (count > 7) break  // 최대 1주일
+  }
+  return count
 }
 
 export async function GET() {
-  // Vercel cron (오전 8시 KST) 자동 실행 — 공휴일 제외
-  if (isHoliday()) {
-    return NextResponse.json({ message: '공휴일 — 메인 브리핑 생략', date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) })
+  const today = new Date()
+  if (isNonWorkingDay(today)) {
+    return NextResponse.json({
+      message: '주말/공휴일 — 메인 브리핑 생략',
+      date: getKstDateStr(today),
+    })
   }
-  const res = await POST()
+
+  // 연휴 다음 첫 근무일이면 수집 기간 확장 (기본 24h + 비근무일 수 × 24h)
+  const extraDays = countPrecedingNonWorkingDays()
+  const res = await POST(undefined, undefined, extraDays)
   return res
 }
 
-export async function POST() {
+export async function POST(_req?: Request, _ctx?: unknown, extraDays = 0) {
   const supabase = createServiceClient()
   const runId = uuidv4()
 
@@ -57,7 +83,7 @@ export async function POST() {
     return NextResponse.json({ error: 'DB 연결 실패' }, { status: 500 })
   }
 
-  runPipeline(runId, supabase).catch(async (err) => {
+  runPipeline(runId, supabase, (_ctx as any)?.extraDays ?? extraDays).catch(async (err) => {
     console.error('파이프라인 오류:', err)
     await supabase.from('run_logs').update({
       status: 'failed',
@@ -72,11 +98,12 @@ const MIN_TOTAL = 15
 const MAX_TOTAL = 20
 const CATEGORIES = ['자사', '업계', '정책']
 
-async function runPipeline(runId: string, supabase: ReturnType<typeof createServiceClient>) {
+async function runPipeline(runId: string, supabase: ReturnType<typeof createServiceClient>, extraDays = 0) {
   const config = await getConfig()
 
-  // 1. 수집
-  const raw = await collectArticles(config.keywords, config.collection_hours)
+  // 1. 수집 (연휴 다음날이면 수집 기간 확장)
+  const collectionHours = config.collection_hours + extraDays * 24
+  const raw = await collectArticles(config.keywords, collectionHours)
 
   // 2. AI 필터링 + 카테고리 분류 + 태그/영향도
   const filtered = await filterArticles(raw, config.media_tiers)
