@@ -6,10 +6,10 @@ const IMPACT_COLOR: Record<string, string> = {
   LOW: '#666666',
 }
 
-const IMPACT_BG: Record<string, string> = {
-  HIGH: '#fff0f0',
-  MEDIUM: '#fff8f0',
-  LOW: '#f5f5f5',
+function formatDateEn(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+  })
 }
 
 export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
@@ -34,70 +34,89 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       </table>
     </td></tr>` : ''
 
-  // ── 기사 파트 (한국어 + 중국어 병기) ──
-  const articlesPart = categories.map(cat => {
+  function catLabel(cat: string) {
+    return cat === '자사' ? 'Huawei' : cat === '업계' ? 'Industry' : 'Policy'
+  }
+  function catLabelZh(cat: string) {
+    return cat === '자사' ? '华为动态' : cat === '업계' ? '行业动态' : '政策动态'
+  }
+
+  // ── 중문 섹션 ──
+  const zhPart = categories.map(cat => {
     const catArticles = [...activeArticles.filter(a => a.category === cat)]
       .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
-    const catLabel = cat === '자사' ? '자사 (Huawei)' : cat === '업계' ? '업계 (Industry)' : '정책 (Policy)'
-    const impactColorFn = (a: Article) => IMPACT_COLOR[a.impact_level] ?? '#666'
 
     const rows = catArticles.map((a, idx) => {
-      const impactColor = impactColorFn(a)
-      const pubDate = new Date(a.pub_date).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      const impactColor = IMPACT_COLOR[a.impact_level] ?? '#666'
+      const pubDate = formatDateEn(a.pub_date)
       return `
-      <tr><td style="padding:16px 0;border-bottom:1px solid #f0f0f0">
-        <!-- 번호 + 태그 -->
+      <tr><td style="padding:14px 0;border-bottom:1px solid #f0f0f0">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
           <span style="font-size:10px;color:#bbb">${idx + 1} / ${catArticles.length}</span>
           <span style="font-size:10px;color:${impactColor};border:1px solid ${impactColor};padding:1px 6px;border-radius:3px">${a.tag ?? ''}</span>
           <span style="font-size:10px;color:#fff;background:${impactColor};padding:1px 6px;border-radius:3px">${a.impact_level}</span>
         </div>
-
-        <!-- 한국어 제목 -->
-        <a href="${a.link}" style="color:#1a73e8;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:2px">${a.title}</a>
-        <!-- 중국어 제목 -->
-        ${a.title_zh ? `<a href="${a.link}" style="color:#c8102e;font-size:13px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:6px">${a.title_zh}</a>` : ''}
-
-        <!-- 매체 + 날짜 -->
-        <div style="font-size:11px;color:#999;margin-bottom:10px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
-
-        <!-- 한국어 요약 -->
-        ${a.summary_ko.length > 0 ? `
-        <div style="margin-bottom:8px">
-          ${a.summary_ko.map(s => `<div style="font-size:13px;color:#333;line-height:1.7;margin-bottom:3px">${s}</div>`).join('')}
-        </div>` : ''}
-
-        <!-- 구분선 -->
-        ${a.summary_zh.length > 0 ? `<div style="border-top:1px solid #e8e8e8;margin:8px 0"></div>` : ''}
-
-        <!-- 중국어 요약 -->
+        ${a.title_zh ? `<a href="${a.link}" style="color:#c8102e;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title_zh}</a>` : `<a href="${a.link}" style="color:#c8102e;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>`}
+        <div style="font-size:11px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
         ${a.summary_zh.length > 0 ? `
         <div>
-          ${a.summary_zh.map(s => `<div style="font-size:12px;color:#666;line-height:1.7;margin-bottom:3px">${s}</div>`).join('')}
+          ${a.summary_zh.map(s => `<div style="font-size:13px;color:#333;line-height:1.7;margin-bottom:3px">${s}</div>`).join('')}
         </div>` : ''}
       </td></tr>`
     }).join('')
 
     return `
-      <tr><td style="padding:16px 0 4px 0">
+      <tr><td style="padding:14px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="background:#c8102e;color:#fff;padding:8px 16px;font-size:13px;font-weight:bold;border-radius:4px 0 0 4px">${catLabel}</td>
+          <td style="background:#c8102e;color:#fff;padding:8px 16px;font-size:13px;font-weight:bold;border-radius:4px 0 0 4px">${catLabelZh(cat)}</td>
           <td style="background:#a00d24;color:rgba(255,255,255,0.8);padding:8px 14px;font-size:12px;border-radius:0 4px 4px 0;text-align:right;white-space:nowrap">${catArticles.length} articles</td>
         </tr></table>
       </td></tr>
       ${rows}`
   }).join('')
 
-  // ── Tomorrow Watch List ──
-  const watchlist = (runLog.tomorrow_watchlist?.length > 0) ? `
-    <tr><td style="padding:16px 0 0 0">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4ff;border-radius:6px;padding:14px 18px">
-        <tr><td style="font-size:12px;font-weight:bold;color:#3949ab;letter-spacing:1px;padding-bottom:8px">TOMORROW WATCH LIST</td></tr>
-        <tr><td>
-          ${runLog.tomorrow_watchlist.map(t => `<div style="font-size:12px;color:#333;line-height:1.6;margin-bottom:5px">${t}</div>`).join('')}
-        </td></tr>
-      </table>
-    </td></tr>` : ''
+  // ── 국문 섹션 ──
+  const koPart = categories.map(cat => {
+    const catArticles = [...activeArticles.filter(a => a.category === cat)]
+      .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+
+    const rows = catArticles.map((a, idx) => {
+      const impactColor = IMPACT_COLOR[a.impact_level] ?? '#666'
+      const pubDate = formatDateEn(a.pub_date)
+      return `
+      <tr><td style="padding:14px 0;border-bottom:1px solid #f0f0f0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:10px;color:#bbb">${idx + 1} / ${catArticles.length}</span>
+          <span style="font-size:10px;color:${impactColor};border:1px solid ${impactColor};padding:1px 6px;border-radius:3px">${a.tag ?? ''}</span>
+          <span style="font-size:10px;color:#fff;background:${impactColor};padding:1px 6px;border-radius:3px">${a.impact_level}</span>
+        </div>
+        <a href="${a.link}" style="color:#1a73e8;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>
+        <div style="font-size:11px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
+        ${a.summary_ko.length > 0 ? `
+        <div>
+          ${a.summary_ko.map(s => `<div style="font-size:13px;color:#333;line-height:1.7;margin-bottom:4px">• ${s}</div>`).join('')}
+        </div>` : ''}
+      </td></tr>`
+    }).join('')
+
+    return `
+      <tr><td style="padding:14px 0 4px 0">
+        <table width="100%" cellpadding="0" cellspacing="0"><tr>
+          <td style="background:#1a73e8;color:#fff;padding:8px 16px;font-size:13px;font-weight:bold;border-radius:4px 0 0 4px">${catLabel(cat)}</td>
+          <td style="background:#1557b0;color:rgba(255,255,255,0.8);padding:8px 14px;font-size:12px;border-radius:0 4px 4px 0;text-align:right;white-space:nowrap">${catArticles.length} articles</td>
+        </tr></table>
+      </td></tr>
+      ${rows}`
+  }).join('')
+
+  // ── 섹션 구분선 ──
+  const sectionDivider = `
+    <tr><td style="padding:20px 0 8px 0">
+      <table width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="border-top:2px solid #e8e8e8"></td>
+      </tr></table>
+      <div style="font-size:12px;color:#999;text-align:center;padding-top:8px">▼ 한국어 Korean</div>
+    </td></tr>`
 
   return `<!DOCTYPE html>
 <html lang="zh">
@@ -116,7 +135,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       </td>
       <td style="text-align:right;vertical-align:middle">
         <div style="color:rgba(255,255,255,0.85);font-size:12px">${date}</div>
-        <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:3px">총 ${activeArticles.length}건</div>
+        <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:3px">${activeArticles.length} articles</div>
       </td>
     </tr></table>
   </td></tr>
@@ -126,8 +145,14 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     <table width="100%" cellpadding="0" cellspacing="0">
       ${execSummary}
 
-      <!-- 기사 목록 -->
-      ${articlesPart}
+      <!-- 중문 섹션 -->
+      ${zhPart}
+
+      <!-- 구분선 -->
+      ${sectionDivider}
+
+      <!-- 국문 섹션 -->
+      ${koPart}
 
     </table>
   </td></tr>
@@ -135,7 +160,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   <!-- 푸터 -->
   <tr><td style="padding:14px 24px;background:#f8f8f8;border-top:1px solid #e8e8e8">
     <div style="font-size:11px;color:#aaa;text-align:center">
-      생성: ${new Date(runLog.run_at).toLocaleString('ko-KR')} &nbsp;|&nbsp; Huawei Korea PR Monitoring
+      ${new Date(runLog.run_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;|&nbsp; Huawei Korea PR Monitoring
     </div>
   </td></tr>
 
