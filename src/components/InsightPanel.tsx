@@ -38,8 +38,8 @@ export default function InsightPanel({ runLog, onUpdate, onRegenerate }: Props) 
       {/* 헤더 */}
       <div className="bg-[#c8102e] px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-white font-bold text-sm">오늘의 하이라이트 &amp; PR인사이트</span>
-            <span className="text-red-200 text-xs">今日焦点新闻 &amp; PR洞察</span>
+          <span className="text-white font-bold text-sm">오늘의 하이라이트</span>
+            <span className="text-red-200 text-xs">今日焦点新闻</span>
         </div>
         <div className="flex gap-2">
           <button

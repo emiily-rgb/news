@@ -30,7 +30,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
           ${runLog.insight_zh.map(s => `<div style="font-size:13px;color:#222;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
         </td></tr>` : ''}
         ${runLog.insight_ko?.length > 0 ? `
-        <tr><td style="border-top:1px solid #e0e0e0;padding-top:14px;font-size:13px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;padding-bottom:10px">오늘의 하이라이트 &amp; PR인사이트</td></tr>
+        <tr><td style="border-top:1px solid #e0e0e0;padding-top:14px;font-size:13px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;padding-bottom:10px">오늘의 하이라이트</td></tr>
         <tr><td>
           ${runLog.insight_ko.map(s => `<div style="font-size:13px;color:#444;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
         </td></tr>` : ''}
@@ -54,10 +54,9 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       const pubDate = formatDateEn(a.pub_date)
       return `
       <tr><td style="padding:14px 0;border-bottom:1px solid #f0f0f0">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-          <span style="font-size:10px;color:#bbb">${idx + 1} / ${catArticles.length}</span>
-          <span style="font-size:10px;color:${impactColor};border:1px solid ${impactColor};padding:1px 6px;border-radius:3px">${a.tag ?? ''}</span>
-          <span style="font-size:10px;color:#fff;background:${impactColor};padding:1px 6px;border-radius:3px">${a.impact_level}</span>
+        <div style="margin-bottom:8px">
+          <span style="font-size:11px;color:${impactColor};border:1px solid ${impactColor};padding:2px 8px;border-radius:3px;margin-right:6px">${a.tag ?? ''}</span>
+          <span style="font-size:11px;color:#fff;background:${impactColor};padding:2px 8px;border-radius:3px">${a.impact_level}</span>
         </div>
         ${a.title_zh ? `<a href="${a.link}" style="color:#c8102e;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title_zh}</a>` : `<a href="${a.link}" style="color:#c8102e;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>`}
         <div style="font-size:11px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
@@ -89,10 +88,9 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       const pubDate = formatDateEn(a.pub_date)
       return `
       <tr><td style="padding:14px 0;border-bottom:1px solid #f0f0f0">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-          <span style="font-size:10px;color:#bbb">${idx + 1} / ${catArticles.length}</span>
-          <span style="font-size:10px;color:${impactColor};border:1px solid ${impactColor};padding:1px 6px;border-radius:3px">${a.tag ?? ''}</span>
-          <span style="font-size:10px;color:#fff;background:${impactColor};padding:1px 6px;border-radius:3px">${a.impact_level}</span>
+        <div style="margin-bottom:8px">
+          <span style="font-size:11px;color:${impactColor};border:1px solid ${impactColor};padding:2px 8px;border-radius:3px;margin-right:6px">${a.tag ?? ''}</span>
+          <span style="font-size:11px;color:#fff;background:${impactColor};padding:2px 8px;border-radius:3px">${a.impact_level}</span>
         </div>
         <a href="${a.link}" style="color:#1a73e8;font-size:14px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>
         <div style="font-size:11px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
@@ -126,7 +124,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   return `<!DOCTYPE html>
 <html lang="zh">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f0f0f0;font-family:Arial,'Microsoft YaHei','Apple SD Gothic Neo',sans-serif">
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:'Microsoft YaHei','Apple SD Gothic Neo',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0">
 <tr><td align="center" style="padding:20px 10px">
 <table width="680" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:6px;overflow:hidden;max-width:680px">
