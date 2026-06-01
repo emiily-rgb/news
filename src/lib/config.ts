@@ -9,7 +9,7 @@ export async function getConfig(): Promise<Config> {
       .select('value')
       .eq('key', 'main')
       .single()
-    return data?.value ?? DEFAULT_CONFIG
+    return { ...DEFAULT_CONFIG, ...(data?.value ?? {}) }
   } catch {
     return DEFAULT_CONFIG
   }

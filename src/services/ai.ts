@@ -3,9 +3,32 @@ import { RawArticle } from './collector'
 import { Article, Sentiment, ImpactLevel, ArticleTag, EmergingSignals } from '@/types'
 
 const MODEL = 'claude-sonnet-4-5'
+const FILTER_MODEL = 'claude-haiku-4-5'
+
+// AI 응답 JSON을 최대한 안전하게 파싱
+function robustJsonParse(text: string): Record<string, unknown> {
+  const block = text.match(/\{[\s\S]*\}/)?.[0] ?? '{}'
+  // 1차: 직접 파싱
+  try { return JSON.parse(block) } catch { /* pass */ }
+  // 2차: 제어문자 제거 후 파싱
+  try { return JSON.parse(block.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')) } catch { /* pass */ }
+  // 3차: 문자열 값 내부의 unescaped " 를 ' 로 치환
+  try {
+    const fixed = block.replace(/"((?:[^"\\]|\\.)*)"/g, (_m, inner: string) =>
+      `"${inner.replace(/(?<!\\)"/g, '\\"')}"`)
+    return JSON.parse(fixed)
+  } catch { /* pass */ }
+  // 4차: 줄별로 파싱 가능한 값만 추출
+  const result: Record<string, unknown> = {}
+  for (const line of block.split('\n')) {
+    const m = line.match(/"(\w+)"\s*:\s*"([^"]*)"/)
+    if (m) result[m[1]] = m[2]
+  }
+  return result
+}
 
 function getClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  return new Anthropic({ apiKey: process.env['NEWS_AI_KEY'] })
 }
 
 // ── 1단계: 필터링 + 카테고리 분류 + 태그/영향도 판단 ──
@@ -52,7 +75,7 @@ async function filterBatch(batch: RawArticle[], offset: number): Promise<FilterR
   const lines = batch.map((a, i) => `[${offset + i}] 제목: "${a.title}" | 매체: ${a.media} | 검색키워드: ${a.keyword}`).join('\n')
   console.log(`[filterBatch] offset=${offset}, batch=${batch.length}건`)
   const response = await getClient().messages.create({
-    model: MODEL,
+    model: FILTER_MODEL,
     max_tokens: 4000,
     messages: [{ role: 'user', content: FILTER_PROMPT(lines) }],
   })
@@ -94,7 +117,7 @@ export async function filterArticles(
         relevant: false, category: '업계', tag: 'AI' as ArticleTag,
         impact_level: 'LOW' as ImpactLevel, sentiment: 'neutral' as Sentiment, relevance_score: 0
       }
-      const tier = mediaTiers[article.media] ?? 3
+      const tier = (mediaTiers ?? {})[article.media] ?? 3
       return {
         ...article,
         mediaTier: tier,
@@ -117,21 +140,22 @@ export async function summarizeAndTranslate(
   const results: Partial<Article>[] = []
 
   for (const article of articles) {
+    const safeTitle = article.title.replace(/[\\"]/g, ' ').replace(/\s+/g, ' ').trim()
     const prompt = `당신은 화웨이 임원용 뉴스 브리핑 전문 에디터다.
 
 다음 기사를 분석하라.
 
-제목: ${article.title}
+제목: ${safeTitle}
 매체: ${article.media}
 카테고리: ${article.finalCategory}
 태그: ${article.tag}
 영향도: ${article.impactLevel}
 
 작성 기준:
-- KR Summary: 임원 관점에서 핵심만 2~3문장. 번호 없이 문장으로.
+- KR Summary: 임원 관점에서 핵심만 2~3문장. 번호 없이 문장으로. 반드시 반말체로 작성 (예: "~했다", "~이다", "~될 전망"). 존댓말 금지.
 - CN Summary: KR Summary의 중국어 간체 번역. 직역 금지, 현지화.
 - title_zh: 기사 제목 중국어 간체 번역 (비즈니스 현지화)
-- why_it_matters_ko: 임원 관점에서 왜 중요한지 1~2문장 (사업 영향 중심)
+- why_it_matters_ko: 임원 관점에서 왜 중요한지 1~2문장 (사업 영향 중심). 반드시 반말체로 작성. 존댓말 금지.
 - why_it_matters_zh: why_it_matters_ko의 중국어 간체 번역
 
 응답 형식 (JSON만):
@@ -152,7 +176,7 @@ export async function summarizeAndTranslate(
           messages: [{ role: 'user', content: prompt }],
         })
         const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
-        const parsed = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] ?? '{}')
+        const parsed = robustJsonParse(text)
 
         results.push({
           title: article.title,
@@ -198,8 +222,9 @@ export async function generateInsight(articles: Partial<Article>[]): Promise<{
 }> {
   const active = articles.filter(a => !a.excluded)
 
+  const sanitize = (s?: string) => (s ?? '').replace(/["'\\]/g, ' ').replace(/\s+/g, ' ').trim()
   const articleSummary = active
-    .map(a => `[${a.category}][${a.tag}][${a.impact_level}] ${a.title}\n  요약: ${a.summary_ko?.join(' ')}`)
+    .map(a => `[${a.category}][${a.tag}][${a.impact_level}] ${sanitize(a.title)}\n  요약: ${sanitize(a.summary_ko?.join(' '))}`)
     .join('\n\n')
 
   const highCount = active.filter(a => a.impact_level === 'HIGH').length
@@ -214,14 +239,15 @@ ${articleSummary}
 
 아래 항목을 작성하라.
 
-1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 핵심 메시지(Key Takeaways) 2~3개를 마지막에 불릿으로 포함.
+1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 핵심 메시지(Key Takeaways) 2~3개를 마지막에 불릿으로 포함. 반드시 반말체로 작성 (예: "~했다", "~이다", "~될 전망"). 존댓말 금지.
 2. executive_summary_zh: executive_summary_ko의 중국어 간체 번역 (불릿 포함)
 3. emerging_signals: 반복적으로 나타나는 흐름
-   - positive: 긍정 신호 최대 3개 (한국어)
+   - positive: 긍정 신호 최대 3개 (한국어, 반말체)
    - positive_zh: positive의 중국어 간체 번역
-   - risk: 리스크 신호 최대 3개 (한국어)
+   - risk: 리스크 신호 최대 3개 (한국어, 반말체)
    - risk_zh: risk의 중국어 간체 번역
-4. tomorrow_watchlist: 내일 추가 모니터링 필요 이슈 최대 3개 (한국어)
+4. tomorrow_watchlist: 내일 추가 모니터링 필요 이슈 최대 3개 (한국어, 반말체)
+모든 한국어 항목은 반드시 반말체로 작성. 존댓말 금지.
 
 응답 형식 (JSON만):
 {
@@ -239,24 +265,14 @@ ${articleSummary}
   try {
     const response = await getClient().messages.create({
       model: MODEL,
-      max_tokens: 2000,
+      max_tokens: 3000,
       messages: [{ role: 'user', content: prompt }],
     })
     const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
 
     let parsed: Record<string, unknown> = {}
     try {
-      const raw = text.match(/\{[\s\S]*\}/)?.[0] ?? '{}'
-      let jsonStr = raw.replace(/[\x00-\x1F\x7F]/g, m => '\n\r\t'.includes(m) ? m : ' ')
-      try {
-        parsed = JSON.parse(jsonStr)
-      } catch {
-        jsonStr = jsonStr.replace(/"((?:[^"\\]|\\.)*)"/g, (_, inner) => {
-          const fixed = inner.replace(/(?<!\\)"/g, "'")
-          return `"${fixed}"`
-        })
-        parsed = JSON.parse(jsonStr)
-      }
+      parsed = robustJsonParse(text)
     } catch (parseErr) {
       console.error('[generateInsight] JSON 파싱 실패:', parseErr)
       return {

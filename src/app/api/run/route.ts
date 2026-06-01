@@ -102,7 +102,7 @@ async function runPipeline(runId: string, supabase: ReturnType<typeof createServ
   const config = await getConfig()
 
   // 1. 수집 (연휴 다음날이면 수집 기간 확장)
-  const collectionHours = config.collection_hours + extraDays * 24
+  const collectionHours = (config.collection_hours ?? 24) + extraDays * 24
   const raw = await collectArticles(config.keywords, collectionHours)
 
   // 2. AI 필터링 + 카테고리 분류 + 태그/영향도
@@ -163,8 +163,7 @@ async function runPipeline(runId: string, supabase: ReturnType<typeof createServ
 
   // 6. Executive Brief 생성
   const insight = await generateInsight(processed)
-
-  await supabase.from('run_logs').update({
+  const { error: updateErr } = await supabase.from('run_logs').update({
     status: 'completed',
     total_collected: raw.length,
     total_after_filter: selected.length,
@@ -177,4 +176,5 @@ async function runPipeline(runId: string, supabase: ReturnType<typeof createServ
     recipients: config.recipients,
     draft_saved_at: new Date().toISOString(),
   }).eq('id', runId)
+  if (updateErr) console.error('[runPipeline] DB 업데이트 실패:', updateErr.message)
 }
