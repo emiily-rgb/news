@@ -5,6 +5,12 @@ import { collectArticles } from '@/services/collector'
 import { filterArticles, summarizeAndTranslate, generateInsight } from '@/services/ai'
 import { v4 as uuidv4 } from 'uuid'
 
+export async function GET() {
+  // Vercel cron (오전 8시 KST) 자동 실행
+  const res = await POST()
+  return res
+}
+
 export async function POST() {
   const supabase = createServiceClient()
   const runId = uuidv4()
@@ -119,5 +125,6 @@ async function runPipeline(runId: string, supabase: ReturnType<typeof createServ
     tomorrow_watchlist: insight.tomorrowWatchlist,
     insight_generated_at: new Date().toISOString(),
     recipients: config.recipients,
+    draft_saved_at: new Date().toISOString(),
   }).eq('id', runId)
 }
