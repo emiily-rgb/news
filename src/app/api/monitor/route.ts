@@ -5,9 +5,6 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 const parser = new Parser({ customFields: { item: ['source'] } })
 
-// 화웨이 관련 키워드 (AI 없이 단순 키워드 필터링)
-const HUAWEI_KEYWORDS = ['화웨이', 'Huawei', 'huawei', '허웨이']
-
 // RSS 피드 목록
 const RSS_FEEDS = [
   'https://news.google.com/rss/search?q=화웨이&hl=ko&gl=KR&ceid=KR:ko',
@@ -24,7 +21,18 @@ interface ArticleItem {
   media: string
 }
 
-async function collectArticles(): Promise<ArticleItem[]> {
+async function getKeywords(): Promise<string[]> {
+  const supabase = createServiceClient()
+  const { data } = await supabase.from('configs').select('value').eq('key', 'main').single()
+  const categories = data?.value?.keywords ?? []
+  const allKeywords: string[] = []
+  for (const cat of categories) {
+    if (Array.isArray(cat.keywords)) allKeywords.push(...cat.keywords)
+  }
+  return allKeywords.length > 0 ? allKeywords : ['화웨이', 'Huawei']
+}
+
+async function collectArticles(keywords: string[]): Promise<ArticleItem[]> {
   const seen = new Set<string>()
   const articles: ArticleItem[] = []
   const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000
@@ -35,10 +43,10 @@ async function collectArticles(): Promise<ArticleItem[]> {
       for (const item of feed.items ?? []) {
         if (!item.title || !item.link) continue
 
-        // 화웨이 키워드 포함 여부 확인
+        // 키워드 포함 여부 확인
         const titleLower = item.title.toLowerCase()
-        const isHuawei = HUAWEI_KEYWORDS.some(k => titleLower.includes(k.toLowerCase()))
-        if (!isHuawei) continue
+        const isMatch = keywords.some(k => titleLower.includes(k.toLowerCase()))
+        if (!isMatch) continue
 
         // 최근 3시간 이내 기사만
         const pubTime = item.pubDate ? new Date(item.pubDate).getTime() : 0
@@ -135,8 +143,9 @@ export async function GET(req: NextRequest) {
   const hour = now.toLocaleString('ko-KR', { hour: 'numeric', hour12: false, timeZone: 'Asia/Seoul' })
   const timeLabel = `${hour}:00`
 
-  // 기사 수집
-  const articles = await collectArticles()
+  // 키워드 + 기사 수집
+  const keywords = await getKeywords()
+  const articles = await collectArticles(keywords)
 
   // 수신자 목록
   const supabase = createServiceClient()
