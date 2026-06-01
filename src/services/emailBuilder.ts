@@ -41,7 +41,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     return cat === '자사' ? 'Huawei' : cat === '업계' ? 'Industry' : 'Policy'
   }
   function catLabelZh(cat: string) {
-    return cat === '자사' ? '行业资讯' : cat === '업계' ? '行业资讯' : '政策动向'
+    return cat === '자사' ? '华为动态' : cat === '업계' ? '行业资讯' : '政策动向'
   }
 
   // ── 중문 섹션 ──
