@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import sharp from 'sharp'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,15 +16,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: '지원하지 않는 파일 형식입니다 (jpg, png, gif, webp)' }, { status: 400 })
   }
 
-  const fileName = `articles/${id}/${Date.now()}.${ext}`
   const arrayBuffer = await file.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
+  const inputBuffer = Buffer.from(arrayBuffer)
+
+  // WebP로 변환 (최대 1200px, 품질 85)
+  const buffer = await sharp(inputBuffer)
+    .resize({ width: 1200, withoutEnlargement: true })
+    .webp({ quality: 85 })
+    .toBuffer()
+
+  const fileName = `articles/${id}/${Date.now()}.webp`
 
   // Supabase Storage에 업로드 (버킷: article-images)
   const { error: uploadError } = await supabase.storage
     .from('article-images')
     .upload(fileName, buffer, {
-      contentType: file.type,
+      contentType: 'image/webp',
       upsert: true,
     })
 
