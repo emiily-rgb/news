@@ -5,8 +5,31 @@ import { collectArticles } from '@/services/collector'
 import { filterArticles, summarizeAndTranslate, generateInsight } from '@/services/ai'
 import { v4 as uuidv4 } from 'uuid'
 
+// 2026년 한국 공휴일 (YYYY-MM-DD, KST)
+const HOLIDAYS_2026 = new Set([
+  '2026-01-01', // 신정
+  '2026-01-28', '2026-01-29', '2026-01-30', // 설날 연휴
+  '2026-03-01', // 삼일절
+  '2026-05-05', // 어린이날
+  '2026-05-25', // 부처님오신날
+  '2026-06-03', // 전국동시지방선거
+  '2026-08-15', // 광복절
+  '2026-09-24', '2026-09-25', '2026-09-26', // 추석 연휴
+  '2026-10-03', // 개천절
+  '2026-10-09', // 한글날
+  '2026-12-25', // 크리스마스
+])
+
+function isHoliday(): boolean {
+  const kstDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) // YYYY-MM-DD
+  return HOLIDAYS_2026.has(kstDate)
+}
+
 export async function GET() {
-  // Vercel cron (오전 8시 KST) 자동 실행
+  // Vercel cron (오전 8시 KST) 자동 실행 — 공휴일 제외
+  if (isHoliday()) {
+    return NextResponse.json({ message: '공휴일 — 메인 브리핑 생략', date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }) })
+  }
   const res = await POST()
   return res
 }
