@@ -199,8 +199,9 @@ export default function Home() {
   }
 
   if (!profile) {
-    if (typeof window !== 'undefined') window.location.href = '/login'
-    return null
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-gray-400 text-sm">로딩 중...</div>
+    </div>
   }
 
   return (
