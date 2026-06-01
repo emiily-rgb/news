@@ -17,8 +17,9 @@ export default function EmailPreviewModal({ html, runLog, recipients, isAdmin, o
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const date = new Date(runLog.run_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
-  const subject = `[화웨이 뉴스 모니터링] ${date}`
+  const d = new Date(runLog.run_at)
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  const subject = `[Huawei Daily Monitoring] ${dateStr}`
 
   async function sendEmail() {
     if (recipients.length === 0) {
