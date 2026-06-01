@@ -180,22 +180,22 @@ export async function summarizeAndTranslate(
 
         results.push({
           title: article.title,
-          title_zh: parsed.title_zh ?? '',
+          title_zh: (parsed.title_zh as string) ?? '',
           media: article.media,
           media_tier: article.mediaTier,
           link: article.link,
           pub_date: article.pubDate,
           category: article.finalCategory,
           keyword: article.keyword,
-          summary_ko: parsed.summary_ko ?? [],
-          summary_zh: parsed.summary_zh ?? [],
+          summary_ko: (parsed.summary_ko as string[]) ?? [],
+          summary_zh: (parsed.summary_zh as string[]) ?? [],
           sentiment: article.sentiment,
           relevance_score: article.relevanceScore,
           image_url: article.imageUrl ?? null,
           tag: article.tag,
           impact_level: article.impactLevel,
-          why_it_matters_ko: parsed.why_it_matters_ko ?? null,
-          why_it_matters_zh: parsed.why_it_matters_zh ?? null,
+          why_it_matters_ko: (parsed.why_it_matters_ko as string) ?? null,
+          why_it_matters_zh: (parsed.why_it_matters_zh as string) ?? null,
           excluded: false,
         })
         success = true
