@@ -13,12 +13,13 @@ interface Props {
   onUpdateSummary: (id: string, field: 'summary_ko' | 'summary_zh', value: string[]) => void
   onUpdateField: (id: string, field: 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', value: string) => void
   onUpdateImageUrl: (id: string, imageUrl: string) => void
+  onUpdateCategory: (id: string, category: string) => void
   onDelete: (id: string) => void
 }
 
 export default function ArticleCard({
   article, isAdmin, isFirst, isLast,
-  onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onDelete,
+  onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onUpdateCategory, onDelete,
 }: Props) {
   const [editing, setEditing] = useState<'ko' | 'zh' | 'title_zh' | 'wim_ko' | 'wim_zh' | null>(null)
   const [koText, setKoText] = useState(article.summary_ko.join('\n'))
@@ -132,12 +133,28 @@ export default function ArticleCard({
             )}
           </div>
 
-          <p className="text-gray-400 text-xs mb-3">
-            {article.media}
-            {article.media_tier <= 2 && <span className="ml-1 text-blue-400">T{article.media_tier}</span>}
-            {' | '}
-            {new Date(article.pub_date).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-          </p>
+          <div className="flex items-center gap-2 text-gray-400 text-xs mb-3 flex-wrap">
+            <span>
+              {article.media}
+              {article.media_tier <= 2 && <span className="ml-1 text-blue-400">T{article.media_tier}</span>}
+            </span>
+            <span>|</span>
+            <span>{new Date(article.pub_date).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            {isAdmin && (
+              <>
+                <span>|</span>
+                <select
+                  value={article.category}
+                  onChange={e => onUpdateCategory(article.id, e.target.value)}
+                  className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
+                >
+                  <option value="자사">자사</option>
+                  <option value="업계">업계</option>
+                  <option value="정책">정책</option>
+                </select>
+              </>
+            )}
+          </div>
 
           {/* 이미지 */}
           <div className="mb-3">

@@ -20,6 +20,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
   const [text, setText] = useState('')
   const [results, setResults] = useState<Result[]>([])
   const [processing, setProcessing] = useState(false)
+  const [forceCategory, setForceCategory] = useState<string>('')
 
   function parseUrls(raw: string): string[] {
     return raw
@@ -40,7 +41,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
     const res = await fetch(`/api/run/${runId}/manual-articles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ urls }),
+      body: JSON.stringify({ urls, forceCategory: forceCategory || undefined }),
     })
     const data = await res.json()
 
@@ -73,6 +74,20 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
 
         {/* 입력 */}
         <div className="px-5 py-4">
+          <div className="flex items-center gap-3 mb-3">
+            <label className="text-xs font-medium text-gray-600 shrink-0">카테고리 강제 지정</label>
+            <select
+              value={forceCategory}
+              onChange={e => setForceCategory(e.target.value)}
+              disabled={processing}
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#c8102e]/30 focus:border-[#c8102e] disabled:bg-gray-50"
+            >
+              <option value="">AI 자동 분류</option>
+              <option value="자사">자사 (华为动态)</option>
+              <option value="업계">업계 (行业资讯)</option>
+              <option value="정책">정책 (政策动向)</option>
+            </select>
+          </div>
           <label className="block text-xs font-medium text-gray-600 mb-2">
             기사 URL <span className="text-gray-400 font-normal">(줄바꿈 또는 쉼표로 여러 개 입력 가능)</span>
           </label>

@@ -55,7 +55,7 @@ function extractFromHtml(html: string): { title: string; bodyText: string; media
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
   const { runId } = await params
-  const { urls } = await req.json() as { urls: string[] }
+  const { urls, forceCategory } = await req.json() as { urls: string[]; forceCategory?: string }
 
   if (!urls?.length) return NextResponse.json({ error: 'URL이 없습니다' }, { status: 400 })
 
@@ -93,11 +93,39 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ run
       const html = await fetchRes.text()
 
       // 2. 본문 추출
-      const { title, bodyText, pubDate } = extractFromHtml(html)
-
-      // 매체명은 URL 도메인에서 추출
+      const { title, bodyText, pubDate, media: ogMedia } = extractFromHtml(html)
       const domain = new URL(url).hostname.replace(/^www\./, '')
-      const mediaName = domain.replace(/\.(com|co\.kr|net|or\.kr|kr)$/, '').replace(/[-_.]/g, ' ')
+      const MEDIA_MAP: Record<string, string> = {
+        'sedaily.com': '서울경제',
+        'mk.co.kr': '매일경제',
+        'hankyung.com': '한국경제',
+        'chosun.com': '조선일보',
+        'joongang.co.kr': '중앙일보',
+        'donga.com': '동아일보',
+        'hani.co.kr': '한겨레',
+        'khan.co.kr': '경향신문',
+        'yna.co.kr': '연합뉴스',
+        'yonhapnewstv.co.kr': '연합뉴스TV',
+        'newsis.com': '뉴시스',
+        'news1.kr': '뉴스1',
+        'mt.co.kr': '머니투데이',
+        'etnews.com': '전자신문',
+        'zdnet.co.kr': 'ZDNet Korea',
+        'itchosun.com': 'IT조선',
+        'bloter.net': '블로터',
+        'techm.kr': '테크M',
+        'digitaltoday.co.kr': '디지털투데이',
+        'aitimes.com': 'AI타임스',
+        'reuters.com': 'Reuters',
+        'bloomberg.com': 'Bloomberg',
+        'ft.com': 'Financial Times',
+        'wsj.com': 'Wall Street Journal',
+        'nytimes.com': 'New York Times',
+        'techcrunch.com': 'TechCrunch',
+        'theverge.com': 'The Verge',
+        'wired.com': 'Wired',
+      }
+      const mediaName = ogMedia || MEDIA_MAP[domain] || domain.replace(/\.(com|co\.kr|net|or\.kr|kr)$/, '').replace(/[-_.]/g, ' ')
 
       if (!title) throw new Error('제목을 추출할 수 없습니다')
 
@@ -113,7 +141,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ run
         pubDate,
       })
 
-      // 4. order_index 계산
+      // 4. order_index 계산 (강제 카테고리 적용)
+      if (forceCategory) processed.category = forceCategory
       const cat = processed.category ?? '업계'
       maxOrderByCategory[cat] = (maxOrderByCategory[cat] ?? -1) + 1
       const orderIndex = maxOrderByCategory[cat]

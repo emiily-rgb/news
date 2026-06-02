@@ -130,6 +130,16 @@ export default function Home() {
     setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
   }
 
+  async function updateCategory(id: string, category: string) {
+    const res = await fetch(`/api/articles/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category }),
+    })
+    const updated = await res.json()
+    setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
+  }
+
   async function deleteArticle(id: string) {
     await fetch(`/api/articles/${id}`, { method: 'DELETE' })
     setArticles(prev => prev.filter(a => a.id !== id))
@@ -338,6 +348,7 @@ export default function Home() {
                         onUpdateSummary={updateSummary}
                         onUpdateField={updateField}
                         onUpdateImageUrl={updateImageUrl}
+                        onUpdateCategory={updateCategory}
                         onDelete={deleteArticle}
                       />
                     ))}
