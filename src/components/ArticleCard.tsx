@@ -164,10 +164,10 @@ export default function ArticleCard({
                   onChange={e => onUpdateCategory(article.id, e.target.value)}
                   className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
                 >
+                  <option value="자사">자사 (华为动态)</option>
+                  <option value="업계">업계 (行业资讯)</option>
+                  <option value="정책">정책 (政策动向)</option>
                   <option value="위기이슈">위기이슈 (危机事项)</option>
-                  <option value="자사">자사</option>
-                  <option value="업계">업계</option>
-                  <option value="정책">정책</option>
                 </select>
               </>
             )}
