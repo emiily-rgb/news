@@ -208,13 +208,34 @@ export default function ArticleCard({
           {editing === 'ko' ? (
             <div className="mb-3">
               <p className="text-xs font-medium text-gray-500 mb-1">한국어 요약</p>
-              <textarea
-                value={koText}
-                onChange={e => setKoText(e.target.value)}
-                className="w-full border border-blue-300 rounded p-2 text-sm text-gray-700 resize-none"
-                rows={3}
-                autoFocus
-              />
+              {koText.split('\n').map((line, i, arr) => (
+                <div key={i} className="flex items-center gap-1.5 mb-1">
+                  <span className="text-gray-400 text-sm shrink-0">•</span>
+                  <input
+                    autoFocus={i === 0}
+                    value={line}
+                    onChange={e => {
+                      const lines = koText.split('\n')
+                      lines[i] = e.target.value
+                      setKoText(lines.join('\n'))
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const lines = koText.split('\n')
+                        lines.splice(i + 1, 0, '')
+                        setKoText(lines.join('\n'))
+                      } else if (e.key === 'Backspace' && line === '' && arr.length > 1) {
+                        e.preventDefault()
+                        const lines = koText.split('\n')
+                        lines.splice(i, 1)
+                        setKoText(lines.join('\n'))
+                      }
+                    }}
+                    className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-700"
+                  />
+                </div>
+              ))}
               <div className="flex gap-2 mt-1">
                 <button onClick={() => saveEdit('ko')} className="text-xs bg-blue-600 text-white px-3 py-1 rounded">저장</button>
                 <button onClick={() => setEditing(null)} className="text-xs text-gray-500 px-3 py-1 rounded border">취소</button>
@@ -239,13 +260,34 @@ export default function ArticleCard({
           {editing === 'zh' ? (
             <div className="mb-3">
               <p className="text-xs font-medium text-gray-500 mb-1">中文 摘要</p>
-              <textarea
-                value={zhText}
-                onChange={e => setZhText(e.target.value)}
-                className="w-full border border-blue-300 rounded p-2 text-sm text-gray-700 resize-none"
-                rows={3}
-                autoFocus
-              />
+              {zhText.split('\n').map((line, i, arr) => (
+                <div key={i} className="flex items-center gap-1.5 mb-1">
+                  <span className="text-gray-400 text-sm shrink-0">•</span>
+                  <input
+                    autoFocus={i === 0}
+                    value={line}
+                    onChange={e => {
+                      const lines = zhText.split('\n')
+                      lines[i] = e.target.value
+                      setZhText(lines.join('\n'))
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const lines = zhText.split('\n')
+                        lines.splice(i + 1, 0, '')
+                        setZhText(lines.join('\n'))
+                      } else if (e.key === 'Backspace' && line === '' && arr.length > 1) {
+                        e.preventDefault()
+                        const lines = zhText.split('\n')
+                        lines.splice(i, 1)
+                        setZhText(lines.join('\n'))
+                      }
+                    }}
+                    className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-700"
+                  />
+                </div>
+              ))}
               <div className="flex gap-2 mt-1">
                 <button onClick={() => saveEdit('zh')} className="text-xs bg-blue-600 text-white px-3 py-1 rounded">저장</button>
                 <button onClick={() => setEditing(null)} className="text-xs text-gray-500 px-3 py-1 rounded border">취소</button>
