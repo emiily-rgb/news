@@ -70,8 +70,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       return `
       <tr><td style="padding:14px 0;border-bottom:1px solid #f5f5f5">
         <div style="margin-bottom:7px">
-          <span style="font-size:11px;font-weight:600;color:${impactColor};border:1px solid ${impactColor};padding:2px 7px;border-radius:2px;margin-right:6px;letter-spacing:0.3px">${a.impact_level}</span>
-          ${a.tag ? `<span style="font-size:11px;color:#999;border:1px solid #e0e0e0;padding:2px 7px;border-radius:2px;letter-spacing:0.3px">${a.tag}</span>` : ''}
+          <span style="font-size:11px;font-weight:600;color:#fff;background:${impactColor};padding:2px 8px;border-radius:2px;margin-right:4px;letter-spacing:0.3px">${a.impact_level}</span>
+          ${a.tag ? `<span style="font-size:11px;color:#999;padding-left:4px;letter-spacing:0.5px">| ${a.tag}</span>` : ''}
         </div>
         <a href="${a.link}" style="color:#111;font-size:15px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
         <div style="font-size:12px;color:#bbb;margin-bottom:8px">${formatMediaName(a.media)} &nbsp;·&nbsp; ${pubDate}</div>
