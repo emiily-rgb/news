@@ -35,7 +35,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   })
 
   const activeArticles = articles.filter(a => !a.excluded)
-  const categories = ['자사', '업계', '정책'].filter(c => activeArticles.some(a => a.category === c))
+  const categories = ['위기이슈', '자사', '업계', '정책'].filter(c => activeArticles.some(a => a.category === c))
 
   // ── Executive Summary ──
   const execSummary = (runLog.insight_zh?.length > 0 || runLog.insight_ko?.length > 0) ? `
@@ -53,10 +53,10 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     </td></tr>` : ''
 
   function catLabel(cat: string) {
-    return cat === '자사' ? 'Huawei' : cat === '업계' ? 'Industry' : 'Policy'
+    return cat === '자사' ? 'Huawei' : cat === '업계' ? 'Industry' : cat === '정책' ? 'Policy' : 'Crisis'
   }
   function catLabelZh(cat: string) {
-    return cat === '자사' ? '华为动态' : cat === '업계' ? '行业资讯' : '政策动向'
+    return cat === '자사' ? '华为动态' : cat === '업계' ? '行业资讯' : cat === '정책' ? '政策动向' : '危机事项'
   }
 
   function articleRows(catArticles: Article[], titleField: 'zh' | 'ko') {

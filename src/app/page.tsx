@@ -11,7 +11,7 @@ import ManualArticleModal from '@/components/ManualArticleModal'
 import { useAuth } from '@/context/AuthContext'
 
 function initOrderIndex(arts: Article[]): Article[] {
-  const cats = ['자사', '업계', '정책']
+  const cats = ['위기이슈', '자사', '업계', '정책']
   const result = arts.map(a => ({ ...a }))
   cats.forEach(cat => {
     const catItems = result.filter(a => a.category === cat)
@@ -199,7 +199,7 @@ export default function Home() {
     setShowPreview(true)
   }
 
-  const categories = ['자사', '업계', '정책'].filter(c => articles.some(a => a.category === c))
+  const categories = ['위기이슈', '자사', '업계', '정책'].filter(c => articles.some(a => a.category === c))
   const activeCount = articles.filter(a => !a.excluded).length
 
   if (authLoading) {
@@ -329,7 +329,7 @@ export default function Home() {
               return (
                 <div key={cat} className="mb-6">
                   <div className="bg-[#c8102e] text-white px-4 py-2.5 rounded-t-lg flex items-center justify-between">
-                    <span className="font-bold">■ {cat === '자사' ? '자사 (Huawei)' : cat === '업계' ? '업계 (Industry)' : '정책 (Policy)'}</span>
+                    <span className="font-bold">■ {cat === '자사' ? '자사 (Huawei)' : cat === '업계' ? '업계 (Industry)' : cat === '정책' ? '정책 (Policy)' : '위기이슈 (Crisis)'}</span>
                     <span className="text-red-200 text-sm">
                       {catArticles.filter(a => !a.excluded).length}건
                       {catArticles.some(a => a.excluded) && ` (제외 ${catArticles.filter(a => a.excluded).length}건)`}
