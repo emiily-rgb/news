@@ -1,6 +1,6 @@
 {
   "functions": {
-    "src/app/api/run/route.ts": { "maxDuration": 800 }
+    "src/app/api/run/route.ts": { "maxDuration": 300 }
   },
   "crons": [
     {

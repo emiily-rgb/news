@@ -137,9 +137,7 @@ export async function filterArticles(
 export async function summarizeAndTranslate(
   articles: (RawArticle & { mediaTier: number; sentiment: Sentiment; relevanceScore: number; finalCategory: string; tag: ArticleTag; impactLevel: ImpactLevel })[]
 ): Promise<Partial<Article>[]> {
-  const results: Partial<Article>[] = []
-
-  for (const article of articles) {
+  async function summarizeOne(article: typeof articles[0]): Promise<Partial<Article> | null> {
     const safeTitle = article.title.replace(/[\\"]/g, ' ').replace(/\s+/g, ' ').trim()
     const prompt = `당신은 화웨이 임원용 뉴스 브리핑 전문 에디터다.
 
@@ -167,7 +165,6 @@ export async function summarizeAndTranslate(
   "why_it_matters_zh": "中文重要性"
 }`
 
-    let success = false
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const response = await getClient().messages.create({
@@ -177,8 +174,7 @@ export async function summarizeAndTranslate(
         })
         const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
         const parsed = robustJsonParse(text)
-
-        results.push({
+        return {
           title: article.title,
           title_zh: (parsed.title_zh as string) ?? '',
           media: article.media,
@@ -197,16 +193,23 @@ export async function summarizeAndTranslate(
           why_it_matters_ko: (parsed.why_it_matters_ko as string) ?? null,
           why_it_matters_zh: (parsed.why_it_matters_zh as string) ?? null,
           excluded: false,
-        })
-        success = true
-        break
+        }
       } catch (err) {
         console.error(`요약 실패 [시도 ${attempt}/3] [${article.title}]:`, err)
         if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * attempt))
       }
     }
-    if (!success) console.error(`요약 최종 실패, 건너뜀: ${article.title}`)
-    await new Promise(r => setTimeout(r, 300))
+    console.error(`요약 최종 실패, 건너뜀: ${article.title}`)
+    return null
+  }
+
+  // 5개씩 병렬 처리
+  const CONCURRENCY = 5
+  const results: Partial<Article>[] = []
+  for (let i = 0; i < articles.length; i += CONCURRENCY) {
+    const batch = articles.slice(i, i + CONCURRENCY)
+    const batchResults = await Promise.all(batch.map(summarizeOne))
+    results.push(...batchResults.filter((r): r is Partial<Article> => r !== null))
   }
 
   return results
