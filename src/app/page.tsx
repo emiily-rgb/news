@@ -11,7 +11,8 @@ import ManualArticleModal from '@/components/ManualArticleModal'
 import { useAuth } from '@/context/AuthContext'
 
 function downloadCsv(articles: Article[], runLog: RunLog) {
-  const date = new Date(runLog.run_at).toISOString().slice(0, 10).replace(/-/g, '')
+  const d = new Date(runLog.run_at)
+  const date = `${String(d.getFullYear()).slice(2)}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`
   const headers = ['Date', 'Category', 'Impact', 'Tag', 'Title', 'Title (ZH)', 'URL', 'Media', 'Summary (KO)', 'Summary (ZH)']
   const rows = articles
     .filter(a => !a.excluded)
@@ -41,7 +42,7 @@ function downloadCsv(articles: Article[], runLog: RunLog) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `Huawei_News_Brief_${date}.csv`
+  a.download = `${date}_Huawei_News_Brief.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
