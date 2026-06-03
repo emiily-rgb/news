@@ -38,6 +38,13 @@ const ALLOWED_DOMAINS: Record<string, string> = {
   'bloter.net': '블로터',
   'itchosun.com': 'IT조선',
   'ytn.co.kr': 'YTN',
+  'edaily.co.kr': '이데일리',
+  'hankookilbo.com': '한국일보',
+  'news1.kr': '뉴스1',
+  'heraldcorp.com': '헤럴드경제',
+  'businesspost.co.kr': '비즈니스포스트',
+  'theguru.co.kr': '더구루',
+  'thescoop.co.kr': '더스쿠프',
 }
 
 // Google News source.name → 내부 언론사명 매핑 (한글 이름과 다를 경우)
@@ -59,6 +66,13 @@ const SOURCE_NAME_MAP: Record<string, string> = {
   'AI Times': 'AI타임스',
   'Bloter': '블로터',
   'IT Chosun': 'IT조선',
+  'Edaily': '이데일리',
+  'The Korea Herald': '헤럴드경제',
+  'News1': '뉴스1',
+  'Hankook Ilbo': '한국일보',
+  'BusinessPost': '비즈니스포스트',
+  'The Guru': '더구루',
+  'The Scoop': '더스쿠프',
 }
 
 // Google News 검색 키워드 (핵심만, 병렬 처리)

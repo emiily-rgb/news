@@ -113,6 +113,13 @@ export const MEDIA_DISPLAY: Record<string, string> = {
   'AI타임스': 'AI Times',
   '블로터': 'Bloter',
   'YTN': 'YTN',
+  '이데일리': 'Edaily',
+  '한국일보': 'Hankook Ilbo',
+  '뉴스1': 'News1',
+  '헤럴드경제': 'Herald Economy',
+  '비즈니스포스트': 'BusinessPost',
+  '더구루': 'The Guru',
+  '더스쿠프': 'The Scoop',
 }
 
 export function formatMediaName(media: string): string {
