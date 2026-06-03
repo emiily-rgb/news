@@ -90,8 +90,8 @@ export default function ArticleCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
 
-          {/* 태그 + 제목 */}
-          <div className="flex items-center gap-0 mb-1.5 flex-wrap">
+          {/* 태그 */}
+          <div className="flex items-center gap-0 mb-2">
             {article.category === '자사' && article.sentiment === 'negative' && (
               <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 text-xs px-2 rounded font-semibold leading-none h-5 mr-2">⚠️ 부정</span>
             )}
@@ -110,6 +110,10 @@ export default function ArticleCard({
                 <span className="inline-flex items-center justify-center text-gray-400 text-xs font-medium leading-none tracking-wide uppercase">{article.tag}</span>
               </>
             )}
+          </div>
+
+          {/* 제목 */}
+          <div className="mb-1.5">
             <a
               href={article.link}
               target="_blank"
