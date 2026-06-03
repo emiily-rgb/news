@@ -1,4 +1,4 @@
-import { Article, RunLog } from '@/types'
+import { Article, RunLog, formatMediaName } from '@/types'
 
 const IMPACT_COLOR: Record<string, string> = {
   HIGH: '#c8102e',
@@ -74,7 +74,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
           ${a.tag ? `<span style="font-size:11px;color:#999;border:1px solid #e0e0e0;padding:2px 7px;border-radius:2px;letter-spacing:0.3px">${a.tag}</span>` : ''}
         </div>
         <a href="${a.link}" style="color:#111;font-size:15px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
-        <div style="font-size:12px;color:#bbb;margin-bottom:8px">${a.media} &nbsp;·&nbsp; ${pubDate}</div>
+        <div style="font-size:12px;color:#bbb;margin-bottom:8px">${formatMediaName(a.media)} &nbsp;·&nbsp; ${pubDate}</div>
         ${summary.length > 0 ? `<div>${summary.map(s => bulletItem(s)).join('')}</div>` : ''}
       </td></tr>`
     }).join('')

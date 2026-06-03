@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Article } from '@/types'
+import { Article, formatMediaName } from '@/types'
 
 interface Props {
   article: Article
@@ -93,19 +93,19 @@ export default function ArticleCard({
           {/* 태그 + 제목 */}
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {article.category === '자사' && article.sentiment === 'negative' && (
-              <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">⚠️ 부정</span>
+              <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium leading-none h-5">⚠️ 부정</span>
             )}
             {article.impact_level === 'HIGH' && (
-              <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-medium">HIGH</span>
+              <span className="inline-flex items-center justify-center bg-red-100 text-red-600 text-xs px-2 rounded font-semibold leading-none h-5">HIGH</span>
             )}
             {article.impact_level === 'MEDIUM' && (
-              <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-medium">MEDIUM</span>
+              <span className="inline-flex items-center justify-center bg-yellow-100 text-yellow-700 text-xs px-2 rounded font-semibold leading-none h-5">MEDIUM</span>
             )}
             {article.impact_level === 'LOW' && (
-              <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full font-medium">LOW</span>
+              <span className="inline-flex items-center justify-center bg-gray-100 text-gray-500 text-xs px-2 rounded font-semibold leading-none h-5">LOW</span>
             )}
             {article.tag && (
-              <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full font-medium">{article.tag}</span>
+              <span className="inline-flex items-center justify-center border border-gray-300 text-gray-500 text-xs px-2 rounded leading-none h-5">{article.tag}</span>
             )}
             <a
               href={article.link}
@@ -144,7 +144,7 @@ export default function ArticleCard({
 
           <div className="flex items-center gap-2 text-gray-400 text-xs mb-3 flex-wrap">
             <span>
-              {article.media}
+              {formatMediaName(article.media)}
               {article.media_tier <= 2 && <span className="ml-1 text-blue-400">T{article.media_tier}</span>}
             </span>
             <span>|</span>

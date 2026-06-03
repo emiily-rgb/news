@@ -93,6 +93,29 @@ export const ALLOWED_MEDIA: Record<string, string> = {
   'inews24.com': '아이뉴스24',
 }
 
+// 매체명 한글 → 영문 변환
+export const MEDIA_DISPLAY: Record<string, string> = {
+  '연합뉴스': 'Yonhap News',
+  '조선일보': 'Chosun Ilbo',
+  '중앙일보': 'JoongAng Ilbo',
+  '동아일보': 'Donga Ilbo',
+  '한국경제': 'Korea Economic Daily',
+  '매일경제': 'Maeil Business News',
+  '조선비즈': 'ChosunBiz',
+  '머니투데이': 'Money Today',
+  '전자신문': 'Electronic Times',
+  'ZDNet Korea': 'ZDNet Korea',
+  '디지털데일리': 'Digital Daily',
+  '아이뉴스24': 'iNews24',
+  '서울경제': 'Seoul Economic Daily',
+  '연합뉴스TV': 'Yonhap News TV',
+  'IT조선': 'IT Chosun',
+}
+
+export function formatMediaName(media: string): string {
+  return MEDIA_DISPLAY[media] ?? media
+}
+
 export const DEFAULT_CONFIG: Config = {
   keywords: [
     // 자사 (Huawei)
