@@ -10,6 +10,43 @@ import EmailPreviewModal from '@/components/EmailPreviewModal'
 import ManualArticleModal from '@/components/ManualArticleModal'
 import { useAuth } from '@/context/AuthContext'
 
+function downloadCsv(articles: Article[], runLog: RunLog) {
+  const date = new Date(runLog.run_at).toISOString().slice(0, 10).replace(/-/g, '')
+  const headers = ['Date', 'Category', 'Impact', 'Tag', 'Title', 'Title (ZH)', 'URL', 'Media', 'Summary (KO)', 'Summary (ZH)', 'Why It Matters']
+  const rows = articles
+    .filter(a => !a.excluded)
+    .sort((a, b) => {
+      const catOrder = ['위기이슈', '자사', '업계', '정책']
+      const catDiff = catOrder.indexOf(a.category) - catOrder.indexOf(b.category)
+      return catDiff !== 0 ? catDiff : (a.order_index ?? 0) - (b.order_index ?? 0)
+    })
+    .map(a => [
+      new Date(a.pub_date).toLocaleDateString('ko-KR'),
+      a.category,
+      a.impact_level,
+      a.tag ?? '',
+      a.title,
+      a.title_zh ?? '',
+      a.link,
+      a.media,
+      a.summary_ko.join(' / '),
+      a.summary_zh.join(' / '),
+      a.why_it_matters_ko ?? '',
+    ])
+
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n')
+
+  const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `Huawei_News_Brief_${date}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function initOrderIndex(arts: Article[]): Article[] {
   const cats = ['위기이슈', '자사', '업계', '정책']
   const result = arts.map(a => ({ ...a }))
@@ -389,6 +426,14 @@ export default function Home() {
                 >
                   {savingDraft ? '저장 중...' : '초안 저장'}
                 </button>
+                {runLog && (
+                  <button
+                    onClick={() => downloadCsv(articles, runLog)}
+                    className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
+                  >
+                    CSV 다운로드
+                  </button>
+                )}
                 <button onClick={openPreview}
                   className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm transition">
                   이메일 미리보기
