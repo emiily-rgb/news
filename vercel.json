@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "src/app/api/run/route.ts": { "maxDuration": 800 }
+  },
   "crons": [
     {
       "path": "/api/run",
