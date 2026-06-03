@@ -139,7 +139,7 @@ export default function InsightPanel({ runLog, onUpdate, onRegenerate }: Props) 
           </div>
         ) : !hasContent ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-400 mb-3">Executive Summary가 없습니다</p>
+            <p className="text-sm text-gray-400 mb-3">오늘의 하이라이트가 없습니다</p>
             <button onClick={regenerate} disabled={regenerating}
               className="text-sm bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-2 rounded transition disabled:opacity-50">
               {regenerating ? '생성 중…' : '생성하기'}
