@@ -49,7 +49,13 @@ export async function GET() {
   return POST(undefined, undefined, extraDays)
 }
 
-export async function POST(_req?: Request, _ctx?: unknown, extraDays = 0) {
+export async function POST(_req?: Request | NextResponse, _ctx?: unknown, extraDays = 0) {
+  // hoursBack 쿼리 파라미터 지원 (수동 실행 시 커스텀 수집 기간)
+  if (_req && 'url' in _req) {
+    const url = new URL((_req as Request).url)
+    const customHours = url.searchParams.get('hoursBack')
+    if (customHours) extraDays = Math.max(0, Math.ceil((Number(customHours) - 24) / 24))
+  }
   const supabase = createServiceClient()
   const runId = uuidv4()
 
