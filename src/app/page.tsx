@@ -231,11 +231,11 @@ export default function Home() {
             <p className="text-xs text-gray-400">{isAdmin ? '최고 관리자' : '컨텐츠 관리자'}</p>
           </div>
           {isAdmin && (
-            <button onClick={() => setShowSettings(true)} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm transition">
+            <button onClick={() => setShowSettings(true)} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded text-sm transition">
               설정
             </button>
           )}
-          <button onClick={signOut} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm transition">
+          <button onClick={signOut} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded text-sm transition">
             로그아웃
           </button>
         </div>
@@ -243,7 +243,7 @@ export default function Home() {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* 뉴스 수집 카드 */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-5">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h2 className="text-sm font-semibold text-gray-800">뉴스 수집</h2>
@@ -258,7 +258,7 @@ export default function Home() {
                 <button
                   onClick={() => setShowManualAdd(true)}
                   disabled={running}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm transition disabled:opacity-40"
+                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-40"
                 >
                   + 기사 직접 추가
                 </button>
@@ -284,12 +284,12 @@ export default function Home() {
 
         {/* 최근 실행 이력 */}
         {pastRuns.length > 0 && !runLog && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">최근 실행 이력</h3>
             <div className="space-y-1.5">
               {pastRuns.slice(0, 5).map(r => (
                 <button key={r.id} onClick={() => loadRun(r.id!)}
-                  className="w-full text-left px-4 py-2.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition text-sm flex items-center justify-between">
+                  className="w-full text-left px-4 py-2.5 rounded bg-gray-50 hover:bg-gray-100 transition text-sm flex items-center justify-between">
                   <span className="text-gray-700">{new Date(r.run_at!).toLocaleString('ko-KR')}</span>
                   <span className="text-gray-400 text-xs">{r.total_after_filter}건</span>
                 </button>
@@ -344,7 +344,7 @@ export default function Home() {
                       {catArticles.some(a => a.excluded) && ` · 제외 ${catArticles.filter(a => a.excluded).length}건`}
                     </span>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100">
+                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
                     {[...catArticles].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)).map((article, idx, sorted) => (
                       <ArticleCard
                         key={article.id}
@@ -367,7 +367,7 @@ export default function Home() {
             })}
 
             {/* 하단 액션 바 */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between flex-wrap gap-3">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between flex-wrap gap-3">
               <div>
                 <p className="text-sm text-gray-600">발송 대상 <strong className="text-gray-900">{activeCount}건</strong></p>
                 {(draftSaved || runLog?.draft_saved_at) && (
@@ -380,12 +380,12 @@ export default function Home() {
                 <button
                   onClick={saveDraft}
                   disabled={savingDraft}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm transition disabled:opacity-50"
+                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-50"
                 >
                   {savingDraft ? '저장 중...' : '초안 저장'}
                 </button>
                 <button onClick={openPreview}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm transition">
+                  className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm transition">
                   이메일 미리보기
                 </button>
                 {isAdmin && (
