@@ -148,7 +148,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
 <table width="760" cellpadding="0" cellspacing="0" bgcolor="#ffffff" class="email-container" style="background:#fff;border-radius:4px;overflow:hidden;max-width:760px;border:1px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
 
   <!-- 헤더 -->
-  <tr><td class="email-header" style="padding:24px 28px;border-bottom:2px solid #c8102e">
+  <tr><td class="email-header" bgcolor="#ffffff" style="padding:24px 28px;background:#ffffff;border-bottom:2px solid #c8102e">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="vertical-align:middle">
         <img src="https://news-ebon-alpha.vercel.app/huawei_logo.png" alt="HUAWEI" height="28" style="display:inline-block;vertical-align:middle;margin-right:10px" />
@@ -162,14 +162,14 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   </td></tr>
 
   <!-- 언어 네비게이션 -->
-  <tr><td class="email-nav" style="padding:10px 28px;background:#fafafa;border-bottom:1px solid #f0f0f0">
+  <tr><td class="email-nav" bgcolor="#fafafa" style="padding:10px 28px;background:#fafafa;border-bottom:1px solid #f0f0f0">
     <a href="#zh-section" style="font-size:14px;font-weight:600;color:#c8102e;text-decoration:none;margin-right:12px">中文</a>
     <span style="font-size:14px;color:#ddd">|</span>
     <a href="#ko-section" style="font-size:14px;font-weight:600;color:#555;text-decoration:none;margin-left:12px">한국어</a>
   </td></tr>
 
   <!-- 본문 -->
-  <tr><td class="email-body" style="padding:24px 28px">
+  <tr><td class="email-body" bgcolor="#ffffff" style="padding:24px 28px;background:#ffffff">
     <table width="100%" cellpadding="0" cellspacing="0">
       ${execSummary}
 
@@ -188,7 +188,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   </td></tr>
 
   <!-- 푸터 -->
-  <tr><td class="email-footer" style="padding:16px 28px;background:#fafafa;border-top:1px solid #f0f0f0">
+  <tr><td class="email-footer" bgcolor="#fafafa" style="padding:16px 28px;background:#fafafa;border-top:1px solid #f0f0f0">
     <div style="font-size:13px;color:#ccc;text-align:center">
       ${new Date(runLog.run_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;·&nbsp; Huawei Korea
     </div>
