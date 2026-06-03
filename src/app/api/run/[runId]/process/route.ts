@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getConfig } from '@/lib/config'
 import { filterArticles, summarizeAndTranslate, generateInsight } from '@/services/ai'
@@ -18,10 +18,13 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ ru
   if (!runData) return NextResponse.json({ error: 'run을 찾을 수 없음' }, { status: 404 })
   if (runData.status === 'completed') return NextResponse.json({ message: '이미 완료됨' })
 
-  // 2단계 시작
-  processPipeline(runId, supabase, runData.raw_articles ?? []).catch(async (err) => {
-    console.error('처리 오류:', err)
-    await supabase.from('run_logs').update({ status: 'failed', error: String(err) }).eq('id', runId)
+  after(async () => {
+    try {
+      await processPipeline(runId, supabase, runData.raw_articles ?? [])
+    } catch (err) {
+      console.error('처리 오류:', err)
+      await supabase.from('run_logs').update({ status: 'failed' }).eq('id', runId)
+    }
   })
 
   return NextResponse.json({ ok: true })

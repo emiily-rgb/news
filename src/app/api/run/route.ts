@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getConfig } from '@/lib/config'
 import { collectArticles } from '@/services/collector'
@@ -71,10 +71,14 @@ export async function POST(_req?: Request, _ctx?: unknown, extraDays = 0) {
 
   if (logError) return NextResponse.json({ error: 'DB 연결 실패' }, { status: 500 })
 
-  // 1단계: 수집만 실행
-  collectAndSave(runId, supabase, (_ctx as any)?.extraDays ?? extraDays).catch(async (err) => {
-    console.error('수집 오류:', err)
-    await supabase.from('run_logs').update({ status: 'failed', error: String(err) }).eq('id', runId)
+  // 응답 후에도 계속 실행되도록 after() 사용
+  after(async () => {
+    try {
+      await collectAndSave(runId, supabase, (_ctx as any)?.extraDays ?? extraDays)
+    } catch (err) {
+      console.error('수집 오류:', err)
+      await supabase.from('run_logs').update({ status: 'failed' }).eq('id', runId)
+    }
   })
 
   return NextResponse.json({ runId })
