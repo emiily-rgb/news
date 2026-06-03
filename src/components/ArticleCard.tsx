@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { Article, formatMediaName } from '@/types'
 
 interface Props {
@@ -22,49 +22,25 @@ function BulletEditor({ lines, onChange, autoFocusFirst }: {
   onChange: (lines: string[]) => void
   autoFocusFirst?: boolean
 }) {
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
-  const focusIndex = useRef<number | null>(null)
-
-  useEffect(() => {
-    if (focusIndex.current !== null) {
-      inputRefs.current[focusIndex.current]?.focus()
-      focusIndex.current = null
-    }
-  }, [lines.length])
+  const text = lines.join('\n')
 
   return (
-    <div>
-      {lines.map((line, i) => (
-        <div key={i} className="flex items-center gap-1.5 mb-1">
-          <span className="text-gray-300 text-sm shrink-0">•</span>
-          <input
-            ref={el => { inputRefs.current[i] = el }}
-            autoFocus={autoFocusFirst && i === 0}
-            value={line}
-            onChange={e => {
-              const next = [...lines]
-              next[i] = e.target.value
-              onChange(next)
-            }}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                const next = [...lines]
-                next.splice(i + 1, 0, '')
-                focusIndex.current = i + 1
-                onChange(next)
-              } else if (e.key === 'Backspace' && line === '' && lines.length > 1) {
-                e.preventDefault()
-                const next = [...lines]
-                next.splice(i, 1)
-                focusIndex.current = Math.max(0, i - 1)
-                onChange(next)
-              }
-            }}
-            className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-300"
-          />
-        </div>
-      ))}
+    <div className="relative">
+      <div className="absolute left-2 top-2 flex flex-col gap-0 pointer-events-none" aria-hidden>
+        {lines.map((_, i) => (
+          <span key={i} className="text-gray-300 text-sm leading-[1.6rem]">•</span>
+        ))}
+      </div>
+      <textarea
+        autoFocus={autoFocusFirst}
+        value={text}
+        rows={Math.max(lines.length, 1)}
+        onChange={e => {
+          const next = e.target.value.split('\n')
+          onChange(next)
+        }}
+        className="w-full border border-blue-300 rounded pl-5 pr-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none leading-[1.6rem]"
+      />
     </div>
   )
 }
