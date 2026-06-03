@@ -99,7 +99,12 @@ export default function Home() {
       setRunLog(data.runLog)
       setCurrentStep(data.runLog?.current_step ?? null)
       setArticles(initOrderIndex(data.articles ?? []))
-      if (data.runLog?.status !== 'running') {
+
+      const status = data.runLog?.status
+      if (status === 'collected') {
+        // 수집 완료 → 2단계 자동 시작
+        fetch(`/api/run/${id}/process`, { method: 'POST' })
+      } else if (status !== 'running') {
         clearInterval(interval)
         setPollInterval(null)
         setRunning(false)
@@ -321,6 +326,7 @@ export default function Home() {
               {(() => {
                 const steps = [
                   { key: 'collecting',  label: 'RSS 수집' },
+                  { key: 'collected',   label: '수집완료' },
                   { key: 'filtering',   label: 'AI 필터링' },
                   { key: 'selecting',   label: '기사 선택' },
                   { key: 'summarizing', label: '요약 · 번역' },
