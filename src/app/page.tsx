@@ -12,7 +12,7 @@ import { useAuth } from '@/context/AuthContext'
 
 function downloadCsv(articles: Article[], runLog: RunLog) {
   const date = new Date(runLog.run_at).toISOString().slice(0, 10).replace(/-/g, '')
-  const headers = ['Date', 'Category', 'Impact', 'Tag', 'Title', 'URL', 'Media', 'Summary']
+  const headers = ['Date', 'Category', 'Impact', 'Tag', 'Title', 'Title (ZH)', 'URL', 'Media', 'Summary (KO)', 'Summary (ZH)']
   const rows = articles
     .filter(a => !a.excluded)
     .sort((a, b) => {
@@ -26,9 +26,11 @@ function downloadCsv(articles: Article[], runLog: RunLog) {
       a.impact_level,
       a.tag ?? '',
       a.title,
+      a.title_zh ?? '',
       a.link,
       a.media,
       a.summary_ko.join(' / '),
+      a.summary_zh.join(' / '),
     ])
 
   const csvContent = [headers, ...rows]
