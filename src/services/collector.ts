@@ -153,7 +153,7 @@ export async function collectArticles(
         const pub = item.pubDate ? new Date(item.pubDate) : null
         if (!pub || pub < cutoff) continue
 
-        const title = item.title.replace(/<[^>]+>/g, '')
+        const title = item.title.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'")
         const key = normalizeTitle(title)
         if (seen.has(key)) continue
         seen.add(key)

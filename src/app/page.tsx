@@ -73,6 +73,7 @@ export default function Home() {
   const [savingDraft, setSavingDraft] = useState(false)
   const [showManualAdd, setShowManualAdd] = useState(false)
   const [currentStep, setCurrentStep] = useState<string | null>(null)
+  const [reprocessing, setReprocessing] = useState(false)
 
   useEffect(() => {
     fetch('/api/config').then(r => r.json()).then(c => setConfigRecipients(c.recipients ?? []))
@@ -229,6 +230,29 @@ export default function Home() {
     })
   }
 
+  async function reprocessMissing() {
+    if (!runId) return
+    setReprocessing(true)
+    const res = await fetch(`/api/run/${runId}/reprocess`, { method: 'POST' })
+    const { count } = await res.json()
+    if (count === 0) {
+      setReprocessing(false)
+      return
+    }
+    // 완료까지 폴링
+    const poll = setInterval(async () => {
+      const r = await fetch(`/api/run/${runId}`)
+      const data = await r.json()
+      const arts: Article[] = data.articles ?? []
+      const stillMissing = arts.filter(a => !a.excluded && (!a.summary_ko || a.summary_ko.length === 0))
+      setArticles(initOrderIndex(arts))
+      if (stillMissing.length === 0) {
+        clearInterval(poll)
+        setReprocessing(false)
+      }
+    }, 3000)
+  }
+
   async function saveDraft() {
     if (!runId) return
     setSavingDraft(true)
@@ -303,6 +327,15 @@ export default function Home() {
               )}
             </div>
             <div className="flex gap-2">
+              {runId && articles.some(a => !a.excluded && (!a.summary_ko || a.summary_ko.length === 0)) && (
+                <button
+                  onClick={reprocessMissing}
+                  disabled={running || reprocessing}
+                  className="border border-amber-300 hover:bg-amber-50 text-amber-700 px-4 py-2 rounded text-sm transition disabled:opacity-40"
+                >
+                  {reprocessing ? '재생성 중...' : '⟳ 요약 재생성'}
+                </button>
+              )}
               {runId && (
                 <button
                   onClick={() => setShowManualAdd(true)}
