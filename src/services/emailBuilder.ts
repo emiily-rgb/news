@@ -142,7 +142,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Apple SD Gothic Neo','Microsoft YaHei',Arial,sans-serif">
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Apple SD Gothic Neo','PingFang SC','Noto Sans KR','Noto Sans SC','Malgun Gothic','Microsoft YaHei',sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4">
 <tr><td align="center" class="email-outer" style="padding:24px 10px">
 <table width="640" cellpadding="0" cellspacing="0" class="email-container" style="background:#fff;border-radius:4px;overflow:hidden;max-width:640px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
