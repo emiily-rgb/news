@@ -19,22 +19,27 @@ function normalizeTitle(title: string): string {
   return title.replace(/[\s\W]/g, '').toLowerCase()
 }
 
-// 언론사 직접 RSS 피드
-const MEDIA_FEEDS: { url: string; name: string }[] = [
-  { url: 'https://www.yna.co.kr/rss/news.xml',                        name: '연합뉴스' },
-  { url: 'https://www.chosun.com/arc/outboundfeeds/rss/',             name: '조선일보' },
-  { url: 'https://rss.joins.com/joins_news_list.xml',                 name: '중앙일보' },
-  { url: 'https://rss.donga.com/total.xml',                           name: '동아일보' },
-  { url: 'https://www.hankyung.com/feed/all-news',                    name: '한국경제' },
-  { url: 'https://www.mk.co.kr/rss/40300001/',                        name: '매일경제' },
-  { url: 'https://biz.chosun.com/arc/outboundfeeds/rss/',             name: '조선비즈' },
-  { url: 'https://rss.mt.co.kr/mt_news.xml',                         name: '머니투데이' },
-  { url: 'https://rss.etnews.com/Section901.xml',                     name: '전자신문' },
-  { url: 'https://rss.etnews.com/Section902.xml',                     name: '전자신문' },
-  { url: 'https://www.zdnet.co.kr/rss/news.xml',                      name: 'ZDNet Korea' },
-  { url: 'https://www.ddaily.co.kr/rss/allArticle.xml',               name: '디지털데일리' },
-  { url: 'https://inews24.com/rss/allnews.xml',                       name: '아이뉴스24' },
+// 직접 구독 가능한 RSS 피드
+const DIRECT_FEEDS: { url: string; name: string }[] = [
+  { url: 'https://www.yna.co.kr/rss/news.xml',           name: '연합뉴스' },
+  { url: 'https://rss.donga.com/total.xml',              name: '동아일보' },
+  { url: 'https://www.hankyung.com/feed/all-news',       name: '한국경제' },
+  { url: 'https://www.mk.co.kr/rss/40300001/',           name: '매일경제' },
+  { url: 'https://rss.mt.co.kr/mt_news.xml',            name: '머니투데이' },
+  { url: 'https://rss.etnews.com/Section901.xml',        name: '전자신문' },
+  { url: 'https://rss.etnews.com/Section902.xml',        name: '전자신문' },
 ]
+
+// RSS 없는 언론사 — Google News 사이트 검색 (핵심 키워드만)
+const GOOGLE_SITE_FEEDS: { site: string; name: string }[] = [
+  { site: 'chosun.com',    name: '조선일보' },
+  { site: 'joongang.co.kr', name: '중앙일보' },
+  { site: 'biz.chosun.com', name: '조선비즈' },
+  { site: 'zdnet.co.kr',   name: 'ZDNet Korea' },
+  { site: 'ddaily.co.kr',  name: '디지털데일리' },
+  { site: 'inews24.com',   name: '아이뉴스24' },
+]
+const GOOGLE_SITE_KEYWORDS = ['화웨이', 'Huawei', 'AI 반도체', '수출통제', '미국 제재']
 
 export async function collectArticles(
   categories: CategoryKeywords[],
@@ -48,44 +53,59 @@ export async function collectArticles(
     cat.keywords.map(kw => ({ category: cat.category, keyword: kw, lower: kw.toLowerCase() }))
   )
 
-  // 모든 피드 병렬 수집
-  const feedResults = await Promise.all(
-    MEDIA_FEEDS.map(async ({ url, name }) => {
+  function matchKeyword(title: string): { category: string; keyword: string } | null {
+    const lower = title.toLowerCase()
+    return allKeywords.find(k => lower.includes(k.lower)) ?? null
+  }
+
+  function addArticle(articles: RawArticle[], item: { title: string; link: string; pubDate: string }, media: string) {
+    const matched = matchKeyword(item.title)
+    if (!matched) return
+    const key = normalizeTitle(item.title)
+    if (seen.has(key)) return
+    seen.add(key)
+    articles.push({ title: item.title, link: item.link, pubDate: item.pubDate, media, category: matched.category, keyword: matched.keyword })
+  }
+
+  // 1. 직접 RSS 피드 병렬 수집
+  const directResults = await Promise.all(
+    DIRECT_FEEDS.map(async ({ url, name }) => {
       const articles: RawArticle[] = []
       try {
-        const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 10000)
         const feed = await parser.parseURL(url)
-        clearTimeout(timeout)
-
         for (const item of feed.items ?? []) {
           if (!item.title || !item.link) continue
           const pub = item.pubDate ? new Date(item.pubDate) : null
           if (!pub || pub < cutoff) continue
-
-          const titleLower = item.title.toLowerCase()
-          const matched = allKeywords.find(k => titleLower.includes(k.lower))
-          if (!matched) continue
-
-          const key = normalizeTitle(item.title)
-          if (seen.has(key)) continue
-          seen.add(key)
-
-          articles.push({
-            title: item.title,
-            link: item.link,
-            pubDate: pub.toISOString(),
-            media: name,
-            category: matched.category,
-            keyword: matched.keyword,
-          })
+          addArticle(articles, { title: item.title, link: item.link, pubDate: pub.toISOString() }, name)
         }
       } catch (err) {
-        console.error(`RSS 수집 실패 [${name} / ${url}]:`, err)
+        console.error(`RSS 수집 실패 [${name}]:`, err)
       }
       return articles
     })
   )
 
-  return feedResults.flat()
+  // 2. Google News 사이트별 검색 (RSS 없는 언론사용, 핵심 키워드만)
+  const googleResults = await Promise.all(
+    GOOGLE_SITE_FEEDS.flatMap(({ site, name }) =>
+      GOOGLE_SITE_KEYWORDS.map(async (kw) => {
+        const articles: RawArticle[] = []
+        try {
+          const q = encodeURIComponent(`${kw} site:${site}`)
+          const url = `https://news.google.com/rss/search?q=${q}&hl=ko&gl=KR&ceid=KR:ko`
+          const feed = await parser.parseURL(url)
+          for (const item of (feed.items ?? []).slice(0, 5)) {
+            if (!item.title || !item.link) continue
+            const pub = item.pubDate ? new Date(item.pubDate) : null
+            if (!pub || pub < cutoff) continue
+            addArticle(articles, { title: item.title, link: item.link, pubDate: pub.toISOString() }, name)
+          }
+        } catch { /* ignore */ }
+        return articles
+      })
+    )
+  )
+
+  return [...directResults.flat(), ...googleResults.flat()]
 }
