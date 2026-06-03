@@ -110,11 +110,13 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
 
   // ── 섹션 구분선 ──
   const sectionDivider = `
-    <tr><td style="padding:24px 0 8px 0">
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td style="border-top:1px solid #ebebeb"></td>
-      </tr></table>
-      <div style="font-size:12px;color:#ccc;text-align:center;padding-top:10px;letter-spacing:0.5px">▼ 한국어 Korean</div>
+    <tr><td style="padding:32px 0 8px 0">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="border-top:2px solid #c8102e"></td></tr>
+      </table>
+      <div style="text-align:center;padding-top:16px;padding-bottom:4px">
+        <span style="font-size:13px;font-weight:600;color:#111">▼ 한국어</span>
+      </div>
     </td></tr>`
 
   return `<!DOCTYPE html>
@@ -139,18 +141,27 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     </tr></table>
   </td></tr>
 
+  <!-- 언어 네비게이션 -->
+  <tr><td style="padding:10px 28px;background:#fafafa;border-bottom:1px solid #f0f0f0">
+    <a href="#zh-section" style="font-size:12px;font-weight:600;color:#c8102e;text-decoration:none;margin-right:12px">中文</a>
+    <span style="font-size:12px;color:#ddd">|</span>
+    <a href="#ko-section" style="font-size:12px;font-weight:600;color:#555;text-decoration:none;margin-left:12px">한국어</a>
+  </td></tr>
+
   <!-- 본문 -->
   <tr><td style="padding:24px 28px">
     <table width="100%" cellpadding="0" cellspacing="0">
       ${execSummary}
 
       <!-- 중문 섹션 -->
+      <tr><td><a name="zh-section" id="zh-section"></a></td></tr>
       ${zhPart}
 
       <!-- 구분선 -->
       ${sectionDivider}
 
       <!-- 국문 섹션 -->
+      <tr><td><a name="ko-section" id="ko-section"></a></td></tr>
       ${koPart}
 
     </table>
