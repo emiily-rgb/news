@@ -70,12 +70,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       return `
       <tr><td style="padding:14px 0;border-bottom:1px solid #f5f5f5">
         <div style="margin-bottom:7px">
-          <span style="display:inline-block;font-size:11px;font-weight:600;color:#fff;background:${impactColor};padding:4px 8px;border-radius:2px;margin-right:4px;letter-spacing:0.3px;line-height:1">${a.impact_level}</span>
-          ${a.tag ? `<span style="font-size:11px;color:#999;padding-left:4px;letter-spacing:0.5px">| ${a.tag}</span>` : ''}
+          <span style="display:inline-block;font-size:12px;font-weight:600;color:#fff;background:${impactColor};padding:4px 9px;border-radius:2px;margin-right:4px;letter-spacing:0.3px;line-height:1">${a.impact_level}</span>
+          ${a.tag ? `<span style="font-size:12px;color:#888;padding-left:4px;letter-spacing:0.5px">| ${a.tag}</span>` : ''}
         </div>
         ${a.image_url ? `<img src="${a.image_url}" alt="" width="100%" style="display:block;width:100%;max-height:220px;object-fit:cover;border-radius:3px;margin-bottom:10px" />` : ''}
         <a href="${a.link}" style="color:#111;font-size:15px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
-        <div style="font-size:12px;color:#bbb;margin-bottom:8px">${formatMediaName(a.media)} &nbsp;·&nbsp; ${pubDate}</div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:8px">${formatMediaName(a.media)} &nbsp;·&nbsp; ${pubDate}</div>
         ${summary.length > 0 ? `<div>${summary.map(s => bulletItem(s)).join('')}</div>` : ''}
       </td></tr>`
     }).join('')
@@ -89,7 +89,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
           <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:16px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabelZh(cat)}</td>
-          <td style="text-align:right;font-size:12px;color:#bbb">${catArticles.length} articles</td>
+          <td style="text-align:right;font-size:13px;color:#bbb">${catArticles.length} articles</td>
         </tr></table>
       </td></tr>
       ${articleRows(catArticles, 'zh')}`
@@ -103,7 +103,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
           <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:16px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabel(cat)}</td>
-          <td style="text-align:right;font-size:12px;color:#bbb">${catArticles.length} articles</td>
+          <td style="text-align:right;font-size:13px;color:#bbb">${catArticles.length} articles</td>
         </tr></table>
       </td></tr>
       ${articleRows(catArticles, 'ko')}`
@@ -136,17 +136,17 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         <span style="color:#888;font-size:15px;font-weight:500;margin-left:10px;vertical-align:middle">Daily News Brief</span>
       </td>
       <td style="text-align:right;vertical-align:middle">
-        <div style="color:#555;font-size:12px">${date}</div>
-        <div style="color:#bbb;font-size:12px;margin-top:2px">${activeArticles.length} articles</div>
+        <div style="color:#555;font-size:13px">${date}</div>
+        <div style="color:#bbb;font-size:13px;margin-top:2px">${activeArticles.length} articles</div>
       </td>
     </tr></table>
   </td></tr>
 
   <!-- 언어 네비게이션 -->
   <tr><td style="padding:10px 28px;background:#fafafa;border-bottom:1px solid #f0f0f0">
-    <a href="#zh-section" style="font-size:12px;font-weight:600;color:#c8102e;text-decoration:none;margin-right:12px">中文</a>
-    <span style="font-size:12px;color:#ddd">|</span>
-    <a href="#ko-section" style="font-size:12px;font-weight:600;color:#555;text-decoration:none;margin-left:12px">한국어</a>
+    <a href="#zh-section" style="font-size:13px;font-weight:600;color:#c8102e;text-decoration:none;margin-right:12px">中文</a>
+    <span style="font-size:13px;color:#ddd">|</span>
+    <a href="#ko-section" style="font-size:13px;font-weight:600;color:#555;text-decoration:none;margin-left:12px">한국어</a>
   </td></tr>
 
   <!-- 본문 -->
