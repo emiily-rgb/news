@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { RunLog } from '@/types'
 
 interface Props {
@@ -18,12 +18,23 @@ function BulletEditor({
   onChange: (lines: string[]) => void
   autoFocusFirst?: boolean
 }) {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const focusIndex = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (focusIndex.current !== null) {
+      inputRefs.current[focusIndex.current]?.focus()
+      focusIndex.current = null
+    }
+  }, [lines.length])
+
   return (
     <div>
       {lines.map((line, i) => (
         <div key={i} className="flex items-center gap-1.5 mb-1">
           <span className="text-gray-300 text-sm shrink-0">•</span>
           <input
+            ref={el => { inputRefs.current[i] = el }}
             autoFocus={autoFocusFirst && i === 0}
             value={line}
             onChange={e => {
@@ -36,11 +47,13 @@ function BulletEditor({
                 e.preventDefault()
                 const next = [...lines]
                 next.splice(i + 1, 0, '')
+                focusIndex.current = i + 1
                 onChange(next)
               } else if (e.key === 'Backspace' && line === '' && lines.length > 1) {
                 e.preventDefault()
                 const next = [...lines]
                 next.splice(i, 1)
+                focusIndex.current = Math.max(0, i - 1)
                 onChange(next)
               }
             }}
