@@ -12,10 +12,23 @@ interface Props {
   onSent?: () => void
 }
 
-export default function EmailPreviewModal({ html, runLog, recipients, isAdmin, onClose, onSent }: Props) {
+export default function EmailPreviewModal({ html, runLog, recipients: initialRecipients, isAdmin, onClose, onSent }: Props) {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [recipients, setRecipients] = useState<string[]>(initialRecipients)
+  const [newEmail, setNewEmail] = useState('')
+
+  function addRecipient() {
+    const email = newEmail.trim().toLowerCase()
+    if (!email || !email.includes('@') || recipients.includes(email)) return
+    setRecipients(prev => [...prev, email])
+    setNewEmail('')
+  }
+
+  function removeRecipient(email: string) {
+    setRecipients(prev => prev.filter(r => r !== email))
+  }
 
   const d = new Date(runLog.run_at)
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
@@ -54,11 +67,27 @@ export default function EmailPreviewModal({ html, runLog, recipients, isAdmin, o
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
-          <div>
+          <div className="flex-1 min-w-0">
             <h3 className="font-bold text-gray-800">이메일 미리보기</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              수신자: {recipients.length > 0 ? recipients.join(', ') : '(미설정 — 설정에서 추가)'}
-            </p>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {recipients.map(r => (
+                <span key={r} className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full">
+                  {r}
+                  <button onClick={() => removeRecipient(r)} className="text-gray-400 hover:text-red-500 leading-none">×</button>
+                </span>
+              ))}
+              <div className="flex items-center gap-1">
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={e => setNewEmail(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addRecipient()}
+                  placeholder="이메일 추가"
+                  className="text-xs border border-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
+                />
+                <button onClick={addRecipient} className="text-xs text-[#c8102e] hover:underline">+ 추가</button>
+              </div>
+            </div>
           </div>
           <div className="flex gap-2 items-center">
             <button
