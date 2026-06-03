@@ -35,7 +35,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   })
 
   const activeArticles = articles.filter(a => !a.excluded)
-  const categories = ['위기이슈', '자사', '업계', '정책'].filter(c => activeArticles.some(a => a.category === c))
+  const categories = ['자사', '업계', '정책', '위기이슈'].filter(c => activeArticles.some(a => a.category === c))
 
   // ── Executive Summary ──
   const execSummary = (runLog.insight_zh?.length > 0 || runLog.insight_ko?.length > 0) ? `

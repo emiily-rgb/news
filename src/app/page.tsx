@@ -17,7 +17,7 @@ function downloadCsv(articles: Article[], runLog: RunLog) {
   const rows = articles
     .filter(a => !a.excluded)
     .sort((a, b) => {
-      const catOrder = ['위기이슈', '자사', '업계', '정책']
+      const catOrder = ['자사', '업계', '정책', '위기이슈']
       const catDiff = catOrder.indexOf(a.category) - catOrder.indexOf(b.category)
       return catDiff !== 0 ? catDiff : (a.order_index ?? 0) - (b.order_index ?? 0)
     })
@@ -48,7 +48,7 @@ function downloadCsv(articles: Article[], runLog: RunLog) {
 }
 
 function initOrderIndex(arts: Article[]): Article[] {
-  const cats = ['위기이슈', '자사', '업계', '정책']
+  const cats = ['자사', '업계', '정책', '위기이슈']
   const result = arts.map(a => ({ ...a }))
   cats.forEach(cat => {
     const catItems = result.filter(a => a.category === cat)
@@ -248,7 +248,7 @@ export default function Home() {
     setShowPreview(true)
   }
 
-  const categories = ['위기이슈', '자사', '업계', '정책'].filter(c => articles.some(a => a.category === c))
+  const categories = ['자사', '업계', '정책', '위기이슈'].filter(c => articles.some(a => a.category === c))
   const activeCount = articles.filter(a => !a.excluded).length
 
   if (authLoading) {

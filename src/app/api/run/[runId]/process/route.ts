@@ -59,12 +59,13 @@ async function processPipeline(
 
   const selected: typeof filtered = []
   const catCount: Record<string, number> = {}
-  const maxPerCat = Math.ceil(MAX_TOTAL * 0.6)
+  // 자사는 최대 10건, 나머지는 최대 6건
+  const maxPerCat: Record<string, number> = { '자사': 10, '업계': 6, '정책': 6, '위기이슈': 6 }
 
   for (const article of sorted) {
     if (selected.length >= MAX_TOTAL) break
     const cat = article.finalCategory
-    if ((catCount[cat] ?? 0) >= maxPerCat) continue
+    if ((catCount[cat] ?? 0) >= (maxPerCat[cat] ?? 6)) continue
     selected.push(article)
     catCount[cat] = (catCount[cat] ?? 0) + 1
   }
