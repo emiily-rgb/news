@@ -150,33 +150,38 @@ export default function Home() {
       const article = prev.find(a => a.id === id)
       if (!article) return prev
 
-      // 같은 카테고리 내에서만 이동
-      const catArticles = prev.filter(a => a.category === article.category).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+      // 같은 카테고리 내에서 정렬된 배열
+      const catArticles = prev
+        .filter(a => a.category === article.category)
+        .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+
       const idx = catArticles.findIndex(a => a.id === id)
       const swapIdx = direction === 'up' ? idx - 1 : idx + 1
       if (swapIdx < 0 || swapIdx >= catArticles.length) return prev
 
-      const swapArticle = catArticles[swapIdx]
-      const newOrderA = swapArticle.order_index
-      const newOrderB = article.order_index
+      // 배열 순서를 바꾼 뒤 0, 1, 2... 로 index 재할당
+      const reordered = [...catArticles]
+      ;[reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]]
 
-      // DB 업데이트 (fire and forget)
+      const updates: Record<string, number> = {}
+      reordered.forEach((a, i) => { updates[a.id] = i })
+
+      // DB 업데이트 (변경된 두 개만)
       fetch(`/api/articles/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_index: newOrderA }),
+        body: JSON.stringify({ order_index: updates[id] }),
       })
-      fetch(`/api/articles/${swapArticle.id}`, {
+      fetch(`/api/articles/${catArticles[swapIdx].id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_index: newOrderB }),
+        body: JSON.stringify({ order_index: updates[catArticles[swapIdx].id] }),
       })
 
-      return prev.map(a => {
-        if (a.id === id) return { ...a, order_index: newOrderA }
-        if (a.id === swapArticle.id) return { ...a, order_index: newOrderB }
-        return a
-      })
+      return prev.map(a => ({
+        ...a,
+        order_index: updates[a.id] ?? a.order_index,
+      }))
     })
   }
 
