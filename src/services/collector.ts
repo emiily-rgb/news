@@ -127,7 +127,7 @@ export async function collectArticles(
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
       ]) as Awaited<ReturnType<typeof parser.parseURL>>
 
-      for (const item of feed.items?.slice(0, 20) ?? []) {
+      for (const item of feed.items?.slice(0, 50) ?? []) {
         if (!item.title || !item.link) continue
 
         // 허용 언론사 확인 (source.name 또는 URL)
@@ -178,7 +178,7 @@ export async function collectArticles(
     const articles: RawArticle[] = []
     try {
       const q = encodeURIComponent(keyword)
-      const url = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=50&sort=date`
+      const url = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=100&sort=date`
       const res = await Promise.race([
         fetch(url, {
           headers: {
