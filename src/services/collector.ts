@@ -67,45 +67,34 @@ export async function collectArticles(
     articles.push({ title: item.title, link: item.link, pubDate: item.pubDate, media, category: matched.category, keyword: matched.keyword })
   }
 
-  // 1. 직접 RSS 피드 병렬 수집
-  const directResults = await Promise.all(
-    DIRECT_FEEDS.map(async ({ url, name }) => {
-      const articles: RawArticle[] = []
-      try {
-        const feed = await parser.parseURL(url)
-        for (const item of feed.items ?? []) {
-          if (!item.title || !item.link) continue
-          const pub = item.pubDate ? new Date(item.pubDate) : null
-          if (!pub || pub < cutoff) continue
-          addArticle(articles, { title: item.title, link: item.link, pubDate: pub.toISOString() }, name)
-        }
-      } catch (err) {
-        console.error(`RSS 수집 실패 [${name}]:`, err)
+  async function fetchFeed(url: string, name: string, maxItems = 999): Promise<RawArticle[]> {
+    const articles: RawArticle[] = []
+    try {
+      const feed = await Promise.race([
+        parser.parseURL(url),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+      ])
+      for (const item of (feed as Awaited<ReturnType<typeof parser.parseURL>>).items?.slice(0, maxItems) ?? []) {
+        if (!item.title || !item.link) continue
+        const pub = item.pubDate ? new Date(item.pubDate) : null
+        if (!pub || pub < cutoff) continue
+        addArticle(articles, { title: item.title, link: item.link, pubDate: pub.toISOString() }, name)
       }
-      return articles
-    })
-  )
+    } catch { /* ignore */ }
+    return articles
+  }
 
-  // 2. Google News 사이트별 검색 (RSS 없는 언론사용, 핵심 키워드만)
-  const googleResults = await Promise.all(
-    GOOGLE_SITE_FEEDS.flatMap(({ site, name }) =>
-      GOOGLE_SITE_KEYWORDS.map(async (kw) => {
-        const articles: RawArticle[] = []
-        try {
-          const q = encodeURIComponent(`${kw} site:${site}`)
-          const url = `https://news.google.com/rss/search?q=${q}&hl=ko&gl=KR&ceid=KR:ko`
-          const feed = await parser.parseURL(url)
-          for (const item of (feed.items ?? []).slice(0, 5)) {
-            if (!item.title || !item.link) continue
-            const pub = item.pubDate ? new Date(item.pubDate) : null
-            if (!pub || pub < cutoff) continue
-            addArticle(articles, { title: item.title, link: item.link, pubDate: pub.toISOString() }, name)
-          }
-        } catch { /* ignore */ }
-        return articles
+  // 직접 RSS + Google 사이트검색 전부 한번에 병렬 실행
+  const allTasks = [
+    ...DIRECT_FEEDS.map(({ url, name }) => fetchFeed(url, name)),
+    ...GOOGLE_SITE_FEEDS.flatMap(({ site, name }) =>
+      GOOGLE_SITE_KEYWORDS.map(kw => {
+        const q = encodeURIComponent(`${kw} site:${site}`)
+        return fetchFeed(`https://news.google.com/rss/search?q=${q}&hl=ko&gl=KR&ceid=KR:ko`, name, 5)
       })
-    )
-  )
+    ),
+  ]
 
-  return [...directResults.flat(), ...googleResults.flat()]
+  const results = await Promise.all(allTasks)
+  return results.flat()
 }
