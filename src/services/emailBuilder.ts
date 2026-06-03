@@ -17,7 +17,7 @@ function renderInsightItems(items: string[], color: string, subtitleKo: string, 
   return `
     ${normalItems.map(s => bulletItem(s, color, 14)).join('')}
     ${bulletItems.length > 0 ? `
-      <div style="font-size:11px;font-weight:600;color:#c8102e;letter-spacing:1px;margin-top:12px;margin-bottom:6px;text-transform:uppercase">${isZh ? subtitleZh : subtitleKo}</div>
+      <div style="font-size:14px;font-weight:700;color:#c8102e;margin-top:14px;margin-bottom:8px">${isZh ? subtitleZh : subtitleKo}</div>
       ${bulletItems.map(s => bulletItem(s, color)).join('')}
     ` : ''}
   `
@@ -133,7 +133,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="vertical-align:middle">
         <img src="https://news-ebon-alpha.vercel.app/huawei_logo.png" alt="HUAWEI" height="28" style="display:inline-block;vertical-align:middle;margin-right:10px" />
-        <span style="color:#bbb;font-size:14px;font-weight:400;margin-left:10px;vertical-align:middle">Daily News Brief</span>
+        <span style="color:#888;font-size:15px;font-weight:500;margin-left:10px;vertical-align:middle">Daily News Brief</span>
       </td>
       <td style="text-align:right;vertical-align:middle">
         <div style="color:#555;font-size:12px">${date}</div>
