@@ -99,17 +99,21 @@ const MAX_TOTAL = 20
 const CATEGORIES = ['자사', '업계', '정책']
 
 async function runPipeline(runId: string, supabase: ReturnType<typeof createServiceClient>, extraDays = 0) {
+  const setStep = (step: string) => supabase.from('run_logs').update({ current_step: step }).eq('id', runId)
   const config = await getConfig()
 
   // 1. 수집 (연휴 다음날이면 수집 기간 확장)
+  await setStep('collecting')
   const collectionHours = (config.collection_hours ?? 24) + extraDays * 24
   const raw = await collectArticles(config.keywords, collectionHours)
 
   // 2. AI 필터링 + 카테고리 분류 + 태그/영향도
+  await setStep('filtering')
   const filtered = await filterArticles(raw, config.media_tiers)
 
   // 3. 영향도 HIGH → Tier → 관련성 순으로 정렬 후 총 15~20건 선택
   // 단, 카테고리 편중 방지: 한 카테고리가 전체의 60% 초과하지 않도록
+  await setStep('selecting')
   const impactOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 }
   const sorted = filtered.sort((a, b) => {
     const impactDiff = impactOrder[a.impactLevel] - impactOrder[b.impactLevel]
@@ -140,9 +144,11 @@ async function runPipeline(runId: string, supabase: ReturnType<typeof createServ
   }
 
   // 4. 요약 + 번역 + Why It Matters
+  await setStep('summarizing')
   const processed = await summarizeAndTranslate(selected)
 
   // 5. DB 저장
+  await setStep('saving')
   const articles = processed.map((a, i) => ({
     id: uuidv4(),
     run_id: runId,
@@ -162,6 +168,7 @@ async function runPipeline(runId: string, supabase: ReturnType<typeof createServ
   }
 
   // 6. Executive Brief 생성
+  await setStep('briefing')
   const insight = await generateInsight(processed)
   const { error: updateErr } = await supabase.from('run_logs').update({
     status: 'completed',

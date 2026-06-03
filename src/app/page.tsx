@@ -72,6 +72,7 @@ export default function Home() {
   const [draftSaved, setDraftSaved] = useState<string | null>(null)
   const [savingDraft, setSavingDraft] = useState(false)
   const [showManualAdd, setShowManualAdd] = useState(false)
+  const [currentStep, setCurrentStep] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/config').then(r => r.json()).then(c => setConfigRecipients(c.recipients ?? []))
@@ -96,6 +97,7 @@ export default function Home() {
       const res = await fetch(`/api/run/${id}`)
       const data = await res.json()
       setRunLog(data.runLog)
+      setCurrentStep(data.runLog?.current_step ?? null)
       setArticles(initOrderIndex(data.articles ?? []))
       if (data.runLog?.status !== 'running') {
         clearInterval(interval)
@@ -316,10 +318,45 @@ export default function Home() {
           </div>
           {running && (
             <div className="mt-4">
-              <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#c8102e] rounded-full animate-pulse w-full" />
-              </div>
-              <p className="text-xs text-gray-400 mt-1.5">RSS 수집 → AI 필터링 → 요약 → 번역 → Executive Brief 생성 중…</p>
+              {(() => {
+                const steps = [
+                  { key: 'collecting',  label: 'RSS 수집' },
+                  { key: 'filtering',   label: 'AI 필터링' },
+                  { key: 'selecting',   label: '기사 선택' },
+                  { key: 'summarizing', label: '요약 · 번역' },
+                  { key: 'saving',      label: 'DB 저장' },
+                  { key: 'briefing',    label: 'Executive Brief' },
+                ]
+                const currentIdx = steps.findIndex(s => s.key === currentStep)
+                const progress = currentIdx < 0 ? 5 : Math.round(((currentIdx + 1) / steps.length) * 100)
+                return (
+                  <>
+                    <div className="h-1 bg-gray-100 rounded-full overflow-hidden mb-3">
+                      <div
+                        className="h-full bg-[#c8102e] rounded-full transition-all duration-700"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {steps.map((s, i) => {
+                        const done = currentIdx > i
+                        const active = currentIdx === i
+                        return (
+                          <span key={s.key} className="flex items-center gap-1">
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              active ? 'bg-[#c8102e] text-white font-medium' :
+                              done ? 'text-gray-400' : 'text-gray-300'
+                            }`}>
+                              {done ? '✓' : active ? '⟳' : ''} {s.label}
+                            </span>
+                            {i < steps.length - 1 && <span className="text-gray-200 text-xs">→</span>}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           )}
         </div>
