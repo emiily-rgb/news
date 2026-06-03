@@ -327,7 +327,7 @@ export default function Home() {
               )}
             </div>
             <div className="flex gap-2">
-              {runId && articles.some(a => !a.excluded && (!a.summary_ko || a.summary_ko.length === 0)) && (
+              {isAdmin && runId && articles.some(a => !a.excluded && (!a.summary_ko || a.summary_ko.length === 0)) && (
                 <button
                   onClick={reprocessMissing}
                   disabled={running || reprocessing}

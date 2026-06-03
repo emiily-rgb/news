@@ -212,8 +212,8 @@ export default function ArticleCard({
             </>
           </div>
 
-          {/* 요약 재생성 버튼 (요약 없을 때만) */}
-          {article.summary_ko.length === 0 && (
+          {/* 요약 재생성 버튼 (요약 없을 때만, 관리자만) */}
+          {isAdmin && article.summary_ko.length === 0 && (
             <div className="mb-2">
               <button
                 onClick={regenerateSummary}
