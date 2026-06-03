@@ -86,7 +86,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
               <option value="자사">자사 (华为动态)</option>
               <option value="업계">업계 (行业资讯)</option>
               <option value="정책">정책 (政策动向)</option>
-              <option value="위기이슈">위기이슈 (Crisis)</option>
+              <option value="위기이슈">위기이슈 (危机事项)</option>
             </select>
           </div>
           <label className="block text-xs font-medium text-gray-600 mb-2">
