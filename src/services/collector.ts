@@ -107,51 +107,57 @@ export async function collectArticles(
 ): Promise<RawArticle[]> {
   const cutoff = new Date(Date.now() - hoursBack * 60 * 60 * 1000)
   const seen = new Set<string>()
-  const results: RawArticle[] = []
 
-  for (const cat of categories) {
-    for (const keyword of cat.keywords) {
+  // 키워드 목록 평탄화
+  const allKeywords = categories.flatMap(cat => cat.keywords.map(kw => ({ cat, keyword: kw })))
+
+  // RSS 키워드 10개씩 병렬 수집
+  const CONCURRENCY = 10
+  type RawItem = Omit<RawArticle, 'imageUrl'> & { imageUrl?: string }
+  const rawItems: RawItem[] = []
+
+  for (let i = 0; i < allKeywords.length; i += CONCURRENCY) {
+    const batch = allKeywords.slice(i, i + CONCURRENCY)
+    const batchResults = await Promise.all(batch.map(async ({ cat, keyword }) => {
+      const items: RawItem[] = []
       try {
         const encoded = encodeURIComponent(keyword)
         const url = `https://news.google.com/rss/search?q=${encoded}&hl=ko&gl=KR&ceid=KR:ko`
         const feed = await parser.parseURL(url)
-
         let count = 0
         for (const item of feed.items ?? []) {
           if (count >= 15) break
           if (!item.title || !item.link) continue
-
-          // source가 문자열 또는 객체로 올 수 있음
           const rawSource = (item as any).source
           const sourceName = typeof rawSource === 'string' ? rawSource : (rawSource?.name ?? '')
           const mediaName = getAllowedMedia(item.link ?? '', sourceName)
           if (!mediaName) continue
-
           const pub = item.pubDate ? new Date(item.pubDate) : null
           if (!pub || pub < cutoff) continue
-
           const key = normalizeTitle(item.title)
           if (seen.has(key)) continue
           seen.add(key)
-
-          const imageUrl = await fetchOgImage(item.link)
-          results.push({
-            title: item.title,
-            link: item.link,
-            pubDate: pub.toISOString(),
-            media: mediaName,
-            category: cat.category,
-            keyword,
-            imageUrl,
-          })
+          items.push({ title: item.title, link: item.link, pubDate: pub.toISOString(), media: mediaName, category: cat.category, keyword })
           count++
         }
-
-        await sleep(300)
       } catch (err) {
         console.error(`RSS 수집 실패 [${keyword}]:`, err)
       }
-    }
+      return items
+    }))
+    rawItems.push(...batchResults.flat())
+  }
+
+  // 이미지 병렬 수집 (5개씩)
+  const results: RawArticle[] = []
+  const IMG_CONCURRENCY = 5
+  for (let i = 0; i < rawItems.length; i += IMG_CONCURRENCY) {
+    const batch = rawItems.slice(i, i + IMG_CONCURRENCY)
+    const withImages = await Promise.all(batch.map(async item => ({
+      ...item,
+      imageUrl: await fetchOgImage(item.link),
+    })))
+    results.push(...withImages)
   }
 
   return results
