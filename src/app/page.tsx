@@ -151,7 +151,7 @@ export default function Home() {
       if (!article) return prev
 
       // 같은 카테고리 내에서만 이동
-      const catArticles = prev.filter(a => a.category === article.category).sort((a, b) => a.order_index - b.order_index)
+      const catArticles = prev.filter(a => a.category === article.category).sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
       const idx = catArticles.findIndex(a => a.id === id)
       const swapIdx = direction === 'up' ? idx - 1 : idx + 1
       if (swapIdx < 0 || swapIdx >= catArticles.length) return prev
