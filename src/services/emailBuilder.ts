@@ -53,7 +53,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     </td></tr>` : ''
 
   function catLabel(cat: string) {
-    return cat === '자사' ? 'Huawei' : cat === '업계' ? 'Industry' : cat === '정책' ? 'Policy' : 'Crisis'
+    return cat === '자사' ? '자사' : cat === '업계' ? '업계' : cat === '정책' ? '정책' : '위기이슈'
   }
   function catLabelZh(cat: string) {
     return cat === '자사' ? '华为动态' : cat === '업계' ? '行业资讯' : cat === '정책' ? '政策动向' : '危机事项'

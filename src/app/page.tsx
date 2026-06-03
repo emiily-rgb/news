@@ -337,7 +337,7 @@ export default function Home() {
           <>
             {categories.map(cat => {
               const catArticles = articles.filter(a => a.category === cat)
-              const catLabel = cat === '자사' ? 'Huawei' : cat === '업계' ? 'Industry' : cat === '정책' ? 'Policy' : 'Crisis'
+              const catLabel = cat === '자사' ? '华为动态' : cat === '업계' ? '行业资讯' : cat === '정책' ? '政策动向' : '危机事项'
               return (
                 <div key={cat} className="mb-5">
                   <div className="flex items-center gap-2 px-1 mb-2">
