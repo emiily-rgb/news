@@ -7,7 +7,20 @@ const IMPACT_COLOR: Record<string, string> = {
 }
 
 function bulletItem(s: string, color = '#333', fontSize = 15) {
-  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fontSize}px;color:#999;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fontSize}px;color:${color};line-height:1.7">${s}</td></tr></table>`
+  const text = s.startsWith('•') ? s.slice(1).trim() : s
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fontSize}px;color:#999;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fontSize}px;color:${color};line-height:1.7">${text}</td></tr></table>`
+}
+
+function renderInsightItems(items: string[], color: string, subtitleKo: string, subtitleZh: string, isZh: boolean) {
+  const normalItems = items.filter(s => !s.startsWith('•'))
+  const bulletItems = items.filter(s => s.startsWith('•'))
+  return `
+    ${normalItems.map(s => `<div style="font-size:15px;color:${color};line-height:1.7;margin-bottom:6px">${s}</div>`).join('')}
+    ${bulletItems.length > 0 ? `
+      <div style="font-size:12px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;margin-top:10px;margin-bottom:6px;text-transform:uppercase">${isZh ? subtitleZh : subtitleKo}</div>
+      ${bulletItems.map(s => bulletItem(s, color)).join('')}
+    ` : ''}
+  `
 }
 
 function formatDateEn(dateStr: string) {
@@ -31,12 +44,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         ${runLog.insight_zh?.length > 0 ? `
         <tr><td style="font-size:15px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;padding-bottom:10px">今日焦点新闻</td></tr>
         <tr><td style="padding-bottom:14px">
-          ${runLog.insight_zh.map(s => bulletItem(s, '#222')).join('')}
+          ${renderInsightItems(runLog.insight_zh, '#222', 'Key Takeaways', '核心要点', true)}
         </td></tr>` : ''}
         ${runLog.insight_ko?.length > 0 ? `
         <tr><td style="border-top:1px solid #e0e0e0;padding-top:14px;font-size:15px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;padding-bottom:10px">오늘의 하이라이트</td></tr>
         <tr><td>
-          ${runLog.insight_ko.map(s => bulletItem(s, '#444')).join('')}
+          ${renderInsightItems(runLog.insight_ko, '#444', 'Key Takeaways', '核心要点', false)}
         </td></tr>` : ''}
       </table>
     </td></tr>` : ''
