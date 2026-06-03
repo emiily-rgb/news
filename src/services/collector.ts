@@ -37,8 +37,22 @@ const ALLOWED_DOMAINS: Record<string, string> = {
 
 // Google News 검색 키워드 (핵심만, 병렬 처리)
 const SEARCH_KEYWORDS = [
-  '화웨이', 'Huawei', 'AI 반도체', '수출통제', '미국 제재',
-  '엔비디아', 'HBM', '5G', 'AI 서버', '반도체 규제',
+  'Huawei', 'AI 반도체', '수출통제', '미국 제재',
+  '엔비디아', 'HBM', '5G', 'AI 서버', '반도체 규제', '삼성전자 반도체',
+]
+
+// 네이버 뉴스 검색 키워드 (합친 키워드로 요청 수 줄임)
+const NAVER_SEARCH_KEYWORDS = [
+  '화웨이 Ascend',
+  'Huawei Cloud',
+  '화웨이 AI',
+  '화웨이',
+  'SK하이닉스',
+  'AI 데이터센터',
+  '반도체 정책',
+  '대중국 규제',
+  'AI 정책',
+  '반도체 공급망',
 ]
 
 function getMediaFromUrl(url: string): string | null {
@@ -107,7 +121,58 @@ export async function collectArticles(
     return articles
   }
 
-  // 키워드별 Google News 병렬 검색
-  const results = await Promise.all(SEARCH_KEYWORDS.map(kw => searchGoogle(kw)))
-  return results.flat()
+  async function searchNaver(keyword: string): Promise<RawArticle[]> {
+    const clientId = process.env.NAVER_CLIENT_ID
+    const clientSecret = process.env.NAVER_CLIENT_SECRET
+    if (!clientId || !clientSecret) return []
+
+    const articles: RawArticle[] = []
+    try {
+      const q = encodeURIComponent(keyword)
+      const url = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=50&sort=date`
+      const res = await Promise.race([
+        fetch(url, {
+          headers: {
+            'X-Naver-Client-Id': clientId,
+            'X-Naver-Client-Secret': clientSecret,
+          },
+        }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
+      ]) as Response
+
+      if (!res.ok) return []
+      const data = await res.json() as { items: Array<{ title: string; link: string; originallink: string; pubDate: string; description: string }> }
+
+      for (const item of data.items ?? []) {
+        const link = item.originallink || item.link
+        if (!link) continue
+
+        const media = getMediaFromUrl(link)
+        if (!media) continue
+
+        const pub = item.pubDate ? new Date(item.pubDate) : null
+        if (!pub || pub < cutoff) continue
+
+        const title = item.title.replace(/<[^>]+>/g, '')
+        const key = normalizeTitle(title)
+        if (seen.has(key)) continue
+        seen.add(key)
+
+        const titleLower = title.toLowerCase()
+        const matched = allKeywords.find(k => titleLower.includes(k.lower))
+        const category = matched?.category ?? '업계'
+        const kw = matched?.keyword ?? keyword
+
+        articles.push({ title, link, pubDate: pub.toISOString(), media, category, keyword: kw })
+      }
+    } catch { /* ignore */ }
+    return articles
+  }
+
+  // 구글 + 네이버 병렬 검색
+  const [googleResults, naverResults] = await Promise.all([
+    Promise.all(SEARCH_KEYWORDS.map(kw => searchGoogle(kw))),
+    Promise.all(NAVER_SEARCH_KEYWORDS.map(kw => searchNaver(kw))),
+  ])
+  return [...googleResults.flat(), ...naverResults.flat()]
 }
