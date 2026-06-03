@@ -84,6 +84,7 @@ async function filterBatch(batch: RawArticle[], offset: number): Promise<FilterR
   console.log(`[filterBatch] AI 응답 앞부분:`, text.slice(0, 300))
   try {
     const parsed: FilterResult[] = JSON.parse(text.match(/\[[\s\S]*\]/)?.[0] ?? '[]')
+    parsed.forEach(r => { if (Array.isArray(r.tag)) r.tag = r.tag[0] as ArticleTag })
     const trueCount = parsed.filter(r => r.relevant).length
     console.log(`[filterBatch] 파싱 결과: ${parsed.length}건, relevant=true: ${trueCount}건`)
     return parsed
