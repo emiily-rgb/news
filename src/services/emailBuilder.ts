@@ -142,10 +142,10 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Apple SD Gothic Neo','PingFang SC','Noto Sans KR','Noto Sans SC','Malgun Gothic','Microsoft YaHei',sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4">
-<tr><td align="center" class="email-outer" style="padding:24px 10px">
-<table width="760" cellpadding="0" cellspacing="0" class="email-container" style="background:#fff;border-radius:4px;overflow:hidden;max-width:760px;border:1px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+<body bgcolor="#f4f4f4" style="margin:0;padding:0;background:#f4f4f4;font-family:'Apple SD Gothic Neo','PingFang SC','Noto Sans KR','Noto Sans SC','Malgun Gothic','Microsoft YaHei',sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f4f4f4" style="background:#f4f4f4">
+<tr><td align="center" class="email-outer" style="padding:24px 10px" bgcolor="#f4f4f4">
+<table width="760" cellpadding="0" cellspacing="0" bgcolor="#ffffff" class="email-container" style="background:#fff;border-radius:4px;overflow:hidden;max-width:760px;border:1px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
 
   <!-- 헤더 -->
   <tr><td class="email-header" style="padding:24px 28px;border-bottom:2px solid #c8102e">
