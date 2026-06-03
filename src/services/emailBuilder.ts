@@ -6,7 +6,7 @@ const IMPACT_COLOR: Record<string, string> = {
   LOW: '#999999',
 }
 
-function bulletItem(s: string, color = '#444', fontSize = 14) {
+function bulletItem(s: string, color = '#444', fontSize = 15) {
   const text = s.startsWith('•') ? s.slice(1).trim() : s
   return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fontSize}px;color:#111;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fontSize}px;color:${color};line-height:1.7">${text}</td></tr></table>`
 }
@@ -15,9 +15,9 @@ function renderInsightItems(items: string[], color: string, subtitleKo: string, 
   const normalItems = items.filter(s => !s.startsWith('•'))
   const bulletItems = items.filter(s => s.startsWith('•'))
   return `
-    ${normalItems.map(s => bulletItem(s, color, 14)).join('')}
+    ${normalItems.map(s => bulletItem(s, color, 15)).join('')}
     ${bulletItems.length > 0 ? `
-      <div style="font-size:14px;font-weight:700;color:#c8102e;margin-top:14px;margin-bottom:8px">${isZh ? subtitleZh : subtitleKo}</div>
+      <div style="font-size:15px;font-weight:700;color:#c8102e;margin-top:14px;margin-bottom:8px">${isZh ? subtitleZh : subtitleKo}</div>
       ${bulletItems.map(s => bulletItem(s, color)).join('')}
     ` : ''}
   `
@@ -41,12 +41,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   const execSummary = (runLog.insight_zh?.length > 0 || runLog.insight_ko?.length > 0) ? `
     <tr><td style="padding:0 0 24px 0">
       ${runLog.insight_zh?.length > 0 ? `
-      <div style="font-size:15px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">今日焦点新闻</div>
+      <div style="font-size:16px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">今日焦点新闻</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px;margin-bottom:16px">
         ${renderInsightItems(runLog.insight_zh, '#333', 'Key Takeaways', '核心要点', true)}
       </div>` : ''}
       ${runLog.insight_ko?.length > 0 ? `
-      <div style="font-size:15px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">오늘의 하이라이트</div>
+      <div style="font-size:16px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">오늘의 하이라이트</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px">
         ${renderInsightItems(runLog.insight_ko, '#333', 'Key Takeaways', '核心要点', false)}
       </div>` : ''}
@@ -70,12 +70,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       return `
       <tr><td style="padding:14px 0;border-bottom:1px solid #f5f5f5">
         <div style="margin-bottom:7px">
-          <span style="display:inline-block;font-size:12px;font-weight:600;color:#fff;background:${impactColor};padding:4px 9px;border-radius:2px;margin-right:4px;letter-spacing:0.3px;line-height:1">${a.impact_level}</span>
-          ${a.tag ? `<span style="font-size:12px;color:#888;padding-left:4px;letter-spacing:0.5px">| ${Array.isArray(a.tag) ? (a.tag as string[])[0] : a.tag}</span>` : ''}
+          <span style="display:inline-block;font-size:13px;font-weight:600;color:#fff;background:${impactColor};padding:4px 9px;border-radius:2px;margin-right:4px;letter-spacing:0.3px;line-height:1">${a.impact_level}</span>
+          ${a.tag ? `<span style="font-size:13px;color:#888;padding-left:4px;letter-spacing:0.5px">| ${Array.isArray(a.tag) ? (a.tag as string[])[0] : a.tag}</span>` : ''}
         </div>
         ${a.image_url ? `<img src="${a.image_url}" alt="" width="100%" style="display:block;width:100%;max-height:220px;object-fit:cover;border-radius:3px;margin-bottom:10px" />` : ''}
-        <a href="${a.link}" style="color:#111;font-size:15px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
-        <div style="font-size:13px;color:#aaa;margin-bottom:8px">${formatMediaName(a.media)} &nbsp;·&nbsp; ${pubDate}</div>
+        <a href="${a.link}" style="color:#111;font-size:16px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
+        <div style="font-size:14px;color:#aaa;margin-bottom:8px">${formatMediaName(a.media)} &nbsp;·&nbsp; ${pubDate}</div>
         ${summary.length > 0 ? `<div>${summary.map(s => bulletItem(s)).join('')}</div>` : ''}
       </td></tr>`
     }).join('')
@@ -88,8 +88,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     return `
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:16px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabelZh(cat)}</td>
-          <td style="text-align:right;font-size:13px;color:#bbb">${catArticles.length} articles</td>
+          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:17px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabelZh(cat)}</td>
+          <td style="text-align:right;font-size:14px;color:#bbb">${catArticles.length} articles</td>
         </tr></table>
       </td></tr>
       ${articleRows(catArticles, 'zh')}`
@@ -102,8 +102,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     return `
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:16px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabel(cat)}</td>
-          <td style="text-align:right;font-size:13px;color:#bbb">${catArticles.length} articles</td>
+          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:17px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabel(cat)}</td>
+          <td style="text-align:right;font-size:14px;color:#bbb">${catArticles.length} articles</td>
         </tr></table>
       </td></tr>
       ${articleRows(catArticles, 'ko')}`
@@ -116,41 +116,60 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         <tr><td style="border-top:2px solid #c8102e"></td></tr>
       </table>
       <div style="text-align:center;padding-top:16px;padding-bottom:4px">
-        <span style="font-size:13px;font-weight:600;color:#111">▼ 한국어</span>
+        <span style="font-size:14px;font-weight:600;color:#111">▼ 한국어</span>
       </div>
     </td></tr>`
 
   return `<!DOCTYPE html>
 <html lang="zh">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    @media only screen and (max-width: 640px) {
+      .email-outer { padding: 0 !important; }
+      .email-container { width: 100% !important; max-width: 100% !important; border-radius: 0 !important; }
+      .email-header { padding: 16px !important; }
+      .email-header-date { display: none !important; }
+      .email-body { padding: 16px !important; }
+      .email-footer { padding: 12px 16px !important; }
+      .email-nav { padding: 10px 16px !important; }
+      .article-title { font-size: 15px !important; }
+      .article-meta { font-size: 13px !important; }
+      .bullet-text { font-size: 14px !important; }
+      .cat-label { font-size: 16px !important; }
+      .insight-title { font-size: 15px !important; }
+    }
+  </style>
+</head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Apple SD Gothic Neo','Microsoft YaHei',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4">
-<tr><td align="center" style="padding:24px 10px">
-<table width="640" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:4px;overflow:hidden;max-width:640px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+<tr><td align="center" class="email-outer" style="padding:24px 10px">
+<table width="640" cellpadding="0" cellspacing="0" class="email-container" style="background:#fff;border-radius:4px;overflow:hidden;max-width:640px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
 
   <!-- 헤더 -->
-  <tr><td style="padding:24px 28px;border-bottom:2px solid #c8102e">
+  <tr><td class="email-header" style="padding:24px 28px;border-bottom:2px solid #c8102e">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="vertical-align:middle">
         <img src="https://news-ebon-alpha.vercel.app/huawei_logo.png" alt="HUAWEI" height="28" style="display:inline-block;vertical-align:middle;margin-right:10px" />
-        <span style="color:#888;font-size:15px;font-weight:500;margin-left:10px;vertical-align:middle">Daily News Brief</span>
+        <span style="color:#888;font-size:16px;font-weight:500;margin-left:10px;vertical-align:middle">Daily News Brief</span>
       </td>
-      <td style="text-align:right;vertical-align:middle">
-        <div style="color:#555;font-size:13px">${date}</div>
-        <div style="color:#bbb;font-size:13px;margin-top:2px">${activeArticles.length} articles</div>
+      <td class="email-header-date" style="text-align:right;vertical-align:middle">
+        <div style="color:#555;font-size:14px">${date}</div>
+        <div style="color:#bbb;font-size:14px;margin-top:2px">${activeArticles.length} articles</div>
       </td>
     </tr></table>
   </td></tr>
 
   <!-- 언어 네비게이션 -->
-  <tr><td style="padding:10px 28px;background:#fafafa;border-bottom:1px solid #f0f0f0">
-    <a href="#zh-section" style="font-size:13px;font-weight:600;color:#c8102e;text-decoration:none;margin-right:12px">中文</a>
-    <span style="font-size:13px;color:#ddd">|</span>
-    <a href="#ko-section" style="font-size:13px;font-weight:600;color:#555;text-decoration:none;margin-left:12px">한국어</a>
+  <tr><td class="email-nav" style="padding:10px 28px;background:#fafafa;border-bottom:1px solid #f0f0f0">
+    <a href="#zh-section" style="font-size:14px;font-weight:600;color:#c8102e;text-decoration:none;margin-right:12px">中文</a>
+    <span style="font-size:14px;color:#ddd">|</span>
+    <a href="#ko-section" style="font-size:14px;font-weight:600;color:#555;text-decoration:none;margin-left:12px">한국어</a>
   </td></tr>
 
   <!-- 본문 -->
-  <tr><td style="padding:24px 28px">
+  <tr><td class="email-body" style="padding:24px 28px">
     <table width="100%" cellpadding="0" cellspacing="0">
       ${execSummary}
 
@@ -169,8 +188,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   </td></tr>
 
   <!-- 푸터 -->
-  <tr><td style="padding:16px 28px;background:#fafafa;border-top:1px solid #f0f0f0">
-    <div style="font-size:12px;color:#ccc;text-align:center">
+  <tr><td class="email-footer" style="padding:16px 28px;background:#fafafa;border-top:1px solid #f0f0f0">
+    <div style="font-size:13px;color:#ccc;text-align:center">
       ${new Date(runLog.run_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;·&nbsp; Huawei Korea
     </div>
   </td></tr>
