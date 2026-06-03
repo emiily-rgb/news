@@ -6,6 +6,10 @@ const IMPACT_COLOR: Record<string, string> = {
   LOW: '#666666',
 }
 
+function bulletItem(s: string, color = '#333', fontSize = 15) {
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fontSize}px;color:#999;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fontSize}px;color:${color};line-height:1.7">${s}</td></tr></table>`
+}
+
 function formatDateEn(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
@@ -27,12 +31,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         ${runLog.insight_zh?.length > 0 ? `
         <tr><td style="font-size:15px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;padding-bottom:10px">今日焦点新闻</td></tr>
         <tr><td style="padding-bottom:14px">
-          ${runLog.insight_zh.map(s => `<div style="font-size:15px;color:#222;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
+          ${runLog.insight_zh.map(s => bulletItem(s, '#222')).join('')}
         </td></tr>` : ''}
         ${runLog.insight_ko?.length > 0 ? `
         <tr><td style="border-top:1px solid #e0e0e0;padding-top:14px;font-size:15px;font-weight:bold;color:#c8102e;letter-spacing:0.5px;padding-bottom:10px">오늘의 하이라이트</td></tr>
         <tr><td>
-          ${runLog.insight_ko.map(s => `<div style="font-size:15px;color:#444;line-height:1.7;margin-bottom:4px">${s}</div>`).join('')}
+          ${runLog.insight_ko.map(s => bulletItem(s, '#444')).join('')}
         </td></tr>` : ''}
       </table>
     </td></tr>` : ''
@@ -62,7 +66,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         <div style="font-size:13px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
         ${a.summary_zh.length > 0 ? `
         <div>
-          ${a.summary_zh.map(s => `<div style="font-size:15px;color:#333;line-height:1.7;margin-bottom:3px">• ${s}</div>`).join('')}
+          ${a.summary_zh.map(s => bulletItem(s)).join('')}
         </div>` : ''}
       </td></tr>`
     }).join('')
@@ -95,7 +99,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
         <div style="font-size:13px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
         ${a.summary_ko.length > 0 ? `
         <div>
-          ${a.summary_ko.map(s => `<div style="font-size:15px;color:#333;line-height:1.7;margin-bottom:4px">• ${s}</div>`).join('')}
+          ${a.summary_ko.map(s => bulletItem(s)).join('')}
         </div>` : ''}
       </td></tr>`
     }).join('')
