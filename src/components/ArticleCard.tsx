@@ -91,21 +91,24 @@ export default function ArticleCard({
         <div className="flex-1 min-w-0">
 
           {/* 태그 + 제목 */}
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <div className="flex items-center gap-0 mb-1.5 flex-wrap">
             {article.category === '자사' && article.sentiment === 'negative' && (
-              <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium leading-none h-5">⚠️ 부정</span>
+              <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 text-xs px-2 rounded font-semibold leading-none h-5 mr-2">⚠️ 부정</span>
             )}
             {article.impact_level === 'HIGH' && (
-              <span className="inline-flex items-center justify-center bg-red-100 text-red-600 text-xs px-2 rounded font-semibold leading-none h-5">HIGH</span>
+              <span className="inline-flex items-center justify-center bg-red-100 text-red-600 text-xs px-2.5 rounded font-semibold leading-none h-5">{article.impact_level}</span>
             )}
             {article.impact_level === 'MEDIUM' && (
-              <span className="inline-flex items-center justify-center bg-yellow-100 text-yellow-700 text-xs px-2 rounded font-semibold leading-none h-5">MEDIUM</span>
+              <span className="inline-flex items-center justify-center bg-yellow-100 text-yellow-700 text-xs px-2.5 rounded font-semibold leading-none h-5">{article.impact_level}</span>
             )}
             {article.impact_level === 'LOW' && (
-              <span className="inline-flex items-center justify-center bg-gray-100 text-gray-500 text-xs px-2 rounded font-semibold leading-none h-5">LOW</span>
+              <span className="inline-flex items-center justify-center bg-gray-100 text-gray-500 text-xs px-2.5 rounded font-semibold leading-none h-5">{article.impact_level}</span>
             )}
             {article.tag && (
-              <span className="inline-flex items-center justify-center border border-gray-300 text-gray-500 text-xs px-2 rounded leading-none h-5">{article.tag}</span>
+              <>
+                <span className="text-gray-300 text-xs mx-2">|</span>
+                <span className="inline-flex items-center justify-center text-gray-400 text-xs font-medium leading-none tracking-wide uppercase">{article.tag}</span>
+              </>
             )}
             <a
               href={article.link}
