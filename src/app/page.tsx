@@ -345,13 +345,15 @@ export default function Home() {
                   + 기사 직접 추가
                 </button>
               )}
-              <button
-                onClick={startRun}
-                disabled={running}
-                className="bg-[#c8102e] hover:bg-[#a00d24] disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
-              >
-                {running ? '수집 중...' : '▶ 뉴스 수집 시작'}
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={startRun}
+                  disabled={running}
+                  className="bg-[#c8102e] hover:bg-[#a00d24] disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
+                >
+                  {running ? '수집 중...' : '▶ 뉴스 수집 시작'}
+                </button>
+              )}
             </div>
           </div>
           {running && (
@@ -515,12 +517,10 @@ export default function Home() {
                   className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm transition">
                   이메일 미리보기
                 </button>
-                {isAdmin && (
-                  <button onClick={openPreview}
-                    className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                    발송하기
-                  </button>
-                )}
+                <button onClick={openPreview}
+                  className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                  발송하기
+                </button>
               </div>
             </div>
           </>
