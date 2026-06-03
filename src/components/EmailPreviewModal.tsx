@@ -95,6 +95,7 @@ export default function EmailPreviewModal({ html, runLog, recipients, isAdmin, o
             srcDoc={html}
             className="w-full h-full min-h-[600px] border-0 rounded"
             title="이메일 미리보기"
+            sandbox="allow-same-origin"
           />
         </div>
       </div>
