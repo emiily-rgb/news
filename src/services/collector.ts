@@ -84,17 +84,9 @@ export async function collectArticles(
     return articles
   }
 
-  // 직접 RSS + Google 사이트검색 전부 한번에 병렬 실행
-  const allTasks = [
-    ...DIRECT_FEEDS.map(({ url, name }) => fetchFeed(url, name)),
-    ...GOOGLE_SITE_FEEDS.flatMap(({ site, name }) =>
-      GOOGLE_SITE_KEYWORDS.map(kw => {
-        const q = encodeURIComponent(`${kw} site:${site}`)
-        return fetchFeed(`https://news.google.com/rss/search?q=${q}&hl=ko&gl=KR&ceid=KR:ko`, name, 5)
-      })
-    ),
-  ]
-
-  const results = await Promise.all(allTasks)
+  // 직접 RSS 피드만 병렬 수집
+  const results = await Promise.all(
+    DIRECT_FEEDS.map(({ url, name }) => fetchFeed(url, name))
+  )
   return results.flat()
 }
