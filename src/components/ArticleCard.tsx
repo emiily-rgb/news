@@ -87,7 +87,7 @@ export default function ArticleCard({
 
   return (
     <div className="px-7 py-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start gap-5">
         <div className="flex-1 min-w-0">
 
           {/* 태그 */}
@@ -171,45 +171,6 @@ export default function ArticleCard({
                 </select>
               </>
             )}
-          </div>
-
-          {/* 이미지 */}
-          <div className="mb-3">
-            {article.image_url ? (
-              <div className="relative inline-block group">
-                <img src={article.image_url} alt="" className="h-28 object-cover rounded border border-gray-100" />
-                {/* 호버 시 변경/삭제 오버레이 */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2">
-                  <label className="cursor-pointer bg-white text-gray-700 text-xs px-2 py-1 rounded hover:bg-gray-100 transition">
-                    변경
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
-                  </label>
-                  <button
-                    onClick={handleImageDelete}
-                    disabled={uploadingImage}
-                    className="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600 transition"
-                  >삭제</button>
-                </div>
-                {uploadingImage && (
-                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded">
-                    <span className="text-xs text-gray-500">처리 중...</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <label className={`inline-flex items-center gap-1.5 cursor-pointer text-xs text-gray-400 hover:text-blue-500 transition ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
-                {uploadingImage ? (
-                  <span className="text-gray-400">업로드 중...</span>
-                ) : (
-                  <>
-                    <span className="text-base leading-none">🖼</span>
-                    <span>이미지 추가</span>
-                  </>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
-              </label>
-            )}
-            {imageError && <p className="text-xs text-red-500 mt-1">{imageError}</p>}
           </div>
 
           {/* 한국어 요약 */}
@@ -321,8 +282,35 @@ export default function ArticleCard({
 
         </div>
 
-        {/* 우측 버튼 */}
+        {/* 우측: 이미지 + 버튼 */}
         <div className="flex flex-col gap-2 shrink-0 items-end">
+
+          {/* 이미지 */}
+          <div className="w-28 h-20 rounded overflow-hidden bg-gray-50 border border-gray-100 relative group shrink-0">
+            {article.image_url ? (
+              <>
+                <img src={article.image_url} alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5">
+                  <label className="cursor-pointer bg-white text-gray-700 text-xs px-2 py-1 rounded hover:bg-gray-100 transition">
+                    변경
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                  </label>
+                  <button onClick={handleImageDelete} disabled={uploadingImage} className="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600 transition">삭제</button>
+                </div>
+                {uploadingImage && (
+                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                    <span className="text-xs text-gray-500">처리 중...</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <label className={`w-full h-full flex flex-col items-center justify-center cursor-pointer text-gray-300 hover:text-gray-400 transition ${uploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                {uploadingImage ? <span className="text-xs text-gray-400">업로드 중...</span> : <><span className="text-xl">+</span><span className="text-xs mt-0.5">이미지</span></>}
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+              </label>
+            )}
+          </div>
+          {imageError && <p className="text-xs text-red-500">{imageError}</p>}
           <a
             href={article.link}
             target="_blank"
