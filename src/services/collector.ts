@@ -118,7 +118,7 @@ export async function collectArticles(
 
         let count = 0
         for (const item of feed.items ?? []) {
-          if (count >= 15) break
+          if (count >= 10) break
           if (!item.title || !item.link) continue
 
           // source가 문자열 또는 객체로 올 수 있음
@@ -147,7 +147,7 @@ export async function collectArticles(
           count++
         }
 
-        await sleep(1000 + Math.random() * 1000)
+        await sleep(300)
       } catch (err) {
         console.error(`RSS 수집 실패 [${keyword}]:`, err)
       }
