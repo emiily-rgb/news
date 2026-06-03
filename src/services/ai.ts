@@ -51,10 +51,11 @@ ${lines}
 
    조선일보·중앙일보·동아일보는 정책·정무·산업 영향 기사만 포함
 
-2. category: "자사" | "업계" | "정책"
+2. category: "자사" | "업계" | "정책" | "위기이슈"
    - 자사: 화웨이 직접 관련
    - 업계: 시장·경쟁사 (NVIDIA/삼성/SK하이닉스/AI서버/반도체/데이터센터/중국IT)
    - 정책: 정부·규제 (미국규제/중국정책/AI정책/수출통제/보안규제)
+   - 위기이슈: 보안위협·제재·스파이·해킹·백도어·도청·정보유출·엔티티리스트·보이콧·배제
 
 3. tag: "AI" | "Cloud" | "Semiconductor" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment"
 
@@ -318,7 +319,7 @@ ${input.bodyText.trim()
 }
 
 판단 및 작성:
-1. category: "자사"(화웨이 직접) | "업계"(시장/경쟁사/AI/반도체) | "정책"(정부/규제)
+1. category: "자사"(화웨이 직접) | "업계"(시장/경쟁사/AI/반도체) | "정책"(정부/규제) | "위기이슈"(보안위협/제재/해킹/스파이/정보유출)
 2. tag: "AI"|"Cloud"|"Semiconductor"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"
 3. impact_level: "HIGH"|"MEDIUM"|"LOW" (임원 관점 중요도)
 4. sentiment: "positive"|"negative"|"neutral" (화웨이 관점)
