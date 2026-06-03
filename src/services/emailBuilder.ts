@@ -59,8 +59,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       return `
       <tr><td style="padding:14px 0;border-bottom:1px solid #f0f0f0">
         <div style="margin-bottom:8px">
-          <span style="font-size:13px;color:${impactColor};border:1px solid ${impactColor};padding:2px 8px;border-radius:3px;margin-right:6px">${a.tag ?? ''}</span>
-          <span style="font-size:13px;color:#fff;background:${impactColor};padding:2px 8px;border-radius:3px">${a.impact_level}</span>
+          <span style="font-size:13px;color:#fff;background:${impactColor};padding:2px 8px;border-radius:3px;margin-right:6px">${a.impact_level}</span>
+          ${a.tag ? `<span style="font-size:13px;color:${impactColor};border:1px solid ${impactColor};padding:2px 8px;border-radius:3px">${a.tag}</span>` : ''}
         </div>
         ${a.title_zh ? `<a href="${a.link}" style="color:#c8102e;font-size:16px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title_zh}</a>` : `<a href="${a.link}" style="color:#c8102e;font-size:16px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>`}
         <div style="font-size:13px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
@@ -92,8 +92,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       return `
       <tr><td style="padding:14px 0;border-bottom:1px solid #f0f0f0">
         <div style="margin-bottom:8px">
-          <span style="font-size:13px;color:${impactColor};border:1px solid ${impactColor};padding:2px 8px;border-radius:3px;margin-right:6px">${a.tag ?? ''}</span>
-          <span style="font-size:13px;color:#fff;background:${impactColor};padding:2px 8px;border-radius:3px">${a.impact_level}</span>
+          <span style="font-size:13px;color:#fff;background:${impactColor};padding:2px 8px;border-radius:3px;margin-right:6px">${a.impact_level}</span>
+          ${a.tag ? `<span style="font-size:13px;color:${impactColor};border:1px solid ${impactColor};padding:2px 8px;border-radius:3px">${a.tag}</span>` : ''}
         </div>
         <a href="${a.link}" style="color:#1a73e8;font-size:16px;font-weight:bold;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${a.title}</a>
         <div style="font-size:13px;color:#999;margin-bottom:8px">${a.media} &nbsp;|&nbsp; ${pubDate}</div>
