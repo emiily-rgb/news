@@ -31,7 +31,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ ru
 }
 
 const MIN_TOTAL = 15
-const MAX_TOTAL = 20
+const MAX_TOTAL = 25
 
 async function processPipeline(
   runId: string,
