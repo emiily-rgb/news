@@ -312,7 +312,7 @@ export default function Home() {
                 disabled={running}
                 className="bg-[#c8102e] hover:bg-[#a00d24] disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
               >
-                {running ? <><span className="animate-spin inline-block">⏳</span> 수집 중...</> : '▶ 뉴스 수집 시작'}
+                {running ? '수집 중...' : '▶ 뉴스 수집 시작'}
               </button>
             </div>
           </div>
