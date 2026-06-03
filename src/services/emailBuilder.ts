@@ -8,7 +8,7 @@ const IMPACT_COLOR: Record<string, string> = {
 
 function bulletItem(s: string, color = '#444', fontSize = 14) {
   const text = s.startsWith('•') ? s.slice(1).trim() : s
-  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fontSize}px;color:#bbb;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fontSize}px;color:${color};line-height:1.7">${text}</td></tr></table>`
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fontSize}px;color:#111;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fontSize}px;color:${color};line-height:1.7">${text}</td></tr></table>`
 }
 
 function renderInsightItems(items: string[], color: string, subtitleKo: string, subtitleZh: string, isZh: boolean) {
@@ -41,12 +41,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   const execSummary = (runLog.insight_zh?.length > 0 || runLog.insight_ko?.length > 0) ? `
     <tr><td style="padding:0 0 24px 0">
       ${runLog.insight_zh?.length > 0 ? `
-      <div style="font-size:11px;font-weight:600;color:#c8102e;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">今日焦点新闻</div>
+      <div style="font-size:15px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">今日焦点新闻</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px;margin-bottom:16px">
         ${renderInsightItems(runLog.insight_zh, '#333', 'Key Takeaways', '核心要点', true)}
       </div>` : ''}
       ${runLog.insight_ko?.length > 0 ? `
-      <div style="font-size:11px;font-weight:600;color:#c8102e;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">오늘의 하이라이트</div>
+      <div style="font-size:15px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">오늘의 하이라이트</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px">
         ${renderInsightItems(runLog.insight_ko, '#333', 'Key Takeaways', '核心要点', false)}
       </div>` : ''}
@@ -87,7 +87,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     return `
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:14px;font-weight:700;color:#111;letter-spacing:0.5px">${catLabelZh(cat)}</td>
+          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:16px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabelZh(cat)}</td>
           <td style="text-align:right;font-size:12px;color:#bbb">${catArticles.length} articles</td>
         </tr></table>
       </td></tr>
@@ -101,7 +101,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
     return `
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:14px;font-weight:700;color:#111;letter-spacing:0.5px">${catLabel(cat)}</td>
+          <td style="border-left:3px solid #c8102e;padding-left:10px;font-size:16px;font-weight:700;color:#111;letter-spacing:0.3px">${catLabel(cat)}</td>
           <td style="text-align:right;font-size:12px;color:#bbb">${catArticles.length} articles</td>
         </tr></table>
       </td></tr>
