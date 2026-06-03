@@ -5,6 +5,7 @@ import { RunLog } from '@/types'
 
 interface Props {
   runLog: RunLog
+  isAdmin: boolean
   onUpdate: (ko: string[], zh: string[]) => Promise<void>
   onRegenerate: () => Promise<void>
 }
@@ -38,7 +39,7 @@ function BulletEditor({
   )
 }
 
-export default function InsightPanel({ runLog, onUpdate, onRegenerate }: Props) {
+export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }: Props) {
   const [editing, setEditing] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
 
@@ -84,10 +85,12 @@ export default function InsightPanel({ runLog, onUpdate, onRegenerate }: Props) 
           <span className="text-red-300 text-xs">今日焦点新闻</span>
         </div>
         <div className="flex gap-1.5">
-          <button onClick={regenerate} disabled={regenerating}
-            className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition disabled:opacity-50">
-            {regenerating ? '재생성 중…' : '재생성'}
-          </button>
+          {isAdmin && (
+            <button onClick={regenerate} disabled={regenerating}
+              className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition disabled:opacity-50">
+              {regenerating ? '재생성 중…' : '재생성'}
+            </button>
+          )}
           {editing ? (
             <>
               <button onClick={save} className="text-xs bg-white text-[#c8102e] font-semibold px-3 py-1.5 rounded">저장</button>

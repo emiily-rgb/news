@@ -419,6 +419,7 @@ export default function Home() {
         {runLog && (
           <InsightPanel
             runLog={runLog}
+            isAdmin={isAdmin}
             onUpdate={async (ko, zh) => {
               await fetch('/api/insight', {
                 method: 'PATCH',

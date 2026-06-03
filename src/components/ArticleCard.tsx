@@ -197,21 +197,19 @@ export default function ArticleCard({
             </span>
             <span>|</span>
             <span>{new Date(article.pub_date).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-            {isAdmin && (
-              <>
-                <span>|</span>
-                <select
-                  value={article.category}
-                  onChange={e => onUpdateCategory(article.id, e.target.value)}
-                  className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
-                >
-                  <option value="자사">자사 (华为动态)</option>
-                  <option value="업계">업계 (行业资讯)</option>
-                  <option value="정책">정책 (政策动向)</option>
-                  <option value="위기이슈">위기이슈 (危机事项)</option>
-                </select>
-              </>
-            )}
+            <>
+              <span>|</span>
+              <select
+                value={article.category}
+                onChange={e => onUpdateCategory(article.id, e.target.value)}
+                className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
+              >
+                <option value="자사">자사 (华为动态)</option>
+                <option value="업계">업계 (行业资讯)</option>
+                <option value="정책">정책 (政策动向)</option>
+                <option value="위기이슈">위기이슈 (危机事项)</option>
+              </select>
+            </>
           </div>
 
           {/* 요약 재생성 버튼 (요약 없을 때만) */}
