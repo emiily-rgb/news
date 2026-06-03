@@ -219,7 +219,7 @@ export default function Home() {
       <header className="bg-[#c8102e] text-white px-6 py-4 flex items-center justify-between shadow-md">
         <div>
           <h1 className="text-xl font-bold">Huawei Executive Daily Brief</h1>
-          <p className="text-red-200 text-sm mt-0.5">화웨이 한국법인 임원용 뉴스 브리핑</p>
+          <p className="text-red-200 text-sm mt-0.5">화웨이 한국법인 임직원용 뉴스 브리핑</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">

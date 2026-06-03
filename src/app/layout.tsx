@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Huawei Daily News Brief",
-  description: "화웨이 한국법인 임원용 뉴스 브리핑",
+  description: "화웨이 한국법인 임직원용 뉴스 브리핑",
 };
 
 export default function RootLayout({
