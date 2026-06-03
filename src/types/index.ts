@@ -110,6 +110,9 @@ export const MEDIA_DISPLAY: Record<string, string> = {
   '서울경제': 'Seoul Economic Daily',
   '연합뉴스TV': 'Yonhap News TV',
   'IT조선': 'IT Chosun',
+  'AI타임스': 'AI Times',
+  '블로터': 'Bloter',
+  'YTN': 'YTN',
 }
 
 export function formatMediaName(media: string): string {

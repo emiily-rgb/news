@@ -58,6 +58,7 @@ export default function ArticleCard({
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imageError, setImageError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
 
   function saveEdit(field: 'ko' | 'zh') {
     const lines = (field === 'ko' ? koLines : zhLines).filter(l => l.trim())
@@ -88,6 +89,19 @@ export default function ArticleCard({
     }
     setUploadingImage(false)
     e.target.value = ''
+  }
+
+  async function regenerateSummary() {
+    setRegenerating(true)
+    const res = await fetch(`/api/articles/${article.id}/reprocess`, { method: 'POST' })
+    if (res.ok) {
+      const updated = await res.json()
+      setKoLines(updated.summary_ko?.length > 0 ? updated.summary_ko : [''])
+      setZhLines(updated.summary_zh?.length > 0 ? updated.summary_zh : [''])
+      onUpdateSummary(article.id, 'summary_ko', updated.summary_ko ?? [])
+      onUpdateSummary(article.id, 'summary_zh', updated.summary_zh ?? [])
+    }
+    setRegenerating(false)
   }
 
   async function handleImageDelete() {
@@ -199,6 +213,19 @@ export default function ArticleCard({
               </>
             )}
           </div>
+
+          {/* 요약 재생성 버튼 (요약 없을 때만) */}
+          {article.summary_ko.length === 0 && (
+            <div className="mb-2">
+              <button
+                onClick={regenerateSummary}
+                disabled={regenerating}
+                className="text-xs border border-amber-300 hover:bg-amber-50 text-amber-700 px-3 py-1 rounded transition disabled:opacity-50"
+              >
+                {regenerating ? '재생성 중...' : '⟳ 요약 재생성'}
+              </button>
+            </div>
+          )}
 
           {/* 한국어 요약 */}
           {editing === 'ko' ? (

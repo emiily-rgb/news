@@ -33,6 +33,32 @@ const ALLOWED_DOMAINS: Record<string, string> = {
   'zdnet.co.kr': 'ZDNet Korea',
   'ddaily.co.kr': '디지털데일리',
   'inews24.com': '아이뉴스24',
+  'sedaily.com': '서울경제',
+  'aitimes.com': 'AI타임스',
+  'bloter.net': '블로터',
+  'itchosun.com': 'IT조선',
+  'ytn.co.kr': 'YTN',
+}
+
+// Google News source.name → 내부 언론사명 매핑 (한글 이름과 다를 경우)
+const SOURCE_NAME_MAP: Record<string, string> = {
+  'Yonhap News Agency': '연합뉴스',
+  'Yonhap': '연합뉴스',
+  'The Chosun Ilbo': '조선일보',
+  'JoongAng Ilbo': '중앙일보',
+  'Donga': '동아일보',
+  'Korea Economic Daily': '한국경제',
+  'Maeil Business Newspaper': '매일경제',
+  'ChosunBiz': '조선비즈',
+  'Money Today': '머니투데이',
+  'Electronic Times': '전자신문',
+  'ZDNet Korea': 'ZDNet Korea',
+  'Digital Daily': '디지털데일리',
+  'iNews24': '아이뉴스24',
+  'Seoul Economic Daily': '서울경제',
+  'AI Times': 'AI타임스',
+  'Bloter': '블로터',
+  'IT Chosun': 'IT조선',
 }
 
 // Google News 검색 키워드 (핵심만, 병렬 처리)
@@ -95,7 +121,16 @@ export async function collectArticles(
         const sourceName = typeof rawSource === 'string' ? rawSource : (rawSource?.name ?? '')
         let media = getMediaFromUrl(item.link)
         if (!media) {
-          // source.name으로 매칭 시도
+          // SOURCE_NAME_MAP 직접 매핑 먼저
+          media = SOURCE_NAME_MAP[sourceName] ?? null
+        }
+        if (!media) {
+          // 부분 매칭 fallback
+          for (const [eng, kor] of Object.entries(SOURCE_NAME_MAP)) {
+            if (sourceName.includes(eng) || eng.includes(sourceName)) { media = kor; break }
+          }
+        }
+        if (!media) {
           for (const name of Object.values(ALLOWED_DOMAINS)) {
             if (sourceName.includes(name) || name.includes(sourceName)) { media = name; break }
           }
