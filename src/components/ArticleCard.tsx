@@ -95,8 +95,17 @@ export default function ArticleCard({
             {article.category === '자사' && article.sentiment === 'negative' && (
               <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">⚠️ 부정</span>
             )}
-            {article.category === '자사' && article.impact_level === 'HIGH' && (
+            {article.impact_level === 'HIGH' && (
               <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-medium">HIGH</span>
+            )}
+            {article.impact_level === 'MEDIUM' && (
+              <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-medium">MEDIUM</span>
+            )}
+            {article.impact_level === 'LOW' && (
+              <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full font-medium">LOW</span>
+            )}
+            {article.tag && (
+              <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full font-medium">{article.tag}</span>
             )}
             <a
               href={article.link}
@@ -215,10 +224,13 @@ export default function ArticleCard({
             <div className="mb-2 group">
               <div className="flex items-center gap-1 mb-1">
                 <span className="text-xs font-medium text-gray-500">한국어 요약</span>
-                <button onClick={() => setEditing('ko')} className="text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition">편집</button>
+                <button onClick={() => setEditing('ko')} className="text-xs text-blue-400">편집</button>
               </div>
               {article.summary_ko.map((s, i) => (
-                <p key={i} className="text-sm text-gray-700 mb-0.5">{s}</p>
+                <div key={i} className="flex items-start gap-1.5 mb-0.5">
+                  <span className="text-gray-400 text-sm leading-snug shrink-0">•</span>
+                  <p className="text-sm text-gray-700 leading-snug">{s}</p>
+                </div>
               ))}
             </div>
           )}
@@ -243,10 +255,15 @@ export default function ArticleCard({
             <div className="mb-2 group">
               <div className="flex items-center gap-1 mb-1">
                 <span className="text-xs font-medium text-gray-500">中文 摘要</span>
-                <button onClick={() => setEditing('zh')} className="text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition">편집</button>
+                <button onClick={() => setEditing('zh')} className="text-xs text-blue-400">편집</button>
               </div>
               {article.summary_zh.length > 0
-                ? article.summary_zh.map((s, i) => <p key={i} className="text-sm text-gray-600 mb-0.5">{s}</p>)
+                ? article.summary_zh.map((s, i) => (
+                    <div key={i} className="flex items-start gap-1.5 mb-0.5">
+                      <span className="text-gray-400 text-sm leading-snug shrink-0">•</span>
+                      <p className="text-sm text-gray-600 leading-snug">{s}</p>
+                    </div>
+                  ))
                 : <p className="text-xs text-gray-300 italic">중국어 요약 없음 (편집 버튼으로 입력)</p>
               }
             </div>

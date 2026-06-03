@@ -152,10 +152,10 @@ export async function summarizeAndTranslate(
 영향도: ${article.impactLevel}
 
 작성 기준:
-- KR Summary: 임원 관점에서 핵심만 2~3문장. 번호 없이 문장으로. 반드시 반말체로 작성 (예: "~했다", "~이다", "~될 전망"). 존댓말 금지.
+- KR Summary: 임원 관점에서 핵심만 2~3문장. 번호 없이 문장으로. 반드시 명사형 종결로 작성 (예: "~급증", "~발표", "~전망", "~강화"). 존댓말·반말 동사형 종결 금지.
 - CN Summary: KR Summary의 중국어 간체 번역. 직역 금지, 현지화.
 - title_zh: 기사 제목 중국어 간체 번역 (비즈니스 현지화)
-- why_it_matters_ko: 임원 관점에서 왜 중요한지 1~2문장 (사업 영향 중심). 반드시 반말체로 작성. 존댓말 금지.
+- why_it_matters_ko: 임원 관점에서 왜 중요한지 1~2문장 (사업 영향 중심). 반드시 명사형 종결로 작성. 존댓말·반말 동사형 종결 금지.
 - why_it_matters_zh: why_it_matters_ko의 중국어 간체 번역
 
 응답 형식 (JSON만):
@@ -239,14 +239,14 @@ ${articleSummary}
 
 아래 항목을 작성하라.
 
-1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 핵심 메시지(Key Takeaways) 2~3개를 마지막에 불릿으로 포함. 반드시 반말체로 작성 (예: "~했다", "~이다", "~될 전망"). 존댓말 금지.
+1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 핵심 메시지(Key Takeaways) 2~3개를 마지막에 불릿으로 포함. 반드시 명사형 종결로 작성 (예: "~급증", "~발표", "~전망", "~강화"). 존댓말·반말 동사형 종결 금지.
 2. executive_summary_zh: executive_summary_ko의 중국어 간체 번역 (불릿 포함)
 3. emerging_signals: 반복적으로 나타나는 흐름
-   - positive: 긍정 신호 최대 3개 (한국어, 반말체)
+   - positive: 긍정 신호 최대 3개 (한국어, 명사형 종결)
    - positive_zh: positive의 중국어 간체 번역
-   - risk: 리스크 신호 최대 3개 (한국어, 반말체)
+   - risk: 리스크 신호 최대 3개 (한국어, 명사형 종결)
    - risk_zh: risk의 중국어 간체 번역
-4. tomorrow_watchlist: 내일 추가 모니터링 필요 이슈 최대 3개 (한국어, 반말체)
+4. tomorrow_watchlist: 내일 추가 모니터링 필요 이슈 최대 3개 (한국어, 명사형 종결)
 모든 한국어 항목은 반드시 반말체로 작성. 존댓말 금지.
 
 응답 형식 (JSON만):
@@ -320,9 +320,9 @@ ${input.bodyText.trim()
 3. impact_level: "HIGH"|"MEDIUM"|"LOW" (임원 관점 중요도)
 4. sentiment: "positive"|"negative"|"neutral" (화웨이 관점)
 5. title_zh: 제목 중국어 간체 번역
-6. summary_ko: 임원 관점 핵심 요약 2~3문장 (배열)
+6. summary_ko: 임원 관점 핵심 요약 2~3문장 (배열). 반드시 명사형 종결 (예: "~급증", "~발표", "~전망"). 존댓말·반말 동사형 종결 금지.
 7. summary_zh: summary_ko의 중국어 간체 번역 (배열)
-8. why_it_matters_ko: 왜 중요한지 1~2문장 (사업 영향 중심)
+8. why_it_matters_ko: 왜 중요한지 1~2문장 (사업 영향 중심). 반드시 명사형 종결. 존댓말·반말 동사형 종결 금지.
 9. why_it_matters_zh: why_it_matters_ko의 중국어 간체 번역
 
 중요: 텍스트 값 안에 큰따옴표(")를 사용하지 말 것. 인용이 필요하면 작은따옴표(')로 대체.
