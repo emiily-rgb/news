@@ -82,9 +82,16 @@ async function processPipeline(
   await setStep('summarizing')
   const processed = await summarizeAndTranslate(selected)
 
-  // 5. DB 저장
+  // 5. DB 저장 (최종 중복 제거)
   await setStep('saving')
-  const articles = processed.map((a, i) => ({
+  const seenTitles = new Set<string>()
+  const dedupedProcessed = processed.filter(a => {
+    const key = (a.title ?? '').replace(/[\s\W]/g, '').toLowerCase()
+    if (seenTitles.has(key)) return false
+    seenTitles.add(key)
+    return true
+  })
+  const articles = dedupedProcessed.map((a, i) => ({
     id: uuidv4(),
     run_id: runId,
     order_index: i,
@@ -104,7 +111,7 @@ async function processPipeline(
 
   // 6. Executive Brief
   await setStep('briefing')
-  const insight = await generateInsight(processed)
+  const insight = await generateInsight(dedupedProcessed)
 
   await supabase.from('run_logs').update({
     status: 'completed',
