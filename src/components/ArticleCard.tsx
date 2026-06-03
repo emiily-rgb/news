@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Article, formatMediaName } from '@/types'
 
 interface Props {
@@ -17,13 +17,65 @@ interface Props {
   onDelete: (id: string) => void
 }
 
+function BulletEditor({ lines, onChange, autoFocusFirst }: {
+  lines: string[]
+  onChange: (lines: string[]) => void
+  autoFocusFirst?: boolean
+}) {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const focusIndex = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (focusIndex.current !== null) {
+      inputRefs.current[focusIndex.current]?.focus()
+      focusIndex.current = null
+    }
+  }, [lines.length])
+
+  return (
+    <div>
+      {lines.map((line, i) => (
+        <div key={i} className="flex items-center gap-1.5 mb-1">
+          <span className="text-gray-300 text-sm shrink-0">•</span>
+          <input
+            ref={el => { inputRefs.current[i] = el }}
+            autoFocus={autoFocusFirst && i === 0}
+            value={line}
+            onChange={e => {
+              const next = [...lines]
+              next[i] = e.target.value
+              onChange(next)
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                const next = [...lines]
+                next.splice(i + 1, 0, '')
+                focusIndex.current = i + 1
+                onChange(next)
+              } else if (e.key === 'Backspace' && line === '' && lines.length > 1) {
+                e.preventDefault()
+                const next = [...lines]
+                next.splice(i, 1)
+                focusIndex.current = Math.max(0, i - 1)
+                onChange(next)
+              }
+            }}
+            className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-300"
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function ArticleCard({
   article, isAdmin, isFirst, isLast,
   onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onUpdateCategory, onDelete,
 }: Props) {
   const [editing, setEditing] = useState<'ko' | 'zh' | 'title_zh' | 'wim_ko' | 'wim_zh' | null>(null)
-  const [koText, setKoText] = useState(article.summary_ko.join('\n'))
-  const [zhText, setZhText] = useState(article.summary_zh.join('\n'))
+  const [koLines, setKoLines] = useState<string[]>(article.summary_ko.length > 0 ? article.summary_ko : [''])
+  const [zhLines, setZhLines] = useState<string[]>(article.summary_zh.length > 0 ? article.summary_zh : [''])
   const [titleZh, setTitleZh] = useState(article.title_zh ?? '')
   const [wimKo, setWimKo] = useState(article.why_it_matters_ko ?? '')
   const [wimZh, setWimZh] = useState(article.why_it_matters_zh ?? '')
@@ -32,8 +84,7 @@ export default function ArticleCard({
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   function saveEdit(field: 'ko' | 'zh') {
-    const text = field === 'ko' ? koText : zhText
-    const lines = text.split('\n').filter(l => l.trim())
+    const lines = (field === 'ko' ? koLines : zhLines).filter(l => l.trim())
     onUpdateSummary(article.id, field === 'ko' ? 'summary_ko' : 'summary_zh', lines)
     setEditing(null)
   }
@@ -177,34 +228,7 @@ export default function ArticleCard({
           {editing === 'ko' ? (
             <div className="mb-3">
               <p className="text-xs font-medium text-gray-500 mb-1">한국어 요약</p>
-              {koText.split('\n').map((line, i, arr) => (
-                <div key={i} className="flex items-center gap-1.5 mb-1">
-                  <span className="text-gray-400 text-sm shrink-0">•</span>
-                  <input
-                    autoFocus={i === 0}
-                    value={line}
-                    onChange={e => {
-                      const lines = koText.split('\n')
-                      lines[i] = e.target.value
-                      setKoText(lines.join('\n'))
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        const lines = koText.split('\n')
-                        lines.splice(i + 1, 0, '')
-                        setKoText(lines.join('\n'))
-                      } else if (e.key === 'Backspace' && line === '' && arr.length > 1) {
-                        e.preventDefault()
-                        const lines = koText.split('\n')
-                        lines.splice(i, 1)
-                        setKoText(lines.join('\n'))
-                      }
-                    }}
-                    className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-700"
-                  />
-                </div>
-              ))}
+              <BulletEditor lines={koLines} onChange={setKoLines} autoFocusFirst />
               <div className="flex gap-2 mt-1">
                 <button onClick={() => saveEdit('ko')} className="text-xs bg-blue-600 text-white px-3 py-1 rounded">저장</button>
                 <button onClick={() => setEditing(null)} className="text-xs text-gray-500 px-3 py-1 rounded border">취소</button>
@@ -229,34 +253,7 @@ export default function ArticleCard({
           {editing === 'zh' ? (
             <div className="mb-3">
               <p className="text-xs font-medium text-gray-500 mb-1">中文 摘要</p>
-              {zhText.split('\n').map((line, i, arr) => (
-                <div key={i} className="flex items-center gap-1.5 mb-1">
-                  <span className="text-gray-400 text-sm shrink-0">•</span>
-                  <input
-                    autoFocus={i === 0}
-                    value={line}
-                    onChange={e => {
-                      const lines = zhText.split('\n')
-                      lines[i] = e.target.value
-                      setZhText(lines.join('\n'))
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        const lines = zhText.split('\n')
-                        lines.splice(i + 1, 0, '')
-                        setZhText(lines.join('\n'))
-                      } else if (e.key === 'Backspace' && line === '' && arr.length > 1) {
-                        e.preventDefault()
-                        const lines = zhText.split('\n')
-                        lines.splice(i, 1)
-                        setZhText(lines.join('\n'))
-                      }
-                    }}
-                    className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-700"
-                  />
-                </div>
-              ))}
+              <BulletEditor lines={zhLines} onChange={setZhLines} autoFocusFirst />
               <div className="flex gap-2 mt-1">
                 <button onClick={() => saveEdit('zh')} className="text-xs bg-blue-600 text-white px-3 py-1 rounded">저장</button>
                 <button onClick={() => setEditing(null)} className="text-xs text-gray-500 px-3 py-1 rounded border">취소</button>
