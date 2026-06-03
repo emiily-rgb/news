@@ -148,17 +148,5 @@ export async function collectArticles(
     rawItems.push(...batchResults.flat())
   }
 
-  // 이미지 병렬 수집 (5개씩)
-  const results: RawArticle[] = []
-  const IMG_CONCURRENCY = 5
-  for (let i = 0; i < rawItems.length; i += IMG_CONCURRENCY) {
-    const batch = rawItems.slice(i, i + IMG_CONCURRENCY)
-    const withImages = await Promise.all(batch.map(async item => ({
-      ...item,
-      imageUrl: await fetchOgImage(item.link),
-    })))
-    results.push(...withImages)
-  }
-
-  return results
+  return rawItems
 }
