@@ -96,13 +96,13 @@ export default function ArticleCard({
               <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 text-xs px-2 rounded font-semibold leading-none h-5 mr-2">⚠️ 부정</span>
             )}
             {article.impact_level === 'HIGH' && (
-              <span className="inline-flex items-center justify-center bg-[#c8102e] text-white text-xs px-2.5 rounded font-semibold leading-none h-5">{article.impact_level}</span>
+              <span className="inline-flex items-center justify-center bg-[#c8102e] text-white text-xs px-2.5 py-1 rounded font-semibold">{article.impact_level}</span>
             )}
             {article.impact_level === 'MEDIUM' && (
-              <span className="inline-flex items-center justify-center bg-[#e07b00] text-white text-xs px-2.5 rounded font-semibold leading-none h-5">{article.impact_level}</span>
+              <span className="inline-flex items-center justify-center bg-[#e07b00] text-white text-xs px-2.5 py-1 rounded font-semibold">{article.impact_level}</span>
             )}
             {article.impact_level === 'LOW' && (
-              <span className="inline-flex items-center justify-center bg-gray-400 text-white text-xs px-2.5 rounded font-semibold leading-none h-5">{article.impact_level}</span>
+              <span className="inline-flex items-center justify-center bg-gray-400 text-white text-xs px-2.5 py-1 rounded font-semibold">{article.impact_level}</span>
             )}
             {article.tag && (
               <>
