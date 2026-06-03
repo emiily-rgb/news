@@ -19,27 +19,37 @@ function normalizeTitle(title: string): string {
   return title.replace(/[\s\W]/g, '').toLowerCase()
 }
 
-// 직접 구독 가능한 RSS 피드
-const DIRECT_FEEDS: { url: string; name: string }[] = [
-  { url: 'https://www.yna.co.kr/rss/news.xml',           name: '연합뉴스' },
-  { url: 'https://rss.donga.com/total.xml',              name: '동아일보' },
-  { url: 'https://www.hankyung.com/feed/all-news',       name: '한국경제' },
-  { url: 'https://www.mk.co.kr/rss/40300001/',           name: '매일경제' },
-  { url: 'https://rss.mt.co.kr/mt_news.xml',            name: '머니투데이' },
-  { url: 'https://rss.etnews.com/Section901.xml',        name: '전자신문' },
-  { url: 'https://rss.etnews.com/Section902.xml',        name: '전자신문' },
+// 허용 언론사 도메인
+const ALLOWED_DOMAINS: Record<string, string> = {
+  'yna.co.kr': '연합뉴스',
+  'chosun.com': '조선일보',
+  'joongang.co.kr': '중앙일보',
+  'donga.com': '동아일보',
+  'hankyung.com': '한국경제',
+  'mk.co.kr': '매일경제',
+  'biz.chosun.com': '조선비즈',
+  'mt.co.kr': '머니투데이',
+  'etnews.com': '전자신문',
+  'zdnet.co.kr': 'ZDNet Korea',
+  'ddaily.co.kr': '디지털데일리',
+  'inews24.com': '아이뉴스24',
+}
+
+// Google News 검색 키워드 (핵심만, 병렬 처리)
+const SEARCH_KEYWORDS = [
+  '화웨이', 'Huawei', 'AI 반도체', '수출통제', '미국 제재',
+  '엔비디아', 'HBM', '5G', 'AI 서버', '반도체 규제',
 ]
 
-// RSS 없는 언론사 — Google News 사이트 검색 (핵심 키워드만)
-const GOOGLE_SITE_FEEDS: { site: string; name: string }[] = [
-  { site: 'chosun.com',    name: '조선일보' },
-  { site: 'joongang.co.kr', name: '중앙일보' },
-  { site: 'biz.chosun.com', name: '조선비즈' },
-  { site: 'zdnet.co.kr',   name: 'ZDNet Korea' },
-  { site: 'ddaily.co.kr',  name: '디지털데일리' },
-  { site: 'inews24.com',   name: '아이뉴스24' },
-]
-const GOOGLE_SITE_KEYWORDS = ['화웨이', 'Huawei', 'AI 반도체', '수출통제', '미국 제재']
+function getMediaFromUrl(url: string): string | null {
+  try {
+    const host = new URL(url).hostname.replace('www.', '')
+    for (const [domain, name] of Object.entries(ALLOWED_DOMAINS)) {
+      if (host === domain || host.endsWith('.' + domain)) return name
+    }
+  } catch { /* ignore */ }
+  return null
+}
 
 export async function collectArticles(
   categories: CategoryKeywords[],
@@ -53,40 +63,51 @@ export async function collectArticles(
     cat.keywords.map(kw => ({ category: cat.category, keyword: kw, lower: kw.toLowerCase() }))
   )
 
-  function matchKeyword(title: string): { category: string; keyword: string } | null {
-    const lower = title.toLowerCase()
-    return allKeywords.find(k => lower.includes(k.lower)) ?? null
-  }
-
-  function addArticle(articles: RawArticle[], item: { title: string; link: string; pubDate: string }, media: string) {
-    const matched = matchKeyword(item.title)
-    if (!matched) return
-    const key = normalizeTitle(item.title)
-    if (seen.has(key)) return
-    seen.add(key)
-    articles.push({ title: item.title, link: item.link, pubDate: item.pubDate, media, category: matched.category, keyword: matched.keyword })
-  }
-
-  async function fetchFeed(url: string, name: string, maxItems = 999): Promise<RawArticle[]> {
+  async function searchGoogle(keyword: string): Promise<RawArticle[]> {
     const articles: RawArticle[] = []
     try {
+      const q = encodeURIComponent(keyword)
+      const url = `https://news.google.com/rss/search?q=${q}&hl=ko&gl=KR&ceid=KR:ko`
       const feed = await Promise.race([
         parser.parseURL(url),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
-      ])
-      for (const item of (feed as Awaited<ReturnType<typeof parser.parseURL>>).items?.slice(0, maxItems) ?? []) {
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
+      ]) as Awaited<ReturnType<typeof parser.parseURL>>
+
+      for (const item of feed.items?.slice(0, 20) ?? []) {
         if (!item.title || !item.link) continue
+
+        // 허용 언론사 확인 (source.name 또는 URL)
+        const rawSource = (item as any).source
+        const sourceName = typeof rawSource === 'string' ? rawSource : (rawSource?.name ?? '')
+        let media = getMediaFromUrl(item.link)
+        if (!media) {
+          // source.name으로 매칭 시도
+          for (const name of Object.values(ALLOWED_DOMAINS)) {
+            if (sourceName.includes(name) || name.includes(sourceName)) { media = name; break }
+          }
+        }
+        if (!media) continue
+
         const pub = item.pubDate ? new Date(item.pubDate) : null
         if (!pub || pub < cutoff) continue
-        addArticle(articles, { title: item.title, link: item.link, pubDate: pub.toISOString() }, name)
+
+        const key = normalizeTitle(item.title)
+        if (seen.has(key)) continue
+        seen.add(key)
+
+        // 카테고리 매칭
+        const titleLower = item.title.toLowerCase()
+        const matched = allKeywords.find(k => titleLower.includes(k.lower))
+        const category = matched?.category ?? '업계'
+        const kw = matched?.keyword ?? keyword
+
+        articles.push({ title: item.title, link: item.link, pubDate: pub.toISOString(), media, category, keyword: kw })
       }
     } catch { /* ignore */ }
     return articles
   }
 
-  // 직접 RSS 피드만 병렬 수집
-  const results = await Promise.all(
-    DIRECT_FEEDS.map(({ url, name }) => fetchFeed(url, name))
-  )
+  // 키워드별 Google News 병렬 검색
+  const results = await Promise.all(SEARCH_KEYWORDS.map(kw => searchGoogle(kw)))
   return results.flat()
 }
