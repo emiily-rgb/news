@@ -129,7 +129,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   <tr><td style="padding:24px 28px;border-bottom:2px solid #c8102e">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="vertical-align:middle">
-        <img src="https://news-ebon-alpha.vercel.app/huawei-logo.png" alt="HUAWEI" height="28" style="display:inline-block;vertical-align:middle;margin-right:10px" />
+        <img src="https://news-ebon-alpha.vercel.app/huawei_logo.png" alt="HUAWEI" height="28" style="display:inline-block;vertical-align:middle;margin-right:10px" />
         <span style="color:#bbb;font-size:14px;font-weight:400;margin-left:10px;vertical-align:middle">Daily News Brief</span>
       </td>
       <td style="text-align:right;vertical-align:middle">
