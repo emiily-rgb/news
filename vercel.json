@@ -3,13 +3,13 @@
     "src/app/api/run/route.ts": { "maxDuration": 300 }
   },
   "crons": [
-    { "path": "/api/run",                 "schedule": "0 23 * * *"   },
+    { "path": "/api/run",                 "schedule": "0 22 * * *"   },
     { "path": "/api/monitor",             "schedule": "0 3 * * *"    },
     { "path": "/api/monitor",             "schedule": "0 7 * * *"    },
     { "path": "/api/monitor",             "schedule": "0 12 * * *"   },
-    { "path": "/api/daily-alert/collect", "schedule": "30 2 * * 1-5" },
-    { "path": "/api/daily-alert/collect", "schedule": "30 6 * * 1-5" },
-    { "path": "/api/daily-alert/collect", "schedule": "30 11 * * 1-5"},
+    { "path": "/api/daily-alert/collect", "schedule": "50 2 * * 1-5" },
+    { "path": "/api/daily-alert/collect", "schedule": "50 6 * * 1-5" },
+    { "path": "/api/daily-alert/collect", "schedule": "50 11 * * 1-5"},
     { "path": "/api/daily-alert/send",    "schedule": "0 3 * * 1-5"  },
     { "path": "/api/daily-alert/send",    "schedule": "0 7 * * 1-5"  },
     { "path": "/api/daily-alert/send",    "schedule": "0 12 * * 1-5" }

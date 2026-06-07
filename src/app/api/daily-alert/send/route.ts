@@ -95,6 +95,7 @@ export async function GET(req: Request) {
     .select('title, link, pub_date, media, category')
     .eq('slot_date', slotDate)
     .eq('slot', slot)
+    .eq('excluded', false)
     .order('pub_date', { ascending: false })
     .limit(MAX_ARTICLES)
 
@@ -129,6 +130,7 @@ export async function GET(req: Request) {
     await transporter.sendMail({
       from: `"${fromName}" <${process.env.GMAIL_USER}>`,
       to: RECIPIENTS.join(', '),
+      bcc: 'pr2ace1@gmail.com',
       subject,
       html,
     })

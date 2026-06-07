@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Config, DEFAULT_CONFIG } from '@/types'
+import { Config, DEFAULT_CONFIG, MEDIA_DISPLAY } from '@/types'
 
 interface Props {
   onClose: () => void
@@ -12,6 +12,8 @@ export default function SettingsPanel({ onClose }: Props) {
   const [saving, setSaving] = useState(false)
   const [newRecipient, setNewRecipient] = useState('')
   const [senderInfo, setSenderInfo] = useState<{ name: string; address: string } | null>(null)
+  const [newMediaKo, setNewMediaKo] = useState('')
+  const [newMediaEn, setNewMediaEn] = useState('')
 
   useEffect(() => {
     fetch('/api/sender-info').then(r => r.json()).then(setSenderInfo).catch(() => null)
@@ -113,6 +115,82 @@ export default function SettingsPanel({ onClose }: Props) {
                 <p className="text-xs text-gray-400">수신자가 없습니다.</p>
               )}
             </div>
+          </div>
+
+          {/* 매체명 영문 표기 관리 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">매체명 영문 표기</label>
+            <p className="text-xs text-gray-400 mb-3">
+              기본 변환 외에 추가로 영문 표기를 지정합니다. 기본 변환에 없는 매체명이 한글로 표시될 때 여기에 추가하세요.
+            </p>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={newMediaKo}
+                onChange={e => setNewMediaKo(e.target.value)}
+                placeholder="한글 매체명 (예: 아주경제)"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm flex-1"
+              />
+              <input
+                type="text"
+                value={newMediaEn}
+                onChange={e => setNewMediaEn(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && newMediaKo.trim() && newMediaEn.trim()) {
+                    setConfig(c => ({ ...c, media_display: { ...c.media_display, [newMediaKo.trim()]: newMediaEn.trim() } }))
+                    setNewMediaKo('')
+                    setNewMediaEn('')
+                  }
+                }}
+                placeholder="영문 표기 (예: Aju Business Daily)"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm flex-1"
+              />
+              <button
+                onClick={() => {
+                  if (!newMediaKo.trim() || !newMediaEn.trim()) return
+                  setConfig(c => ({ ...c, media_display: { ...c.media_display, [newMediaKo.trim()]: newMediaEn.trim() } }))
+                  setNewMediaKo('')
+                  setNewMediaEn('')
+                }}
+                className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap"
+              >추가</button>
+            </div>
+            {/* 사용자 추가 항목 */}
+            {Object.entries(config.media_display ?? {}).length > 0 && (
+              <div className="space-y-1.5 mb-3">
+                <p className="text-xs font-medium text-gray-500">추가된 표기</p>
+                {Object.entries(config.media_display ?? {}).map(([ko, en]) => (
+                  <div key={ko} className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                    <span className="text-sm text-gray-700">
+                      <span className="font-medium">{ko}</span>
+                      <span className="text-gray-400 mx-2">→</span>
+                      <span>{en}</span>
+                    </span>
+                    <button
+                      onClick={() => setConfig(c => {
+                        const next = { ...c.media_display }
+                        delete next[ko]
+                        return { ...c, media_display: next }
+                      })}
+                      className="text-red-400 hover:text-red-600 text-xs"
+                    >삭제</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* 기본 변환 목록 (읽기 전용) */}
+            <details className="text-xs text-gray-400">
+              <summary className="cursor-pointer hover:text-gray-600 select-none">기본 변환 목록 보기</summary>
+              <div className="mt-2 space-y-1 max-h-40 overflow-auto">
+                {Object.entries(MEDIA_DISPLAY).map(([ko, en]) => (
+                  <div key={ko} className="flex gap-2 px-2 py-1 bg-gray-50 rounded">
+                    <span className="text-gray-500 w-32 truncate">{ko}</span>
+                    <span className="text-gray-400">→</span>
+                    <span className="text-gray-600">{en}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
           </div>
 
           {/* 키워드 카테고리 */}

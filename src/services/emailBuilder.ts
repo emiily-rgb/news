@@ -1,4 +1,4 @@
-import { Article, RunLog, formatMediaName } from '@/types'
+import { Article, RunLog, formatMediaName, INDUSTRY_TAG_ORDER } from '@/types'
 
 const IMPACT_COLOR: Record<string, string> = {
   HIGH: '#c8102e',
@@ -6,19 +6,20 @@ const IMPACT_COLOR: Record<string, string> = {
   LOW: '#999999',
 }
 
-function bulletItem(s: string, color = '#444', fontSize = 15) {
+function bulletItem(s: string, color = '#444', fontSize: number | string = '11pt') {
   const text = s.startsWith('•') ? s.slice(1).trim() : s
-  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fontSize}px;color:#111;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fontSize}px;color:${color};line-height:1.7">${text}</td></tr></table>`
+  const fs = typeof fontSize === 'number' ? `${fontSize}px` : fontSize
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fs};color:#111;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fs};color:${color};line-height:1.7">${text}</td></tr></table>`
 }
 
 function renderInsightItems(items: string[], color: string, subtitleKo: string, subtitleZh: string, isZh: boolean) {
   const normalItems = items.filter(s => !s.startsWith('•'))
   const bulletItems = items.filter(s => s.startsWith('•'))
   return `
-    ${normalItems.map(s => bulletItem(s, color, 15)).join('')}
+    ${normalItems.map(s => bulletItem(s, color, '11pt')).join('')}
     ${bulletItems.length > 0 ? `
-      <div style="font-size:15px;font-weight:700;color:#c8102e;margin-top:14px;margin-bottom:8px">${isZh ? subtitleZh : subtitleKo}</div>
-      ${bulletItems.map(s => bulletItem(s, color)).join('')}
+      <div style="font-size:11pt;font-weight:700;color:#c8102e;margin-top:14px;margin-bottom:8px">${isZh ? subtitleZh : subtitleKo}</div>
+      ${bulletItems.map(s => bulletItem(s, color, '11pt')).join('')}
     ` : ''}
   `
 }
@@ -29,7 +30,7 @@ function formatDateEn(dateStr: string) {
   })
 }
 
-export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
+export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplayOverrides?: Record<string, string>): string {
   const date = new Date(runLog.run_at).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
   })
@@ -71,11 +72,11 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       <tr><td style="padding:14px 0;border-bottom:1px solid #f5f5f5">
         <div style="margin-bottom:7px">
           <span style="display:inline-block;font-size:13px;font-weight:600;color:#fff;background:${impactColor};padding:4px 9px;border-radius:2px;margin-right:4px;letter-spacing:0.3px;line-height:1">${a.impact_level}</span>
-          ${a.tag ? `<span style="font-size:13px;color:#888;padding-left:4px;letter-spacing:0.5px">| ${Array.isArray(a.tag) ? (a.tag as string[])[0] : a.tag}</span>` : ''}
+          ${a.tag ? `<span style="font-size:13px;color:#888;padding-left:4px;letter-spacing:0.5px">| ${(() => { const t = a.tag as unknown; if (Array.isArray(t)) return t[0]; if (typeof t === 'string' && t.startsWith('[')) { try { const arr = JSON.parse(t); if (Array.isArray(arr)) return arr[0]; } catch {} } return t; })()}</span>` : ''}
         </div>
         ${a.image_url ? `<img src="${a.image_url}" alt="" width="100%" style="display:block;width:100%;max-height:220px;object-fit:cover;border-radius:3px;margin-bottom:10px" />` : ''}
         <a href="${a.link}" style="color:#111;font-size:16px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
-        <div style="font-size:14px;color:#aaa;margin-bottom:8px">${formatMediaName(a.media)} &nbsp;·&nbsp; ${pubDate}</div>
+        <div style="font-size:14px;color:#aaa;margin-bottom:8px">${formatMediaName(a.media, mediaDisplayOverrides)} &nbsp;·&nbsp; ${pubDate}</div>
         ${summary.length > 0 ? `<div>${summary.map(s => bulletItem(s)).join('')}</div>` : ''}
       </td></tr>`
     }).join('')
@@ -84,7 +85,16 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   // ── 중문 섹션 ──
   const zhPart = categories.map(cat => {
     const catArticles = [...activeArticles.filter(a => a.category === cat)]
-      .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+      .sort((a, b) => {
+        if (cat === '업계') {
+          const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
+          const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+          const idxA = tagA === -1 ? 999 : tagA
+          const idxB = tagB === -1 ? 999 : tagB
+          if (idxA !== idxB) return idxA - idxB
+        }
+        return (a.order_index ?? 0) - (b.order_index ?? 0)
+      })
     return `
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
@@ -98,7 +108,16 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   // ── 국문 섹션 ──
   const koPart = categories.map(cat => {
     const catArticles = [...activeArticles.filter(a => a.category === cat)]
-      .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+      .sort((a, b) => {
+        if (cat === '업계') {
+          const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
+          const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+          const idxA = tagA === -1 ? 999 : tagA
+          const idxB = tagB === -1 ? 999 : tagB
+          if (idxA !== idxB) return idxA - idxB
+        }
+        return (a.order_index ?? 0) - (b.order_index ?? 0)
+      })
     return `
       <tr><td style="padding:20px 0 4px 0">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
@@ -136,13 +155,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
       .email-nav { padding: 10px 16px !important; }
       .article-title { font-size: 15px !important; }
       .article-meta { font-size: 13px !important; }
-      .bullet-text { font-size: 14px !important; }
-      .cat-label { font-size: 16px !important; }
+.cat-label { font-size: 16px !important; }
       .insight-title { font-size: 15px !important; }
     }
   </style>
 </head>
-<body bgcolor="#f4f4f4" style="margin:0;padding:0;background:#f4f4f4;font-family:'Apple SD Gothic Neo','PingFang SC','Noto Sans KR','Noto Sans SC','Malgun Gothic','Microsoft YaHei',sans-serif">
+<body bgcolor="#f4f4f4" style="margin:0;padding:0;background:#f4f4f4;font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR','Nanum Gothic','PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f4f4f4" style="background:#f4f4f4">
 <tr><td align="center" class="email-outer" style="padding:24px 10px" bgcolor="#f4f4f4">
 <table width="760" cellpadding="0" cellspacing="0" bgcolor="#ffffff" class="email-container" style="background:#fff;border-radius:4px;overflow:hidden;max-width:760px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
@@ -151,8 +169,10 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog): string {
   <tr><td class="email-header" bgcolor="#ffffff" style="padding:24px 28px;background:#ffffff;border-bottom:2px solid #c8102e">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="vertical-align:middle">
-        <img src="https://news-ebon-alpha.vercel.app/huawei_logo.png" alt="HUAWEI" height="28" style="display:inline-block;vertical-align:middle;margin-right:10px" />
-        <span style="color:#888;font-size:16px;font-weight:500;margin-left:10px;vertical-align:middle">Daily News Brief</span>
+        <table cellpadding="0" cellspacing="0" style="display:inline-table;vertical-align:middle"><tr>
+          <td style="vertical-align:middle;padding-right:12px"><img src="https://news-ebon-alpha.vercel.app/huawei_logo.png" alt="HUAWEI" height="28" style="display:block" /></td>
+          <td style="vertical-align:middle"><span style="color:#888;font-size:16px;font-weight:500">Daily News Brief</span></td>
+        </tr></table>
       </td>
       <td class="email-header-date" style="text-align:right;vertical-align:middle">
         <div style="color:#555;font-size:14px">${date}</div>

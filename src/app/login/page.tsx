@@ -29,7 +29,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8">
         <div className="text-center mb-8">
-          <img src="/huawei.svg" alt="Huawei" className="h-12 mx-auto mb-4" />
+          <img src="/Huawei_Standard_logo.svg" alt="Huawei" className="h-12 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-800">Daily News Brief</h1>
           <p className="text-sm text-gray-400 mt-1">로그인이 필요합니다</p>
         </div>

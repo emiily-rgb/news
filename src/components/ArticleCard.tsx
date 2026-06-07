@@ -8,12 +8,14 @@ interface Props {
   isAdmin: boolean
   isFirst: boolean
   isLast: boolean
+  mediaDisplay?: Record<string, string>
   onMoveUp: () => void
   onMoveDown: () => void
   onUpdateSummary: (id: string, field: 'summary_ko' | 'summary_zh', value: string[]) => void
   onUpdateField: (id: string, field: 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', value: string) => void
   onUpdateImageUrl: (id: string, imageUrl: string) => void
   onUpdateCategory: (id: string, category: string) => void
+  onUpdateMedia: (id: string, media: string) => void
   onDelete: (id: string) => void
 }
 
@@ -46,10 +48,12 @@ function BulletEditor({ lines, onChange, autoFocusFirst }: {
 }
 
 export default function ArticleCard({
-  article, isAdmin, isFirst, isLast,
-  onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onUpdateCategory, onDelete,
+  article, isAdmin, isFirst, isLast, mediaDisplay,
+  onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onUpdateCategory, onUpdateMedia, onDelete,
 }: Props) {
   const [editing, setEditing] = useState<'ko' | 'zh' | 'title_zh' | 'wim_ko' | 'wim_zh' | null>(null)
+  const [editingMedia, setEditingMedia] = useState(false)
+  const [mediaInput, setMediaInput] = useState(article.media)
   const [koLines, setKoLines] = useState<string[]>(article.summary_ko.length > 0 ? article.summary_ko : [''])
   const [zhLines, setZhLines] = useState<string[]>(article.summary_zh.length > 0 ? article.summary_zh : [''])
   const [titleZh, setTitleZh] = useState(article.title_zh ?? '')
@@ -133,6 +137,9 @@ export default function ArticleCard({
 
           {/* 태그 */}
           <div className="flex items-center gap-0 mb-2">
+            {article.is_manual && (
+              <span className="inline-flex items-center justify-center bg-gray-100 text-gray-400 text-xs px-2 rounded font-medium leading-none h-5 mr-2">수동 추가</span>
+            )}
             {article.category === '자사' && article.sentiment === 'negative' && (
               <span className="inline-flex items-center justify-center bg-amber-100 text-amber-700 text-xs px-2 rounded font-semibold leading-none h-5 mr-2">⚠️ 부정</span>
             )}
@@ -145,12 +152,18 @@ export default function ArticleCard({
             {article.impact_level === 'LOW' && (
               <span className="inline-flex items-center justify-center bg-gray-400 text-white text-xs px-2.5 py-1 rounded font-semibold">{article.impact_level}</span>
             )}
-            {article.tag && (
-              <>
-                <span className="text-gray-300 text-xs mx-2">|</span>
-                <span className="inline-flex items-center justify-center text-gray-400 text-xs font-medium leading-none tracking-wide uppercase">{article.tag}</span>
-              </>
-            )}
+            {article.tag && (() => {
+              let displayTag: string = article.tag
+              if (displayTag.startsWith('[')) {
+                try { const arr = JSON.parse(displayTag); if (Array.isArray(arr) && arr.length > 0) displayTag = arr[0] } catch { /* pass */ }
+              }
+              return (
+                <>
+                  <span className="text-gray-300 text-xs mx-2">|</span>
+                  <span className="inline-flex items-center justify-center text-gray-400 text-xs font-medium leading-none tracking-wide uppercase">{displayTag}</span>
+                </>
+              )
+            })()}
           </div>
 
           {/* 제목 */}
@@ -191,9 +204,39 @@ export default function ArticleCard({
           </div>
 
           <div className="flex items-center gap-2 text-gray-400 text-xs mb-3 flex-wrap">
-            <span>
-              {formatMediaName(article.media)}
-              {article.media_tier <= 2 && <span className="ml-1 text-blue-400">T{article.media_tier}</span>}
+            <span className="flex items-center gap-1">
+              {isAdmin && editingMedia ? (
+                <input
+                  autoFocus
+                  type="text"
+                  value={mediaInput}
+                  onChange={e => setMediaInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      onUpdateMedia(article.id, mediaInput.trim())
+                      setEditingMedia(false)
+                    }
+                    if (e.key === 'Escape') {
+                      setMediaInput(article.media)
+                      setEditingMedia(false)
+                    }
+                  }}
+                  onBlur={() => {
+                    onUpdateMedia(article.id, mediaInput.trim())
+                    setEditingMedia(false)
+                  }}
+                  className="border border-blue-300 rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-300 w-36"
+                />
+              ) : (
+                <span
+                  onClick={() => isAdmin && setEditingMedia(true)}
+                  title={isAdmin ? '클릭하여 매체명 수정' : undefined}
+                  className={isAdmin ? 'cursor-pointer hover:text-blue-500 hover:underline transition-colors' : ''}
+                >
+                  {formatMediaName(article.media, mediaDisplay)}
+                </span>
+              )}
+              {article.media_tier <= 2 && <span className="text-blue-400">T{article.media_tier}</span>}
             </span>
             <span>|</span>
             <span>{new Date(article.pub_date).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>

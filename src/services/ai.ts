@@ -27,6 +27,22 @@ function robustJsonParse(text: string): Record<string, unknown> {
   return result
 }
 
+// AI가 tag를 배열이나 JSON 배열 문자열로 반환할 때 첫 번째 값만 추출
+function normalizeTag(raw: unknown): ArticleTag {
+  if (Array.isArray(raw)) return (raw[0] as ArticleTag) ?? 'AI'
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (trimmed.startsWith('[')) {
+      try {
+        const arr = JSON.parse(trimmed)
+        if (Array.isArray(arr) && arr.length > 0) return arr[0] as ArticleTag
+      } catch { /* pass */ }
+    }
+    return (trimmed as ArticleTag) || 'AI'
+  }
+  return 'AI'
+}
+
 function getClient() {
   return new Anthropic({ apiKey: process.env['NEWS_AI_KEY'] })
 }
@@ -43,7 +59,7 @@ ${lines}
 
 1. relevant: 아래 포함 기준을 충족하고 제외 기준에 해당하지 않으면 true
 
-   포함: 화웨이 관련, AI, Ascend, Cloud, Data Center, Semiconductor, Network, Smartphone, 통신장비, 공급망, 실적, 투자, 파트너십, 중국 IT 산업, AI 서버, 반도체 산업, 미국 대중국 규제, 중국 정부 정책, AI 정책, 수출통제, 보안 규제
+   포함: 화웨이 관련, AI, Ascend, Cloud, Data Center, Semiconductor, Network, Smartphone, 통신장비, 공급망, 실적, 투자, 파트너십, 중국 IT 산업, AI 서버, 반도체 산업, 미국 대중국 규제, 중국 정부 정책, AI 정책, 수출통제, 보안 규제, 5G, 6G, 주파수, LGU+, NPU, 스마트 캠퍼스, 스마트 병원, SSD, 낸드플래시, 디지털 파워, 데이터센터 전력, 웨어러블, 스마트워치, 스마트카, 차량용 반도체, 자율주행
 
    ※ 포함 기준에 해당하면 관대하게 true로 판단할 것. 의심스러우면 true.
 
@@ -53,11 +69,12 @@ ${lines}
 
 2. category: "자사" | "업계" | "정책" | "위기이슈"
    - 자사: 화웨이 직접 관련
-   - 업계: 시장·경쟁사 (NVIDIA/삼성/SK하이닉스/AI서버/반도체/데이터센터/중국IT)
+   - 업계: 시장·경쟁사 (NVIDIA/삼성/SK하이닉스/AI서버/반도체/데이터센터/중국IT/5G·6G·주파수/NPU/스마트캠퍼스·병원/SSD·낸드/디지털파워/웨어러블/스마트카·차량반도체)
    - 정책: 정부·규제 (미국규제/중국정책/AI정책/수출통제/보안규제)
    - 위기이슈: 보안위협·제재·스파이·해킹·백도어·도청·정보유출·엔티티리스트·보이콧·배제
 
-3. tag: "AI" | "Cloud" | "Semiconductor" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment"
+3. tag: "AI" | "Cloud" | "Semiconductor" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment" | "AI Semiconductor" | "Smart Campus" | "Smart Hospital" | "SSD" | "Digital Power" | "Smart Device" | "IAS"
+   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=NPU/AI칩/AI서버/엔비디아/HBM, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
 
 4. impact_level: "HIGH" | "MEDIUM" | "LOW"
 
@@ -84,7 +101,7 @@ async function filterBatch(batch: RawArticle[], offset: number): Promise<FilterR
   console.log(`[filterBatch] AI 응답 앞부분:`, text.slice(0, 300))
   try {
     const parsed: FilterResult[] = JSON.parse(text.match(/\[[\s\S]*\]/)?.[0] ?? '[]')
-    parsed.forEach(r => { if (Array.isArray(r.tag)) r.tag = r.tag[0] as ArticleTag })
+    parsed.forEach(r => { r.tag = normalizeTag(r.tag) })
     const trueCount = parsed.filter(r => r.relevant).length
     console.log(`[filterBatch] 파싱 결과: ${parsed.length}건, relevant=true: ${trueCount}건`)
     return parsed
@@ -321,7 +338,8 @@ ${input.bodyText.trim()
 
 판단 및 작성:
 1. category: "자사"(화웨이 직접) | "업계"(시장/경쟁사/AI/반도체) | "정책"(정부/규제) | "위기이슈"(보안위협/제재/해킹/스파이/정보유출)
-2. tag: "AI"|"Cloud"|"Semiconductor"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"
+2. tag: "AI"|"Cloud"|"Semiconductor"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"|"AI Semiconductor"|"Smart Campus"|"Smart Hospital"|"SSD"|"Digital Power"|"Smart Device"|"IAS"
+   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=NPU/AI칩/AI서버/엔비디아/HBM, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
 3. impact_level: "HIGH"|"MEDIUM"|"LOW" (임원 관점 중요도)
 4. sentiment: "positive"|"negative"|"neutral" (화웨이 관점)
 5. title_zh: 제목 중국어 간체 번역
@@ -386,7 +404,7 @@ ${input.bodyText.trim()
     sentiment: (parsed.sentiment as Sentiment) ?? 'neutral',
     relevance_score: 1.0,
     image_url: null,
-    tag: (parsed.tag as ArticleTag) ?? 'AI',
+    tag: normalizeTag(parsed.tag),
     impact_level: (parsed.impact_level as ImpactLevel) ?? 'MEDIUM',
     why_it_matters_ko: (parsed.why_it_matters_ko as string) ?? null,
     why_it_matters_zh: (parsed.why_it_matters_zh as string) ?? null,

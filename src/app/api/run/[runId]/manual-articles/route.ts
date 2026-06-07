@@ -155,6 +155,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ run
           run_id: runId,
           ...processed,
           order_index: orderIndex,
+          is_manual: true,
         })
         .select()
         .single()

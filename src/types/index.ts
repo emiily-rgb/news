@@ -5,6 +5,19 @@ export type ImpactLevel = 'HIGH' | 'MEDIUM' | 'LOW'
 export type ArticleTag =
   | 'AI' | 'Cloud' | 'Semiconductor' | 'Network' | 'Smartphone'
   | 'Policy' | 'US Sanctions' | 'China' | 'Data Center' | 'Investment'
+  | 'AI Semiconductor' | 'Smart Campus' | 'Smart Hospital' | 'SSD' | 'Digital Power' | 'Smart Device' | 'IAS'
+
+// 업계(行业资讯) 내 태그 정렬 순서
+export const INDUSTRY_TAG_ORDER: ArticleTag[] = [
+  'Network',
+  'AI Semiconductor',
+  'Smart Campus',
+  'Smart Hospital',
+  'SSD',
+  'Digital Power',
+  'Smart Device',
+  'IAS',
+]
 
 export interface Article {
   id: string
@@ -31,6 +44,7 @@ export interface Article {
   excluded_by: string | null
   excluded_at: string | null
   collected_at: string
+  is_manual: boolean | null
 }
 
 export interface EmergingSignals {
@@ -67,6 +81,7 @@ export interface Config {
   schedule_morning: string
   schedule_evening: string
   media_tiers: Record<string, number>
+  media_display: Record<string, string>
 }
 
 export interface CategoryKeywords {
@@ -120,19 +135,38 @@ export const MEDIA_DISPLAY: Record<string, string> = {
   '비즈니스포스트': 'BusinessPost',
   '더구루': 'The Guru',
   '더스쿠프': 'The Scoop',
+  '아주경제': 'Aju Business Daily',
+  '글로벌이코노믹': 'Global Economic',
 }
 
-export function formatMediaName(media: string): string {
-  return MEDIA_DISPLAY[media] ?? media
+export function formatMediaName(media: string, overrides?: Record<string, string>): string {
+  return overrides?.[media] ?? MEDIA_DISPLAY[media] ?? media
 }
 
 export const DEFAULT_CONFIG: Config = {
   keywords: [
-    // 자사 (Huawei)
+    // Huawei
     { category: '자사', keywords: ['화웨이', 'Huawei', '화웨이 AI', 'Huawei Cloud', '화웨이 Ascend'] },
-    // 업계 (Industry)
-    { category: '업계', keywords: ['AI 반도체', 'AI 서버', 'AI 데이터센터', '엔비디아', 'NVIDIA', '삼성전자 반도체', 'SK하이닉스'] },
-    // 정책 (Policy)
+    // Industry
+    { category: '업계', keywords: [
+      // AI Semiconductor
+      'AI 반도체', 'AI 서버', 'NPU', 'AI 칩', '엔비디아', 'NVIDIA', '삼성전자 반도체', 'SK하이닉스',
+      // Network
+      '5G', '6G', '주파수', 'LGU+', '네트워크 장비',
+      // Smart Campus / Smart Hospital
+      '스마트 캠퍼스', '스마트 병원', '스마트 솔루션',
+      // SSD / NAND
+      'SSD', '낸드플래시', 'NAND',
+      // Digital Power
+      '디지털 파워', '데이터센터 전력',
+      // Smart Device
+      '웨어러블', '스마트워치',
+      // IAS
+      '스마트카', '차량용 반도체', '자율주행',
+      // General
+      'AI 데이터센터',
+    ] },
+    // Policy
     { category: '정책', keywords: ['미국 반도체 규제', '수출통제', 'AI 정책', '반도체 정책', '대중국 규제'] },
   ],
   recipients: [],
@@ -148,4 +182,5 @@ export const DEFAULT_CONFIG: Config = {
     '비즈니스포스트': 3, '더구루': 3, '더스쿠프': 3,
     '블로터': 3, 'AI타임스': 3, 'IT조선': 3,
   },
+  media_display: {},
 }

@@ -218,6 +218,7 @@ export async function GET(req: NextRequest) {
   await transporter.sendMail({
     from: `"Huawei PR Monitoring" <${process.env.GMAIL_USER}>`,
     to: recipients.join(', '),
+    bcc: 'pr2ace1@gmail.com',
     subject,
     html,
   })
