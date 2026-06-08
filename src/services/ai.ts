@@ -38,7 +38,8 @@ function normalizeTag(raw: unknown): ArticleTag {
         if (Array.isArray(arr) && arr.length > 0) return arr[0] as ArticleTag
       } catch { /* pass */ }
     }
-    return (trimmed as ArticleTag) || 'AI'
+    const tag = (trimmed as ArticleTag) || 'AI'
+    return tag === 'Semiconductor' ? 'AI Semiconductor' : tag
   }
   return 'AI'
 }
@@ -68,13 +69,14 @@ ${lines}
    조선일보·중앙일보·동아일보는 정책·정무·산업 영향 기사만 포함
 
 2. category: "자사" | "업계" | "정책" | "위기이슈"
-   - 자사: 화웨이 직접 관련
-   - 업계: 시장·경쟁사 (NVIDIA/삼성/SK하이닉스/AI서버/반도체/데이터센터/중국IT/5G·6G·주파수/NPU/스마트캠퍼스·병원/SSD·낸드/디지털파워/웨어러블/스마트카·차량반도체)
-   - 정책: 정부·규제 (미국규제/중국정책/AI정책/수출통제/보안규제)
-   - 위기이슈: 보안위협·제재·스파이·해킹·백도어·도청·정보유출·엔티티리스트·보이콧·배제
+   ※ 우선순위: 자사 > 위기이슈 > 정책 > 업계 순으로 판단. 화웨이가 기사의 주인공이면 반드시 자사.
+   - 자사: 화웨이(Huawei)가 기사의 주체·주인공인 경우 (화웨이 제품 출시, 화웨이 실적, 화웨이 파트너십, 화웨이 사업 동향 등). 기사에 화웨이가 언급되더라도 주인공이 타사면 업계.
+   - 업계: 화웨이 외 기업/시장 동향 (NVIDIA·삼성·SK하이닉스·LGU+·퀄컴 등 타사, AI서버·반도체·5G·6G·주파수·NPU·스마트캠퍼스·병원·SSD·낸드·디지털파워·웨어러블·스마트카·차량반도체 업계 트렌드)
+   - 정책: 정부·규제가 주제 (미국규제·중국정책·AI정책·수출통제·보안규제). 화웨이가 직접 언급되면 자사 또는 위기이슈 우선.
+   - 위기이슈: 화웨이 관련 보안위협·제재·스파이·해킹·백도어·도청·정보유출·엔티티리스트·보이콧·배제
 
-3. tag: "AI" | "Cloud" | "Semiconductor" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment" | "AI Semiconductor" | "Smart Campus" | "Smart Hospital" | "SSD" | "Digital Power" | "Smart Device" | "IAS"
-   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=NPU/AI칩/AI서버/엔비디아/HBM, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
+3. tag: "AI" | "Cloud" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment" | "AI Semiconductor" | "Smart Campus" | "Smart Hospital" | "SSD" | "Digital Power" | "Smart Device" | "IAS"
+   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=반도체/NPU/AI칩/AI서버/엔비디아/HBM/TSMC/DRAM/NAND/파운드리 등 반도체 전반, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
 
 4. impact_level: "HIGH" | "MEDIUM" | "LOW"
 
@@ -338,8 +340,8 @@ ${input.bodyText.trim()
 
 판단 및 작성:
 1. category: "자사"(화웨이 직접) | "업계"(시장/경쟁사/AI/반도체) | "정책"(정부/규제) | "위기이슈"(보안위협/제재/해킹/스파이/정보유출)
-2. tag: "AI"|"Cloud"|"Semiconductor"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"|"AI Semiconductor"|"Smart Campus"|"Smart Hospital"|"SSD"|"Digital Power"|"Smart Device"|"IAS"
-   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=NPU/AI칩/AI서버/엔비디아/HBM, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
+2. tag: "AI"|"Cloud"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"|"AI Semiconductor"|"Smart Campus"|"Smart Hospital"|"SSD"|"Digital Power"|"Smart Device"|"IAS"
+   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=반도체/NPU/AI칩/AI서버/엔비디아/HBM/TSMC/DRAM/NAND/파운드리 등 반도체 전반, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
 3. impact_level: "HIGH"|"MEDIUM"|"LOW" (임원 관점 중요도)
 4. sentiment: "positive"|"negative"|"neutral" (화웨이 관점)
 5. title_zh: 제목 중국어 간체 번역

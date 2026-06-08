@@ -190,6 +190,16 @@ export default function Home() {
     setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
   }
 
+  async function updateTag(id: string, tag: string) {
+    const res = await fetch(`/api/articles/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag }),
+    })
+    const updated = await res.json()
+    setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
+  }
+
   async function updateMedia(id: string, media: string) {
     const res = await fetch(`/api/articles/${id}`, {
       method: 'PATCH',
@@ -210,10 +220,19 @@ export default function Home() {
       const article = prev.find(a => a.id === id)
       if (!article) return prev
 
-      // 같은 카테고리 내에서 정렬된 배열
+      // UI와 동일한 정렬 기준 사용 (업계는 tag 우선, 나머지는 order_index)
       const catArticles = prev
         .filter(a => a.category === article.category)
-        .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+        .sort((a, b) => {
+          if (article.category === '업계') {
+            const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
+            const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+            const idxA = tagA === -1 ? 999 : tagA
+            const idxB = tagB === -1 ? 999 : tagB
+            if (idxA !== idxB) return idxA - idxB
+          }
+          return (a.order_index ?? 0) - (b.order_index ?? 0)
+        })
 
       const idx = catArticles.findIndex(a => a.id === id)
       const swapIdx = direction === 'up' ? idx - 1 : idx + 1
@@ -509,6 +528,7 @@ export default function Home() {
                         onUpdateField={updateField}
                         onUpdateImageUrl={updateImageUrl}
                         onUpdateCategory={updateCategory}
+                        onUpdateTag={updateTag}
                         onUpdateMedia={updateMedia}
                         onDelete={deleteArticle}
                       />
@@ -563,7 +583,7 @@ export default function Home() {
             onClick={() => { window.location.href = '/api/huawei-csv' }}
             className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
           >
-            화웨이 전체 기사 수집
+            화웨이 CSV
           </button>
         </div>
       </div>

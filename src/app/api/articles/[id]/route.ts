@@ -6,7 +6,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json()
   const supabase = createServiceClient()
 
-  const allowed = ['excluded', 'summary_ko', 'summary_zh', 'title_zh', 'why_it_matters_ko', 'why_it_matters_zh', 'image_url', 'order_index', 'category', 'media']
+  const allowed = ['excluded', 'summary_ko', 'summary_zh', 'title_zh', 'why_it_matters_ko', 'why_it_matters_zh', 'image_url', 'order_index', 'category', 'media', 'tag']
   const update: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) update[key] = body[key]

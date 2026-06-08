@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Article, formatMediaName } from '@/types'
+import { Article, ArticleTag, formatMediaName } from '@/types'
 
 interface Props {
   article: Article
@@ -15,6 +15,7 @@ interface Props {
   onUpdateField: (id: string, field: 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', value: string) => void
   onUpdateImageUrl: (id: string, imageUrl: string) => void
   onUpdateCategory: (id: string, category: string) => void
+  onUpdateTag: (id: string, tag: ArticleTag) => void
   onUpdateMedia: (id: string, media: string) => void
   onDelete: (id: string) => void
 }
@@ -49,7 +50,7 @@ function BulletEditor({ lines, onChange, autoFocusFirst }: {
 
 export default function ArticleCard({
   article, isAdmin, isFirst, isLast, mediaDisplay,
-  onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onUpdateCategory, onUpdateMedia, onDelete,
+  onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onUpdateCategory, onUpdateTag, onUpdateMedia, onDelete,
 }: Props) {
   const [editing, setEditing] = useState<'ko' | 'zh' | 'title_zh' | 'wim_ko' | 'wim_zh' | null>(null)
   const [editingMedia, setEditingMedia] = useState(false)
@@ -251,6 +252,28 @@ export default function ArticleCard({
                 <option value="업계">업계 (行业资讯)</option>
                 <option value="정책">정책 (政策动向)</option>
                 <option value="위기이슈">위기이슈 (危机事项)</option>
+              </select>
+              <select
+                value={article.tag as string ?? ''}
+                onChange={e => onUpdateTag(article.id, e.target.value as ArticleTag)}
+                className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
+              >
+                <option value="AI">AI</option>
+                <option value="Cloud">Cloud</option>
+                <option value="Network">Network</option>
+                <option value="Smartphone">Smartphone</option>
+                <option value="Policy">Policy</option>
+                <option value="US Sanctions">US Sanctions</option>
+                <option value="China">China</option>
+                <option value="Data Center">Data Center</option>
+                <option value="Investment">Investment</option>
+                <option value="AI Semiconductor">AI Semiconductor</option>
+                <option value="Smart Campus">Smart Campus</option>
+                <option value="Smart Hospital">Smart Hospital</option>
+                <option value="SSD">SSD</option>
+                <option value="Digital Power">Digital Power</option>
+                <option value="Smart Device">Smart Device</option>
+                <option value="IAS">IAS</option>
               </select>
             </>
           </div>

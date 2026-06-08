@@ -3,7 +3,7 @@ export type Role = 'admin' | 'content_manager'
 export type Sentiment = 'positive' | 'negative' | 'neutral'
 export type ImpactLevel = 'HIGH' | 'MEDIUM' | 'LOW'
 export type ArticleTag =
-  | 'AI' | 'Cloud' | 'Semiconductor' | 'Network' | 'Smartphone'
+  | 'AI' | 'Cloud' | 'Network' | 'Smartphone'
   | 'Policy' | 'US Sanctions' | 'China' | 'Data Center' | 'Investment'
   | 'AI Semiconductor' | 'Smart Campus' | 'Smart Hospital' | 'SSD' | 'Digital Power' | 'Smart Device' | 'IAS'
 
