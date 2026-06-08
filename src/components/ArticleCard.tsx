@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Article, ArticleTag, formatMediaName } from '@/types'
+import { Article, ArticleTag, displayIndustryTag, formatMediaName } from '@/types'
 
 interface Props {
   article: Article
@@ -153,18 +153,14 @@ export default function ArticleCard({
             {article.impact_level === 'LOW' && (
               <span className="inline-flex items-center justify-center bg-gray-400 text-white text-xs px-2.5 py-1 rounded font-semibold">{article.impact_level}</span>
             )}
-            {article.tag && (() => {
-              let displayTag: string = article.tag
-              if (displayTag.startsWith('[')) {
-                try { const arr = JSON.parse(displayTag); if (Array.isArray(arr) && arr.length > 0) displayTag = arr[0] } catch { /* pass */ }
-              }
-              return (
-                <>
-                  <span className="text-gray-300 text-xs mx-2">|</span>
-                  <span className="inline-flex items-center justify-center text-gray-400 text-xs font-medium leading-none tracking-wide uppercase">{displayTag}</span>
-                </>
-              )
-            })()}
+            {article.tag && (
+              <>
+                <span className="text-gray-300 text-xs mx-2">|</span>
+                <span className="inline-flex items-center justify-center text-gray-400 text-xs font-medium leading-none tracking-wide uppercase">
+                  {article.category === '업계' ? displayIndustryTag(article.tag) : article.tag}
+                </span>
+              </>
+            )}
           </div>
 
           {/* 제목 */}

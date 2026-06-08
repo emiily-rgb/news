@@ -7,7 +7,7 @@ export type ArticleTag =
   | 'Policy' | 'US Sanctions' | 'China' | 'Data Center' | 'Investment'
   | 'AI Semiconductor' | 'Smart Campus' | 'Smart Hospital' | 'SSD' | 'Digital Power' | 'Smart Device' | 'IAS'
 
-// 업계(行业资讯) 내 태그 정렬 순서
+// 업계(行业资讯) 내 태그 정렬 순서 — 여기 없는 태그는 Etc로 표기
 export const INDUSTRY_TAG_ORDER: ArticleTag[] = [
   'Network',
   'AI Semiconductor',
@@ -18,6 +18,15 @@ export const INDUSTRY_TAG_ORDER: ArticleTag[] = [
   'Smart Device',
   'IAS',
 ]
+
+// 업계 태그 표시명 — INDUSTRY_TAG_ORDER에 없으면 'Etc' 반환
+export function displayIndustryTag(tag: unknown): string {
+  let t = tag as string
+  if (typeof t === 'string' && t.startsWith('[')) {
+    try { const arr = JSON.parse(t); if (Array.isArray(arr) && arr.length > 0) t = arr[0] } catch { /* pass */ }
+  }
+  return INDUSTRY_TAG_ORDER.includes(t as ArticleTag) ? t : 'Etc'
+}
 
 export interface Article {
   id: string

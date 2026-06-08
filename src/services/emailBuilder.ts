@@ -1,4 +1,4 @@
-import { Article, RunLog, formatMediaName, INDUSTRY_TAG_ORDER } from '@/types'
+import { Article, RunLog, formatMediaName, INDUSTRY_TAG_ORDER, displayIndustryTag } from '@/types'
 
 const IMPACT_COLOR: Record<string, string> = {
   HIGH: '#c8102e',
@@ -72,7 +72,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
       <tr><td style="padding:14px 0;border-bottom:1px solid #f5f5f5">
         <div style="margin-bottom:7px">
           <span style="display:inline-block;font-size:13px;font-weight:600;color:#fff;background:${impactColor};padding:4px 9px;border-radius:2px;margin-right:4px;letter-spacing:0.3px;line-height:1">${a.impact_level}</span>
-          ${a.tag ? `<span style="font-size:13px;color:#888;padding-left:4px;letter-spacing:0.5px">| ${(() => { const t = a.tag as unknown; if (Array.isArray(t)) return t[0]; if (typeof t === 'string' && t.startsWith('[')) { try { const arr = JSON.parse(t); if (Array.isArray(arr)) return arr[0]; } catch {} } return t; })()}</span>` : ''}
+          ${a.tag ? `<span style="font-size:13px;color:#888;padding-left:4px;letter-spacing:0.5px">| ${a.category === '업계' ? displayIndustryTag(a.tag) : a.tag}</span>` : ''}
         </div>
         ${a.image_url ? `<img src="${a.image_url}" alt="" width="100%" style="display:block;width:100%;max-height:220px;object-fit:cover;border-radius:3px;margin-bottom:10px" />` : ''}
         <a href="${a.link}" style="color:#111;font-size:16px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
