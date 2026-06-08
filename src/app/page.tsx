@@ -581,46 +581,43 @@ export default function Home() {
         )}
 
         {/* 화웨이 CSV */}
-        <div className="flex justify-end">
-          <div className="border border-gray-200 rounded-lg px-4 py-3 flex items-center gap-4 bg-white">
-            <div className="text-xs text-gray-500">
-              <span className="font-medium text-gray-700">화웨이 CSV</span>
-              <span className="mx-1.5 text-gray-300">|</span>
-              {huaweiCacheInfo === null ? (
-                <span className="text-gray-400">확인 중...</span>
-              ) : huaweiCacheInfo.cached && huaweiCacheInfo.createdAt ? (
-                <span className="text-green-600">
-                  오늘 수집 완료 · {new Date(huaweiCacheInfo.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              ) : (
-                <span className="text-gray-400">오늘 미수집</span>
-              )}
-            </div>
-            <div className="flex gap-2">
-              {huaweiCacheInfo?.cached && (
-                <button
-                  onClick={async () => {
-                    if (!confirm('재수집 시 1~2분 소요됩니다. 진행할까요?')) return
-                    setHuaweiRecollecting(true)
-                    window.location.href = '/api/huawei-csv?force=true'
-                    setTimeout(() => {
-                      setHuaweiRecollecting(false)
-                      fetch('/api/huawei-csv/status').then(r => r.json()).then(setHuaweiCacheInfo)
-                    }, 5000)
-                  }}
-                  disabled={huaweiRecollecting}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-500 px-3 py-1.5 rounded text-xs transition disabled:opacity-50"
-                >
-                  {huaweiRecollecting ? '수집 중...' : '재수집'}
-                </button>
-              )}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p className="text-sm text-gray-600">화웨이 CSV</p>
+            {huaweiCacheInfo === null ? (
+              <p className="text-xs text-gray-400 mt-0.5">확인 중...</p>
+            ) : huaweiCacheInfo.cached && huaweiCacheInfo.createdAt ? (
+              <p className="text-xs text-green-600 mt-0.5">
+                ✓ 오늘 수집 완료 {new Date(huaweiCacheInfo.createdAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 mt-0.5">오늘 미수집</p>
+            )}
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {huaweiCacheInfo?.cached && (
               <button
-                onClick={() => { window.location.href = '/api/huawei-csv' }}
-                className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-3 py-1.5 rounded text-xs transition"
+                onClick={async () => {
+                  if (!confirm('재수집 시 1~2분 소요됩니다. 진행할까요?')) return
+                  setHuaweiRecollecting(true)
+                  window.location.href = '/api/huawei-csv?force=true'
+                  setTimeout(() => {
+                    setHuaweiRecollecting(false)
+                    fetch('/api/huawei-csv/status').then(r => r.json()).then(setHuaweiCacheInfo)
+                  }, 5000)
+                }}
+                disabled={huaweiRecollecting}
+                className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-50"
               >
-                다운로드
+                {huaweiRecollecting ? '수집 중...' : '재수집'}
               </button>
-            </div>
+            )}
+            <button
+              onClick={() => { window.location.href = '/api/huawei-csv' }}
+              className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
+            >
+              다운로드
+            </button>
           </div>
         </div>
       </div>
