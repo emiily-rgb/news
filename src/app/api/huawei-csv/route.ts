@@ -26,7 +26,8 @@ function getKstDateStr(date: Date): string {
 function isNonWorkingDay(date: Date): boolean {
   const kstDate = getKstDateStr(date)
   if (HOLIDAYS_2026.has(kstDate)) return true
-  const dow = new Date(kstDate + 'T00:00:00+09:00').getDay()
+  // T09:00:00+09:00 = 해당 KST 날짜의 자정 UTC → getUTCDay()로 정확한 요일 계산
+  const dow = new Date(kstDate + 'T09:00:00+09:00').getUTCDay()
   return dow === 0 || dow === 6
 }
 

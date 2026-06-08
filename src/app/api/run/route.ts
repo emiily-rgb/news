@@ -26,7 +26,7 @@ function getKstDateStr(date: Date): string {
 function isNonWorkingDay(date: Date): boolean {
   const kstDate = getKstDateStr(date)
   if (HOLIDAYS_2026.has(kstDate)) return true
-  const dow = new Date(kstDate + 'T00:00:00+09:00').getDay()
+  const dow = new Date(kstDate + 'T09:00:00+09:00').getUTCDay()
   return dow === 0 || dow === 6
 }
 
