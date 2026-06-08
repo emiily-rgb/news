@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 
-const HUAWEI_KEYWORDS = ['화웨이']
+const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
 // 2026년 한국 공휴일 + 대체공휴일 (run/route.ts와 동일하게 유지)
 const HOLIDAYS_2026 = new Set([
