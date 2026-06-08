@@ -261,7 +261,7 @@ export async function GET(req: Request) {
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
 
   // 캐시 저장
-  await supabase.from('huawei_csv_cache').upsert({ date: todayKST, csv_content: csv })
+  await supabase.from('huawei_csv_cache').upsert({ date: todayKST, csv_content: csv, created_at: new Date().toISOString() })
 
   return new NextResponse(csv, {
     headers: {
