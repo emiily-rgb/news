@@ -38,8 +38,8 @@ function normalizeTag(raw: unknown): ArticleTag {
         if (Array.isArray(arr) && arr.length > 0) return arr[0] as ArticleTag
       } catch { /* pass */ }
     }
-    const tag = (trimmed as ArticleTag) || 'AI'
-    return tag === 'Semiconductor' ? 'AI Semiconductor' : tag
+    if (trimmed === 'Semiconductor') return 'AI Semiconductor'
+    return (trimmed as ArticleTag) || 'AI'
   }
   return 'AI'
 }
