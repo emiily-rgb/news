@@ -4,6 +4,53 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
+// 2026년 한국 공휴일 + 대체공휴일 (run/route.ts와 동일하게 유지)
+const HOLIDAYS_2026 = new Set([
+  '2026-01-01',
+  '2026-01-28', '2026-01-29', '2026-01-30',
+  '2026-03-01', '2026-03-02',
+  '2026-05-05', '2026-05-25',
+  '2026-06-03',
+  '2026-07-17',
+  '2026-08-15',
+  '2026-09-24', '2026-09-25', '2026-09-26',
+  '2026-10-03', '2026-10-09',
+  '2026-12-25',
+])
+
+function getKstDateStr(date: Date): string {
+  return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+}
+
+function isNonWorkingDay(date: Date): boolean {
+  const kstDate = getKstDateStr(date)
+  if (HOLIDAYS_2026.has(kstDate)) return true
+  const dow = new Date(kstDate + 'T00:00:00+09:00').getDay()
+  return dow === 0 || dow === 6
+}
+
+// 브리핑 수집 윈도우: 전 영업일 오전 8시 KST ~ 오늘 오전 8시 KST
+function getBriefingWindow(): { start: Date; end: Date } {
+  const nowKst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+  const todayKst = getKstDateStr(new Date())
+
+  // 오늘 오전 8시 KST
+  const end = new Date(`${todayKst}T08:00:00+09:00`)
+
+  // 전 영업일 찾기 (어제부터 거슬러 올라가며 영업일 찾음)
+  const d = new Date(end)
+  d.setDate(d.getDate() - 1)
+  while (isNonWorkingDay(d)) {
+    d.setDate(d.getDate() - 1)
+  }
+  const prevWorkdayKst = getKstDateStr(d)
+  const start = new Date(`${prevWorkdayKst}T08:00:00+09:00`)
+
+  // 현재 시각이 오늘 8시 이전이면 end를 현재 시각으로 (아직 오늘 윈도우가 안 열린 경우)
+  const now = new Date()
+  return { start, end: end > now ? now : end }
+}
+
 function stripHtml(str: string): string {
   return str
     .replace(/<[^>]+>/g, '')
@@ -69,7 +116,7 @@ async function hasHuaweiInBody(url: string): Promise<boolean> {
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
 
-    const partial = body.slice(0, Math.floor(body.length * 0.6))
+    const partial = body.slice(0, Math.floor(body.length * 0.9))
     const text = partial.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
 
     return text.toLowerCase().includes('화웨이') || text.toLowerCase().includes('huawei')
@@ -157,10 +204,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Naver API 키 없음' }, { status: 500 })
   }
 
-  // hoursBack 파라미터 (기본 72시간 — 금~월 주말 커버)
   const url = new URL(req.url)
-  const hoursBack = Math.max(1, Number(url.searchParams.get('hoursBack') ?? '72'))
-  const cutoff = new Date(Date.now() - hoursBack * 60 * 60 * 1000)
+  const { start: cutoff, end: cutoffEnd } = getBriefingWindow()
 
   const seen = new Set<string>()
   const articles: { title: string; link: string; pubDate: string; description: string; keyword: string }[] = []
@@ -168,39 +213,59 @@ export async function GET(req: Request) {
   for (const keyword of HUAWEI_KEYWORDS) {
     try {
       const q = encodeURIComponent(keyword)
-      const apiUrl = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=100&sort=date`
-      const res = await fetch(apiUrl, {
-        headers: {
-          'X-Naver-Client-Id': clientId,
-          'X-Naver-Client-Secret': clientSecret,
-        },
-        signal: AbortSignal.timeout(10000),
-      })
-      if (!res.ok) continue
+      let start = 1
+      let reachedCutoff = false
 
-      const data = await res.json() as {
-        items: Array<{ title: string; link: string; originallink: string; pubDate: string; description: string }>
-      }
+      while (start <= 1000 && !reachedCutoff) {
+        const apiUrl = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=100&start=${start}&sort=date`
+        const res = await fetch(apiUrl, {
+          headers: {
+            'X-Naver-Client-Id': clientId,
+            'X-Naver-Client-Secret': clientSecret,
+          },
+          signal: AbortSignal.timeout(10000),
+        })
+        if (!res.ok) break
 
-      for (const item of data.items ?? []) {
-        const link = item.originallink || item.link
-        const title = stripHtml(item.title)
-        const description = stripHtml(item.description)
+        const data = await res.json() as {
+          total: number
+          items: Array<{ title: string; link: string; originallink: string; pubDate: string; description: string }>
+        }
 
-        if (!title || !link) continue
+        const items = data.items ?? []
+        if (items.length === 0) break
 
-        const pub = item.pubDate ? new Date(item.pubDate) : null
-        if (!pub || pub < cutoff) continue
+        for (const item of items) {
+          const link = item.originallink || item.link
+          const title = stripHtml(item.title)
+          const description = stripHtml(item.description)
 
-        // 제목 또는 설명에 '화웨이' 또는 'Huawei' 포함 여부 확인
-        const combined = (title + ' ' + description).toLowerCase()
-        if (!combined.includes('화웨이') && !combined.includes('huawei')) continue
+          if (!title || !link) continue
 
-        const key = title.replace(/[\s\W]/g, '').toLowerCase()
-        if (seen.has(key)) continue
-        seen.add(key)
+          const pub = item.pubDate ? new Date(item.pubDate) : null
+          if (!pub) continue
 
-        articles.push({ title, link, pubDate: pub.toISOString(), description, keyword })
+          // 윈도우 종료 시각(오늘 오전 8시) 이후 기사는 스킵
+          if (pub > cutoffEnd) continue
+
+          // cutoff(전 영업일 오전 8시)보다 오래된 기사가 나오면 페이지네이션 중단
+          if (pub < cutoff) {
+            reachedCutoff = true
+            break
+          }
+
+          // 제목 또는 설명에 '화웨이' 또는 'Huawei' 포함 여부 확인
+          const combined = (title + ' ' + description).toLowerCase()
+          if (!combined.includes('화웨이') && !combined.includes('huawei')) continue
+
+          const key = title.replace(/[\s\W]/g, '').toLowerCase()
+          if (seen.has(key)) continue
+          seen.add(key)
+
+          articles.push({ title, link, pubDate: pub.toISOString(), description, keyword })
+        }
+
+        start += 100
       }
     } catch {
       // 키워드별 오류 무시하고 계속

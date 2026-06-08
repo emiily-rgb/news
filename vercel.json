@@ -3,7 +3,7 @@
     "src/app/api/run/route.ts": { "maxDuration": 300 }
   },
   "crons": [
-    { "path": "/api/run",                 "schedule": "0 22 * * *"   },
+    { "path": "/api/run",                 "schedule": "0 23 * * *"   },
     { "path": "/api/monitor",             "schedule": "0 3 * * *"    },
     { "path": "/api/monitor",             "schedule": "0 7 * * *"    },
     { "path": "/api/monitor",             "schedule": "0 12 * * *"   },
