@@ -53,25 +53,28 @@ const DOMAIN_MAP: Record<string, MediaInfo> = {
   'joseilbo.com':        { company: '조세일보',      mediaType: 'Online' },
 }
 
-// 연관기사 등 사이드 섹션 제거 후 본문에 화웨이 포함 여부 확인
+// 본문 앞 60%에서 화웨이 포함 여부 확인 (연관기사는 보통 하단에 위치)
 async function hasHuaweiInBody(url: string): Promise<boolean> {
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
       signal: AbortSignal.timeout(5000),
     })
-    if (!res.ok) return true // 못 가져오면 일단 포함 처리
+    if (!res.ok) return true
     const html = await res.text()
 
-    // 연관기사/추천기사 섹션 제거 (주요 패턴)
-    const cleaned = html
-      .replace(/<(section|div|ul|aside)[^>]*(?:related|recommend|연관|관련기사|랭킹|popular)[^>]*>[\s\S]*?<\/\1>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
+    // head, script, style 제거 후 앞 60%만 검사
+    const body = html
+      .replace(/<head[\s\S]*?<\/head>/gi, '')
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
 
-    return cleaned.toLowerCase().includes('화웨이') || cleaned.toLowerCase().includes('huawei')
+    const partial = body.slice(0, Math.floor(body.length * 0.6))
+    const text = partial.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+
+    return text.toLowerCase().includes('화웨이') || text.toLowerCase().includes('huawei')
   } catch {
-    return true // 오류 시 포함 처리 (안전하게)
+    return true
   }
 }
 

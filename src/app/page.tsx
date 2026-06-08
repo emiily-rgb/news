@@ -600,11 +600,22 @@ export default function Home() {
                 onClick={async () => {
                   if (!confirm('재수집 시 1~2분 소요됩니다. 진행할까요?')) return
                   setHuaweiRecollecting(true)
-                  window.location.href = '/api/huawei-csv?force=true'
-                  setTimeout(() => {
+                  try {
+                    const res = await fetch('/api/huawei-csv?force=true')
+                    const blob = await res.blob()
+                    const disposition = res.headers.get('Content-Disposition') ?? ''
+                    const match = disposition.match(/filename="([^"]+)"/)
+                    const filename = match?.[1] ?? 'huawei.csv'
+                    const a = document.createElement('a')
+                    a.href = URL.createObjectURL(blob)
+                    a.download = filename
+                    a.click()
+                    URL.revokeObjectURL(a.href)
+                    const info = await fetch('/api/huawei-csv/status').then(r => r.json())
+                    setHuaweiCacheInfo(info)
+                  } finally {
                     setHuaweiRecollecting(false)
-                    fetch('/api/huawei-csv/status').then(r => r.json()).then(setHuaweiCacheInfo)
-                  }, 5000)
+                  }
                 }}
                 disabled={huaweiRecollecting}
                 className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-50"
