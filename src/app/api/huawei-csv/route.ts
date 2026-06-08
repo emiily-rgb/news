@@ -210,13 +210,14 @@ export async function GET(req: Request) {
   const articles: { title: string; link: string; pubDate: string; description: string; keyword: string }[] = []
 
   for (const keyword of HUAWEI_KEYWORDS) {
+    for (const sort of ['date', 'sim']) {
     try {
       const q = encodeURIComponent(keyword)
       let start = 1
       let allOld = false
 
       while (start <= 1000 && !allOld) {
-        const apiUrl = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=100&start=${start}&sort=date`
+        const apiUrl = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=100&start=${start}&sort=${sort}`
         const res = await fetch(apiUrl, {
           headers: {
             'X-Naver-Client-Id': clientId,
@@ -264,8 +265,9 @@ export async function GET(req: Request) {
         start += 100
       }
     } catch {
-      // 키워드별 오류 무시하고 계속
+      // 키워드/정렬 오류 무시하고 계속
     }
+    } // end sort loop
   }
 
   const naverCount = articles.length
