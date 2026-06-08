@@ -12,7 +12,7 @@ interface Props {
   onMoveUp: () => void
   onMoveDown: () => void
   onUpdateSummary: (id: string, field: 'summary_ko' | 'summary_zh', value: string[]) => void
-  onUpdateField: (id: string, field: 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', value: string) => void
+  onUpdateField: (id: string, field: 'title' | 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', value: string) => void
   onUpdateImageUrl: (id: string, imageUrl: string) => void
   onUpdateCategory: (id: string, category: string) => void
   onUpdateTag: (id: string, tag: ArticleTag) => void
@@ -52,11 +52,12 @@ export default function ArticleCard({
   article, isAdmin, isFirst, isLast, mediaDisplay,
   onMoveUp, onMoveDown, onUpdateSummary, onUpdateField, onUpdateImageUrl, onUpdateCategory, onUpdateTag, onUpdateMedia, onDelete,
 }: Props) {
-  const [editing, setEditing] = useState<'ko' | 'zh' | 'title_zh' | 'wim_ko' | 'wim_zh' | null>(null)
+  const [editing, setEditing] = useState<'ko' | 'zh' | 'title_ko' | 'title_zh' | 'wim_ko' | 'wim_zh' | null>(null)
   const [editingMedia, setEditingMedia] = useState(false)
   const [mediaInput, setMediaInput] = useState(article.media)
   const [koLines, setKoLines] = useState<string[]>(article.summary_ko.length > 0 ? article.summary_ko : [''])
   const [zhLines, setZhLines] = useState<string[]>(article.summary_zh.length > 0 ? article.summary_zh : [''])
+  const [titleKo, setTitleKo] = useState(article.title)
   const [titleZh, setTitleZh] = useState(article.title_zh ?? '')
   const [wimKo, setWimKo] = useState(article.why_it_matters_ko ?? '')
   const [wimZh, setWimZh] = useState(article.why_it_matters_zh ?? '')
@@ -71,10 +72,10 @@ export default function ArticleCard({
     setEditing(null)
   }
 
-  function saveField(field: 'title_zh' | 'wim_ko' | 'wim_zh') {
-    const map = { title_zh: titleZh, wim_ko: wimKo, wim_zh: wimZh }
-    const apiField = field === 'wim_ko' ? 'why_it_matters_ko' : field === 'wim_zh' ? 'why_it_matters_zh' : 'title_zh'
-    onUpdateField(article.id, apiField as 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', map[field])
+  function saveField(field: 'title_ko' | 'title_zh' | 'wim_ko' | 'wim_zh') {
+    const map = { title_ko: titleKo, title_zh: titleZh, wim_ko: wimKo, wim_zh: wimZh }
+    const apiField = field === 'title_ko' ? 'title' : field === 'wim_ko' ? 'why_it_matters_ko' : field === 'wim_zh' ? 'why_it_matters_zh' : 'title_zh'
+    onUpdateField(article.id, apiField as 'title' | 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', map[field])
     setEditing(null)
   }
 
@@ -165,14 +166,35 @@ export default function ArticleCard({
 
           {/* 제목 */}
           <div className="mb-1.5">
-            <a
-              href={article.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-700 font-semibold hover:underline text-sm leading-snug"
-            >
-              {article.title}
-            </a>
+            {editing === 'title_ko' ? (
+              <div className="flex gap-2 items-start">
+                <input
+                  type="text"
+                  value={titleKo}
+                  onChange={e => setTitleKo(e.target.value)}
+                  className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-800 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-300"
+                  autoFocus
+                  onKeyDown={e => { if (e.key === 'Enter') saveField('title_ko'); if (e.key === 'Escape') setEditing(null) }}
+                />
+                <button onClick={() => saveField('title_ko')} className="text-xs bg-blue-600 text-white px-3 py-1 rounded shrink-0">저장</button>
+                <button onClick={() => { setTitleKo(article.title); setEditing(null) }} className="text-xs text-gray-400 px-2 py-1 rounded border shrink-0">취소</button>
+              </div>
+            ) : (
+              <div className="flex items-start gap-1.5 group/title">
+                <a
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-700 font-semibold hover:underline text-sm leading-snug"
+                >
+                  {titleKo}
+                </a>
+                <button
+                  onClick={() => setEditing('title_ko')}
+                  className="text-xs text-blue-400 opacity-0 group-hover/title:opacity-100 transition shrink-0 mt-0.5"
+                >편집</button>
+              </div>
+            )}
           </div>
 
           {/* 중국어 제목 */}

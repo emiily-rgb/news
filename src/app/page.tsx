@@ -170,7 +170,7 @@ export default function Home() {
     ))
   }
 
-  async function updateField(id: string, field: 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', value: string) {
+  async function updateField(id: string, field: 'title' | 'title_zh' | 'why_it_matters_ko' | 'why_it_matters_zh', value: string) {
     const res = await fetch(`/api/articles/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
