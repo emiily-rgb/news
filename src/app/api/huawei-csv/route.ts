@@ -233,9 +233,12 @@ export async function GET(req: Request) {
         const items = data.items ?? []
         if (items.length === 0) break
 
+        console.log(`[huawei-csv] keyword=${keyword} start=${start} items=${items.length} first="${items[0]?.pubDate}"`)
+
         // 이 페이지의 기사 중 가장 최신이 cutoff보다 오래됐으면 더 이상 볼 필요 없음
         const newest = items[0]?.pubDate ? new Date(items[0].pubDate) : null
-        if (newest && newest < cutoff) { allOld = true; break }
+        if (newest && isNaN(newest.getTime())) console.log(`[huawei-csv] WARN: newest pubDate parse failed: "${items[0]?.pubDate}"`)
+        if (newest && !isNaN(newest.getTime()) && newest < cutoff) { allOld = true; break }
 
         for (const item of items) {
           const link = item.originallink || item.link
@@ -263,6 +266,8 @@ export async function GET(req: Request) {
       // 키워드별 오류 무시하고 계속
     }
   }
+
+  console.log(`[huawei-csv] Naver 수집 완료: ${articles.length}건`)
 
   // Google News 검색 병렬 실행
   const googleResults = await Promise.all(
