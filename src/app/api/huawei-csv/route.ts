@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
+import Parser from 'rss-parser'
 
 const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
@@ -100,6 +101,42 @@ const DOMAIN_MAP: Record<string, MediaInfo> = {
   'joseilbo.com':        { company: '조세일보',      mediaType: 'Online' },
 }
 
+
+const rssParser = new Parser()
+
+type Article = { title: string; link: string; pubDate: string; description: string; keyword: string }
+
+async function searchGoogle(
+  keyword: string,
+  cutoff: Date,
+  cutoffEnd: Date,
+  seen: Set<string>
+): Promise<Article[]> {
+  const results: Article[] = []
+  try {
+    const q = encodeURIComponent(keyword)
+    const url = `https://news.google.com/rss/search?q=${q}&hl=ko&gl=KR&ceid=KR:ko`
+    const feed = await Promise.race([
+      rssParser.parseURL(url),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
+    ]) as Awaited<ReturnType<typeof rssParser.parseURL>>
+
+    for (const item of feed.items ?? []) {
+      if (!item.title || !item.link) continue
+      const pub = item.pubDate ? new Date(item.pubDate) : null
+      if (!pub) continue
+      if (pub > cutoffEnd || pub < cutoff) continue
+
+      const title = item.title
+      const key = title.replace(/[\s\W]/g, '').toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+
+      results.push({ title, link: item.link, pubDate: pub.toISOString(), description: item.contentSnippet ?? '', keyword })
+    }
+  } catch { /* ignore */ }
+  return results
+}
 
 type ArticleAI = { topicEn: string; remarksKo: string; remarksEn: string }
 
@@ -228,6 +265,12 @@ export async function GET(req: Request) {
       // 키워드별 오류 무시하고 계속
     }
   }
+
+  // Google News 검색 병렬 실행
+  const googleResults = await Promise.all(
+    HUAWEI_KEYWORDS.map(kw => searchGoogle(kw, cutoff, cutoffEnd, seen))
+  )
+  for (const results of googleResults) articles.push(...results)
 
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
