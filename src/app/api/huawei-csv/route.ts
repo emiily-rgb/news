@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
 
 const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
@@ -15,6 +16,97 @@ function stripHtml(str: string): string {
 
 function toCsvRow(cells: string[]): string {
   return cells.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')
+}
+
+type MediaInfo = { company: string; mediaType: string }
+
+const DOMAIN_MAP: Record<string, MediaInfo> = {
+  'digitaltoday.co.kr':  { company: '디지털투데이', mediaType: 'IT/Tech' },
+  'etnews.com':          { company: '전자신문',      mediaType: 'IT/Tech' },
+  'zdnet.co.kr':         { company: 'ZDNet Korea',   mediaType: 'IT/Tech' },
+  'itworld.co.kr':       { company: 'IT World',      mediaType: 'IT/Tech' },
+  'cio.co.kr':           { company: 'CIO Korea',     mediaType: 'IT/Tech' },
+  'aitimes.com':         { company: 'AI타임스',      mediaType: 'IT/Tech' },
+  'aitimes.kr':          { company: 'AI타임스',      mediaType: 'IT/Tech' },
+  'techrecipe.co.kr':    { company: '테크레시피',    mediaType: 'IT/Tech' },
+  'bloter.net':          { company: '블로터',        mediaType: 'IT/Tech' },
+  'ddaily.co.kr':        { company: '디지털데일리',  mediaType: 'IT/Tech' },
+  'boannews.com':        { company: '보안뉴스',      mediaType: 'IT/Tech' },
+  'chosun.com':          { company: '조선일보',      mediaType: 'Newspaper' },
+  'joongang.co.kr':      { company: '중앙일보',      mediaType: 'Newspaper' },
+  'donga.com':           { company: '동아일보',      mediaType: 'Newspaper' },
+  'hani.co.kr':          { company: '한겨레',        mediaType: 'Newspaper' },
+  'hankyung.com':        { company: '한국경제',      mediaType: 'Newspaper' },
+  'mk.co.kr':            { company: '매일경제',      mediaType: 'Newspaper' },
+  'sedaily.com':         { company: '서울경제',      mediaType: 'Newspaper' },
+  'fnnews.com':          { company: '파이낸셜뉴스',  mediaType: 'Newspaper' },
+  'heraldcorp.com':      { company: '헤럴드경제',    mediaType: 'Newspaper' },
+  'etoday.co.kr':        { company: '이투데이',      mediaType: 'Newspaper' },
+  'mt.co.kr':            { company: '머니투데이',    mediaType: 'Newspaper' },
+  'newsis.com':          { company: '뉴시스',        mediaType: 'Online' },
+  'news1.kr':            { company: '뉴스1',         mediaType: 'Online' },
+  'yonhapnews.co.kr':    { company: '연합뉴스',      mediaType: 'Online' },
+  'yna.co.kr':           { company: '연합뉴스',      mediaType: 'Online' },
+  'biz.chosun.com':      { company: '조선비즈',      mediaType: 'Online' },
+  'dealsite.co.kr':      { company: '딜사이트',      mediaType: 'Online' },
+  'joseilbo.com':        { company: '조세일보',      mediaType: 'Online' },
+}
+
+type ArticleAI = { topicEn: string; remarksKo: string; remarksEn: string }
+
+async function generateAIFields(
+  articles: { title: string; description: string }[]
+): Promise<ArticleAI[]> {
+  const client = new Anthropic()
+  const BATCH = 10
+  const results: ArticleAI[] = []
+
+  for (let i = 0; i < articles.length; i += BATCH) {
+    const batch = articles.slice(i, i + BATCH)
+    const numbered = batch
+      .map((a, j) => `[${j + 1}]\nTitle: ${a.title}\nDescription: ${a.description}`)
+      .join('\n\n')
+
+    const msg = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2048,
+      messages: [{
+        role: 'user',
+        content: `You are a Korean tech news analyst. For each article below, return a JSON array with exactly ${batch.length} objects in order.
+
+Each object must have:
+- "topicEn": English translation of the Korean title (concise, natural)
+- "remarksKo": One-line Korean summary (different wording from the title, max 30 chars)
+- "remarksEn": English translation of remarksKo
+
+Return ONLY the JSON array, no explanation.
+
+${numbered}`,
+      }],
+    })
+
+    try {
+      const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
+      const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim()) as ArticleAI[]
+      results.push(...parsed)
+    } catch {
+      batch.forEach(() => results.push({ topicEn: '', remarksKo: '', remarksEn: '' }))
+    }
+  }
+
+  return results
+}
+
+function extractMediaInfo(url: string): MediaInfo {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '')
+    for (const [domain, info] of Object.entries(DOMAIN_MAP)) {
+      if (hostname.includes(domain)) return info
+    }
+    return { company: hostname, mediaType: 'Online' }
+  } catch {
+    return { company: '', mediaType: '' }
+  }
 }
 
 export async function GET(req: Request) {
@@ -77,15 +169,28 @@ export async function GET(req: Request) {
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
 
+  // Claude AI로 Topic 영문번역 + Remarks 생성
+  const aiFields = process.env.ANTHROPIC_API_KEY
+    ? await generateAIFields(articles)
+    : articles.map(() => ({ topicEn: '', remarksKo: '', remarksEn: '' }))
+
   // CSV 생성
-  const headers = ['Date', 'Title', 'URL', 'Description', 'Keyword']
-  const rows = articles.map(a => toCsvRow([
-    new Date(a.pubDate).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
-    a.title,
-    a.link,
-    a.description,
-    a.keyword,
-  ]))
+  const headers = ['Date', 'Title', 'URL', 'Topic', 'Media Type', 'Company', 'Remarks']
+  const rows = articles.map((a, i) => {
+    const { company, mediaType } = extractMediaInfo(a.link)
+    const ai = aiFields[i] ?? { topicEn: '', remarksKo: '', remarksEn: '' }
+    const topic = ai.topicEn ? `${a.title}\n${ai.topicEn}` : a.title
+    const remarks = ai.remarksKo && ai.remarksEn ? `${ai.remarksKo}\n${ai.remarksEn}` : ''
+    return toCsvRow([
+      new Date(a.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }),
+      a.title,
+      a.link,
+      topic,
+      mediaType,
+      company,
+      remarks,
+    ])
+  })
 
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
 
