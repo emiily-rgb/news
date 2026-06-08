@@ -214,7 +214,8 @@ export async function GET(req: Request) {
   const yymmdd = todayKST.replace(/-/g, '').slice(2)
   const filename = `${yymmdd}_Huawei_articles.csv`
 
-  // 오늘 캐시 확인
+  // 오늘 캐시 확인 (force=true면 무시)
+  const force = url.searchParams.get('force') === 'true'
   const supabase = createServiceClient()
   const { data: cached } = await supabase
     .from('huawei_csv_cache')
@@ -222,7 +223,7 @@ export async function GET(req: Request) {
     .eq('date', todayKST)
     .single()
 
-  if (cached?.csv_content) {
+  if (!force && cached?.csv_content) {
     return new NextResponse(cached.csv_content, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',

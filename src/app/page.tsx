@@ -76,12 +76,15 @@ export default function Home() {
   const [showManualAdd, setShowManualAdd] = useState(false)
   const [currentStep, setCurrentStep] = useState<string | null>(null)
   const [reprocessing, setReprocessing] = useState(false)
+  const [huaweiCacheInfo, setHuaweiCacheInfo] = useState<{ cached: boolean; createdAt: string | null } | null>(null)
+  const [huaweiRecollecting, setHuaweiRecollecting] = useState(false)
 
   useEffect(() => {
     fetch('/api/config').then(r => r.json()).then(c => {
       setConfigRecipients(c.recipients ?? [])
       setMediaDisplay(c.media_display ?? {})
     })
+    fetch('/api/huawei-csv/status').then(r => r.json()).then(setHuaweiCacheInfo)
   }, [])
 
   useEffect(() => {
@@ -577,14 +580,48 @@ export default function Home() {
           </>
         )}
 
-        {/* 화웨이 전체 기사 수집 CSV 다운로드 */}
+        {/* 화웨이 CSV */}
         <div className="flex justify-end">
-          <button
-            onClick={() => { window.location.href = '/api/huawei-csv' }}
-            className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
-          >
-            화웨이 CSV
-          </button>
+          <div className="border border-gray-200 rounded-lg px-4 py-3 flex items-center gap-4 bg-white">
+            <div className="text-xs text-gray-500">
+              <span className="font-medium text-gray-700">화웨이 CSV</span>
+              <span className="mx-1.5 text-gray-300">|</span>
+              {huaweiCacheInfo === null ? (
+                <span className="text-gray-400">확인 중...</span>
+              ) : huaweiCacheInfo.cached && huaweiCacheInfo.createdAt ? (
+                <span className="text-green-600">
+                  오늘 수집 완료 · {new Date(huaweiCacheInfo.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              ) : (
+                <span className="text-gray-400">오늘 미수집</span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {huaweiCacheInfo?.cached && (
+                <button
+                  onClick={async () => {
+                    if (!confirm('재수집 시 1~2분 소요됩니다. 진행할까요?')) return
+                    setHuaweiRecollecting(true)
+                    window.location.href = '/api/huawei-csv?force=true'
+                    setTimeout(() => {
+                      setHuaweiRecollecting(false)
+                      fetch('/api/huawei-csv/status').then(r => r.json()).then(setHuaweiCacheInfo)
+                    }, 5000)
+                  }}
+                  disabled={huaweiRecollecting}
+                  className="border border-gray-200 hover:bg-gray-50 text-gray-500 px-3 py-1.5 rounded text-xs transition disabled:opacity-50"
+                >
+                  {huaweiRecollecting ? '수집 중...' : '재수집'}
+                </button>
+              )}
+              <button
+                onClick={() => { window.location.href = '/api/huawei-csv' }}
+                className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-3 py-1.5 rounded text-xs transition"
+              >
+                다운로드
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
