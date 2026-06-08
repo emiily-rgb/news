@@ -124,7 +124,7 @@ async function searchGoogle(
     for (const item of feed.items ?? []) {
       if (!item.title || !item.link) continue
       const pub = item.pubDate ? new Date(item.pubDate) : null
-      if (!pub) continue
+      if (!pub || isNaN(pub.getTime())) continue
       if (pub > cutoffEnd || pub < cutoff) continue
 
       const title = item.title
@@ -245,7 +245,7 @@ export async function GET(req: Request) {
           if (!title || !link) continue
 
           const pub = item.pubDate ? new Date(item.pubDate) : null
-          if (!pub) continue
+          if (!pub || isNaN(pub.getTime())) continue
 
           // 윈도우 범위 밖 기사는 스킵 (수집은 계속)
           if (pub > cutoffEnd || pub < cutoff) continue
