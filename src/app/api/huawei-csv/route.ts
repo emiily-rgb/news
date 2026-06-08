@@ -250,7 +250,7 @@ export async function GET(req: Request) {
           // 윈도우 범위 밖 기사는 스킵 (수집은 계속)
           if (pub > cutoffEnd || pub < cutoff) continue
 
-          const key = title.replace(/[\s\W]/g, '').toLowerCase()
+          const key = link
           if (seen.has(key)) continue
           seen.add(key)
 
