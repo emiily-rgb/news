@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 
-const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
+const HUAWEI_KEYWORDS = ['화웨이']
 
 // 2026년 한국 공휴일 + 대체공휴일 (run/route.ts와 동일하게 유지)
 const HOLIDAYS_2026 = new Set([
@@ -100,45 +100,6 @@ const DOMAIN_MAP: Record<string, MediaInfo> = {
   'joseilbo.com':        { company: '조세일보',      mediaType: 'Online' },
 }
 
-// 본문 앞 60%에서 화웨이 포함 여부 확인 (연관기사는 보통 하단에 위치)
-async function hasHuaweiInBody(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
-      signal: AbortSignal.timeout(5000),
-    })
-    if (!res.ok) return true
-    const html = await res.text()
-
-    // head, script, style 제거 후 앞 60%만 검사
-    const body = html
-      .replace(/<head[\s\S]*?<\/head>/gi, '')
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-
-    const partial = body.slice(0, Math.floor(body.length * 0.9))
-    const text = partial.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
-
-    return text.toLowerCase().includes('화웨이') || text.toLowerCase().includes('huawei')
-  } catch {
-    return true
-  }
-}
-
-async function filterByBody(
-  articles: { title: string; link: string; pubDate: string; description: string; keyword: string }[]
-) {
-  const PARALLEL = 10
-  const results: typeof articles = []
-
-  for (let i = 0; i < articles.length; i += PARALLEL) {
-    const batch = articles.slice(i, i + PARALLEL)
-    const checks = await Promise.all(batch.map(a => hasHuaweiInBody(a.link)))
-    batch.forEach((a, j) => { if (checks[j]) results.push(a) })
-  }
-
-  return results
-}
 
 type ArticleAI = { topicEn: string; remarksKo: string; remarksEn: string }
 
@@ -254,10 +215,6 @@ export async function GET(req: Request) {
             break
           }
 
-          // 제목 또는 설명에 '화웨이' 또는 'Huawei' 포함 여부 확인
-          const combined = (title + ' ' + description).toLowerCase()
-          if (!combined.includes('화웨이') && !combined.includes('huawei')) continue
-
           const key = title.replace(/[\s\W]/g, '').toLowerCase()
           if (seen.has(key)) continue
           seen.add(key)
@@ -275,8 +232,7 @@ export async function GET(req: Request) {
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
 
-  // 본문 크롤링으로 화웨이 미포함 기사 제거
-  const filtered = await filterByBody(articles)
+  const filtered = articles
 
   const todayKST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   const yymmdd = todayKST.replace(/-/g, '').slice(2)
