@@ -267,13 +267,26 @@ export async function GET(req: Request) {
     }
   }
 
-  console.log(`[huawei-csv] Naver 수집 완료: ${articles.length}건`)
+  const naverCount = articles.length
+  console.log(`[huawei-csv] Naver 수집 완료: ${naverCount}건`)
 
   // Google News 검색 병렬 실행
   const googleResults = await Promise.all(
     HUAWEI_KEYWORDS.map(kw => searchGoogle(kw, cutoff, cutoffEnd, seen))
   )
   for (const results of googleResults) articles.push(...results)
+  console.log(`[huawei-csv] Google 수집 완료: ${articles.length - naverCount}건, 총 ${articles.length}건`)
+
+  // debug=true 이면 수집 결과 JSON으로 반환
+  if (url.searchParams.get('debug') === 'true') {
+    return NextResponse.json({
+      total: articles.length,
+      naver: naverCount,
+      google: articles.length - naverCount,
+      window: { start: cutoff.toISOString(), end: cutoffEnd.toISOString() },
+      titles: articles.map(a => ({ date: a.pubDate.slice(0, 10), title: a.title })),
+    })
+  }
 
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
