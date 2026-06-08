@@ -212,9 +212,9 @@ export async function GET(req: Request) {
     try {
       const q = encodeURIComponent(keyword)
       let start = 1
-      let reachedCutoff = false
+      let allOld = false
 
-      while (start <= 1000 && !reachedCutoff) {
+      while (start <= 1000 && !allOld) {
         const apiUrl = `https://openapi.naver.com/v1/search/news.json?query=${q}&display=100&start=${start}&sort=date`
         const res = await fetch(apiUrl, {
           headers: {
@@ -233,6 +233,10 @@ export async function GET(req: Request) {
         const items = data.items ?? []
         if (items.length === 0) break
 
+        // 이 페이지의 기사 중 가장 최신이 cutoff보다 오래됐으면 더 이상 볼 필요 없음
+        const newest = items[0]?.pubDate ? new Date(items[0].pubDate) : null
+        if (newest && newest < cutoff) { allOld = true; break }
+
         for (const item of items) {
           const link = item.originallink || item.link
           const title = stripHtml(item.title)
@@ -243,14 +247,8 @@ export async function GET(req: Request) {
           const pub = item.pubDate ? new Date(item.pubDate) : null
           if (!pub) continue
 
-          // 윈도우 종료 시각(오늘 오전 8시) 이후 기사는 스킵
-          if (pub > cutoffEnd) continue
-
-          // cutoff(전 영업일 오전 8시)보다 오래된 기사가 나오면 페이지네이션 중단
-          if (pub < cutoff) {
-            reachedCutoff = true
-            break
-          }
+          // 윈도우 범위 밖 기사는 스킵 (수집은 계속)
+          if (pub > cutoffEnd || pub < cutoff) continue
 
           const key = title.replace(/[\s\W]/g, '').toLowerCase()
           if (seen.has(key)) continue
