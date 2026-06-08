@@ -53,6 +53,43 @@ const DOMAIN_MAP: Record<string, MediaInfo> = {
   'joseilbo.com':        { company: '조세일보',      mediaType: 'Online' },
 }
 
+// 연관기사 등 사이드 섹션 제거 후 본문에 화웨이 포함 여부 확인
+async function hasHuaweiInBody(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!res.ok) return true // 못 가져오면 일단 포함 처리
+    const html = await res.text()
+
+    // 연관기사/추천기사 섹션 제거 (주요 패턴)
+    const cleaned = html
+      .replace(/<(section|div|ul|aside)[^>]*(?:related|recommend|연관|관련기사|랭킹|popular)[^>]*>[\s\S]*?<\/\1>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+
+    return cleaned.toLowerCase().includes('화웨이') || cleaned.toLowerCase().includes('huawei')
+  } catch {
+    return true // 오류 시 포함 처리 (안전하게)
+  }
+}
+
+async function filterByBody(
+  articles: { title: string; link: string; pubDate: string; description: string; keyword: string }[]
+) {
+  const PARALLEL = 10
+  const results: typeof articles = []
+
+  for (let i = 0; i < articles.length; i += PARALLEL) {
+    const batch = articles.slice(i, i + PARALLEL)
+    const checks = await Promise.all(batch.map(a => hasHuaweiInBody(a.link)))
+    batch.forEach((a, j) => { if (checks[j]) results.push(a) })
+  }
+
+  return results
+}
+
 type ArticleAI = { topicEn: string; remarksKo: string; remarksEn: string }
 
 async function generateAIFields(
@@ -170,6 +207,9 @@ export async function GET(req: Request) {
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
 
+  // 본문 크롤링으로 화웨이 미포함 기사 제거
+  const filtered = await filterByBody(articles)
+
   const todayKST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   const yymmdd = todayKST.replace(/-/g, '').slice(2)
   const filename = `${yymmdd}_Huawei_articles.csv`
@@ -193,12 +233,12 @@ export async function GET(req: Request) {
 
   // Claude AI로 Topic 영문번역 + Remarks 생성
   const aiFields = process.env.ANTHROPIC_API_KEY
-    ? await generateAIFields(articles)
-    : articles.map(() => ({ topicEn: '', remarksKo: '', remarksEn: '' }))
+    ? await generateAIFields(filtered)
+    : filtered.map(() => ({ topicEn: '', remarksKo: '', remarksEn: '' }))
 
   // CSV 생성
   const headers = ['Date', 'Title', 'URL', 'Topic', 'Media Type', 'Company', 'Remarks']
-  const rows = articles.map((a, i) => {
+  const rows = filtered.map((a, i) => {
     const { company, mediaType } = extractMediaInfo(a.link)
     const ai = aiFields[i] ?? { topicEn: '', remarksKo: '', remarksEn: '' }
     const topic = ai.topicEn ? `${a.title}\n${ai.topicEn}` : a.title
