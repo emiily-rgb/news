@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { createServiceClient } from '@/lib/supabase/server'
 
 const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
@@ -169,6 +170,27 @@ export async function GET(req: Request) {
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
 
+  const todayKST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+  const yymmdd = todayKST.replace(/-/g, '').slice(2)
+  const filename = `${yymmdd}_Huawei_articles.csv`
+
+  // 오늘 캐시 확인
+  const supabase = createServiceClient()
+  const { data: cached } = await supabase
+    .from('huawei_csv_cache')
+    .select('csv_content')
+    .eq('date', todayKST)
+    .single()
+
+  if (cached?.csv_content) {
+    return new NextResponse(cached.csv_content, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      },
+    })
+  }
+
   // Claude AI로 Topic 영문번역 + Remarks 생성
   const aiFields = process.env.ANTHROPIC_API_KEY
     ? await generateAIFields(articles)
@@ -194,8 +216,8 @@ export async function GET(req: Request) {
 
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }).replace(/-/g, '')
-  const filename = `${today}_Huawei_All_Articles.csv`
+  // 캐시 저장
+  await supabase.from('huawei_csv_cache').upsert({ date: todayKST, csv_content: csv })
 
   return new NextResponse(csv, {
     headers: {
