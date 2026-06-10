@@ -1,5 +1,6 @@
 import Parser from 'rss-parser'
 import { CategoryKeywords } from '@/types'
+import { ALLOWED_DOMAINS, SOURCE_NAME_MAP } from '@/lib/domains'
 
 const parser = new Parser({
   customFields: { item: ['source', 'description'] },
@@ -19,61 +20,6 @@ function normalizeTitle(title: string): string {
   return title.replace(/[\s\W]/g, '').toLowerCase()
 }
 
-// 허용 언론사 도메인
-const ALLOWED_DOMAINS: Record<string, string> = {
-  'yna.co.kr': '연합뉴스',
-  'chosun.com': '조선일보',
-  'joongang.co.kr': '중앙일보',
-  'donga.com': '동아일보',
-  'hankyung.com': '한국경제',
-  'mk.co.kr': '매일경제',
-  'biz.chosun.com': '조선비즈',
-  'mt.co.kr': '머니투데이',
-  'etnews.com': '전자신문',
-  'zdnet.co.kr': 'ZDNet Korea',
-  'ddaily.co.kr': '디지털데일리',
-  'inews24.com': '아이뉴스24',
-  'sedaily.com': '서울경제',
-  'aitimes.com': 'AI타임스',
-  'bloter.net': '블로터',
-  'itchosun.com': 'IT조선',
-  'ytn.co.kr': 'YTN',
-  'edaily.co.kr': '이데일리',
-  'hankookilbo.com': '한국일보',
-  'news1.kr': '뉴스1',
-  'heraldcorp.com': '헤럴드경제',
-  'businesspost.co.kr': '비즈니스포스트',
-  'theguru.co.kr': '더구루',
-  'thescoop.co.kr': '더스쿠프',
-}
-
-// Google News source.name → 내부 언론사명 매핑 (한글 이름과 다를 경우)
-const SOURCE_NAME_MAP: Record<string, string> = {
-  'Yonhap News Agency': '연합뉴스',
-  'Yonhap': '연합뉴스',
-  'The Chosun Ilbo': '조선일보',
-  'JoongAng Ilbo': '중앙일보',
-  'Donga': '동아일보',
-  'Korea Economic Daily': '한국경제',
-  'Maeil Business Newspaper': '매일경제',
-  'ChosunBiz': '조선비즈',
-  'Money Today': '머니투데이',
-  'Electronic Times': '전자신문',
-  'ZDNet Korea': 'ZDNet Korea',
-  'Digital Daily': '디지털데일리',
-  'iNews24': '아이뉴스24',
-  'Seoul Economic Daily': '서울경제',
-  'AI Times': 'AI타임스',
-  'Bloter': '블로터',
-  'IT Chosun': 'IT조선',
-  'Edaily': '이데일리',
-  'The Korea Herald': '헤럴드경제',
-  'News1': '뉴스1',
-  'Hankook Ilbo': '한국일보',
-  'BusinessPost': '비즈니스포스트',
-  'The Guru': '더구루',
-  'The Scoop': '더스쿠프',
-}
 
 // Google News 검색 키워드 (핵심만, 병렬 처리)
 const SEARCH_KEYWORDS = [
@@ -85,6 +31,11 @@ const SEARCH_KEYWORDS = [
   // Network
   '5G 주파수', '6G 통신', 'LGU+ 5G',
   'Huawei 5G', '화웨이 네트워크',
+  // 통신사 시장 전반
+  'SK텔레콤 AI', 'KT 통신', 'LG유플러스 네트워크',
+  '이동통신 시장', '통신 정책',
+  // 6G / 차세대 네트워크
+  '6G 기술', '6G ISAC', '차세대 네트워크', '오픈랜',
   // Smart Campus / Smart Hospital
   '스마트 캠퍼스', '스마트 병원',
   '화웨이 스마트 캠퍼스', '화웨이 스마트 병원',
@@ -101,6 +52,14 @@ const SEARCH_KEYWORDS = [
   '화웨이 자율주행',
   // Policy
   '수출통제', '미국 제재', '반도체 규제', '삼성전자 반도체',
+  // 대중 장비 규제
+  '중국 장비', '화웨이 장비 교체', '공급망 보안',
+  // 반도체 경쟁
+  '중국 반도체 기술', '메모리 반도체', 'DRAM 시장',
+  // AI / 데이터센터 정책
+  'AI 인프라', 'AI 국산화', '데이터센터 투자',
+  // 한중 관계
+  '한중 관계', '대중 외교', '중국 기업 규제',
 ]
 
 // 네이버 뉴스 검색 키워드 (합친 키워드로 요청 수 줄임)
@@ -114,6 +73,11 @@ const NAVER_SEARCH_KEYWORDS = [
   // Network
   '주파수 할당', 'LGU+ 네트워크', '6G 이동통신',
   '화웨이 5G 장비',
+  // 통신사 시장 전반
+  'SKT AI 서비스', 'KT 네트워크 전략', 'LG유플러스 6G',
+  '이동통신 정책',
+  // 6G / 차세대 네트워크
+  '6G ISAC 기술', '차세대 네트워크 한국', '오픈랜 구축',
   // Smart Campus / Smart Hospital
   '스마트 캠퍼스', '스마트 병원',
   '화웨이 스마트 캠퍼스', '화웨이 스마트 병원',
@@ -130,6 +94,14 @@ const NAVER_SEARCH_KEYWORDS = [
   '화웨이 차량용',
   // Policy
   '반도체 정책', '대중국 규제', 'AI 정책', '반도체 공급망',
+  // 대중 장비 규제
+  '중국 통신장비 규제', '나토 중국 장비', '공급망 보안 정책',
+  // 반도체 경쟁
+  '중국 반도체 굴기', 'DRAM 경쟁', '메모리 반도체 시장',
+  // AI / 데이터센터 정책
+  'AI 인프라 투자', 'AI 국산화 정책', '데이터센터 구축',
+  // 한중 관계
+  '한중 경제 관계', '중국 기업 제재', '대중 외교 정책',
 ]
 
 function getMediaFromUrl(url: string): string | null {

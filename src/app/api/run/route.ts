@@ -135,10 +135,10 @@ async function processPipeline(
   })
 
   const MIN_TOTAL = 15
-  const MAX_TOTAL = 25
+  const MAX_TOTAL = 30
   const selected: typeof filtered = []
   const catCount: Record<string, number> = {}
-  const maxPerCat: Record<string, number> = { '자사': 10, '업계': 6, '정책': 6, '위기이슈': 6 }
+  const maxPerCat: Record<string, number> = { '자사': 10, '업계': 10, '정책': 10, '위기이슈': 10 }
 
   for (const article of sorted) {
     if (selected.length >= MAX_TOTAL) break
