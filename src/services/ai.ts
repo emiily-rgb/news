@@ -92,7 +92,14 @@ ${lines}
 type FilterResult = { index: number; relevant: boolean; category: string; tag: ArticleTag; impact_level: ImpactLevel; sentiment: Sentiment; relevance_score: number }
 
 async function filterBatch(batch: RawArticle[], offset: number): Promise<FilterResult[]> {
-  const lines = batch.map((a, i) => `[${offset + i}] 제목: "${a.title}" | 매체: ${a.media} | 검색키워드: ${a.keyword}`).join('\n')
+  const lines = batch.map((a, i) => {
+    const desc = (a as any).description
+    const cleanDesc = typeof desc === 'string'
+      ? desc.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 200)
+      : ''
+    const descPart = cleanDesc ? ` | 요약: "${cleanDesc}"` : ''
+    return `[${offset + i}] 제목: "${a.title}" | 매체: ${a.media} | 검색키워드: ${a.keyword}${descPart}`
+  }).join('\n')
   console.log(`[filterBatch] offset=${offset}, batch=${batch.length}건`)
   const response = await getClient().messages.create({
     model: FILTER_MODEL,
@@ -132,7 +139,7 @@ export async function filterArticles(
     if (i + BATCH_SIZE < articles.length) await new Promise(r => setTimeout(r, 500))
   }
 
-  return articles
+  const filtered = articles
     .map((article, i) => {
       const r = allResults.find(x => x.index === i) ?? {
         relevant: false, category: '업계', tag: 'AI' as ArticleTag,
@@ -152,6 +159,42 @@ export async function filterArticles(
     })
     .filter(a => (a as any)._relevant)
     .map(({ _relevant, ...a }) => a)
+
+  // 배치 간 중복 이슈 클러스터링: 제목 유사도 기반으로 같은 이슈 묶기
+  // 우선순위: A) mediaTier 낮을수록 우선 (1=최상위) → B) relevanceScore 높을수록 우선
+  function titleTokens(title: string): Set<string> {
+    return new Set(title.replace(/[\s\W]/g, ' ').split(' ').filter(t => t.length >= 2))
+  }
+
+  function isSameIssue(a: string, b: string): boolean {
+    const ta = titleTokens(a)
+    const tb = titleTokens(b)
+    const intersection = [...ta].filter(t => tb.has(t)).length
+    const union = new Set([...ta, ...tb]).size
+    return union > 0 && intersection / union >= 0.4 // 40% 이상 겹치면 같은 이슈
+  }
+
+  const dedupedIndices = new Set<number>()
+  const kept: typeof filtered = []
+
+  for (let i = 0; i < filtered.length; i++) {
+    if (dedupedIndices.has(i)) continue
+    const cluster = [i]
+    for (let j = i + 1; j < filtered.length; j++) {
+      if (!dedupedIndices.has(j) && isSameIssue(filtered[i].title, filtered[j].title)) {
+        cluster.push(j)
+        dedupedIndices.add(j)
+      }
+    }
+    // 클러스터 내에서 최우선 기사 선택: mediaTier 오름차순 → relevanceScore 내림차순
+    const best = cluster
+      .map(idx => filtered[idx])
+      .sort((a, b) => a.mediaTier - b.mediaTier || b.relevanceScore - a.relevanceScore)[0]
+    kept.push(best)
+  }
+
+  console.log(`[dedup] 필터 통과: ${filtered.length}건 → 중복 제거 후: ${kept.length}건`)
+  return kept
 }
 
 // ── 2단계: 요약 + 번역 + Why It Matters ──
