@@ -94,6 +94,11 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'comworld.co.kr':         { company: '컴퓨터월드',    mediaType: 'IT/Tech' },
   'betanews.net':           { company: '베타뉴스',      mediaType: 'IT/Tech' },
   'venturesquare.net':      { company: '벤처스퀘어',    mediaType: 'IT/Tech' },
+  'hellodd.com':            { company: '헬로디디',       mediaType: 'IT/Tech' },
+  'kbench.com':             { company: '케이벤치',       mediaType: 'IT/Tech' },
+  'jndn.com':               { company: '전남일보',       mediaType: 'Online' },
+  'dream.kotra.or.kr':      { company: 'KOTRA',          mediaType: 'Online' },
+  'lkp.news':               { company: 'LKP뉴스',        mediaType: 'Online' },
   'startuptoday.co.kr':    { company: '스타트업투데이', mediaType: 'IT/Tech' },
   'it-b.co.kr':            { company: '아이티비즈',     mediaType: 'IT/Tech' },
   'news.mtn.co.kr':        { company: 'MTN뉴스',        mediaType: 'Online' },
@@ -111,6 +116,7 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'paxnetnews.com':         { company: '팍스넷뉴스',    mediaType: 'Online' },
   'ohmynews.com':           { company: '오마이뉴스',    mediaType: 'Online' },
   'pressian.com':           { company: '프레시안',      mediaType: 'Online' },
+  'dhnews.co.kr':           { company: '대학저널',      mediaType: 'Online' },
 }
 
 /** collector.ts용 단순 domain → company 이름 맵 */

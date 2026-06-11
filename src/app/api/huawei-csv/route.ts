@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 import Parser from 'rss-parser'
+import { DOMAIN_MAP, type MediaInfo } from '@/lib/domains'
 
 const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
@@ -31,26 +32,14 @@ function isNonWorkingDay(date: Date): boolean {
   return dow === 0 || dow === 6
 }
 
-// 브리핑 수집 윈도우: 전 영업일 오전 8시 KST ~ 오늘 오전 8시 KST
-function getBriefingWindow(): { start: Date; end: Date } {
-  const nowKst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
+// fallback: 마지막 다운로드 기록 없을 때 전 영업일 10시 KST
+function getFallbackStart(): Date {
   const todayKst = getKstDateStr(new Date())
-
-  // 오늘 오전 8시 KST
-  const end = new Date(`${todayKst}T08:00:00+09:00`)
-
-  // 전 영업일 찾기 (어제부터 거슬러 올라가며 영업일 찾음)
-  const d = new Date(end)
+  const d = new Date(`${todayKst}T10:00:00+09:00`)
   d.setDate(d.getDate() - 1)
-  while (isNonWorkingDay(d)) {
-    d.setDate(d.getDate() - 1)
-  }
+  while (isNonWorkingDay(d)) d.setDate(d.getDate() - 1)
   const prevWorkdayKst = getKstDateStr(d)
-  const start = new Date(`${prevWorkdayKst}T08:00:00+09:00`)
-
-  // 현재 시각이 오늘 8시 이전이면 end를 현재 시각으로 (아직 오늘 윈도우가 안 열린 경우)
-  const now = new Date()
-  return { start, end: end > now ? now : end }
+  return new Date(`${prevWorkdayKst}T10:00:00+09:00`)
 }
 
 function stripHtml(str: string): string {
@@ -64,61 +53,44 @@ function stripHtml(str: string): string {
     .trim()
 }
 
+// 제목 끝 매체명 제거: "제목 - 매체명", "제목 | 매체명", "제목 (매체명)", "제목 [매체명]"
+function stripMediaSuffix(title: string): string {
+  return title
+    .replace(/\s*[-–|]\s*[^\-–|[\]()\n]{1,30}$/, '')
+    .replace(/\s*[\[(][^\]\)]{1,30}[\])]\s*$/, '')
+    .trim()
+}
+
 function toCsvRow(cells: string[]): string {
   return cells.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')
 }
 
-type MediaInfo = { company: string; mediaType: string }
-
-const DOMAIN_MAP: Record<string, MediaInfo> = {
-  'digitaltoday.co.kr':  { company: '디지털투데이', mediaType: 'IT/Tech' },
-  'etnews.com':          { company: '전자신문',      mediaType: 'IT/Tech' },
-  'zdnet.co.kr':         { company: 'ZDNet Korea',   mediaType: 'IT/Tech' },
-  'itworld.co.kr':       { company: 'IT World',      mediaType: 'IT/Tech' },
-  'cio.co.kr':           { company: 'CIO Korea',     mediaType: 'IT/Tech' },
-  'aitimes.com':         { company: 'AI타임스',      mediaType: 'IT/Tech' },
-  'aitimes.kr':          { company: 'AI타임스',      mediaType: 'IT/Tech' },
-  'techrecipe.co.kr':    { company: '테크레시피',    mediaType: 'IT/Tech' },
-  'bloter.net':          { company: '블로터',        mediaType: 'IT/Tech' },
-  'ddaily.co.kr':        { company: '디지털데일리',  mediaType: 'IT/Tech' },
-  'boannews.com':        { company: '보안뉴스',      mediaType: 'IT/Tech' },
-  'chosun.com':          { company: '조선일보',      mediaType: 'Newspaper' },
-  'joongang.co.kr':      { company: '중앙일보',      mediaType: 'Newspaper' },
-  'donga.com':           { company: '동아일보',      mediaType: 'Newspaper' },
-  'hani.co.kr':          { company: '한겨레',        mediaType: 'Newspaper' },
-  'hankyung.com':        { company: '한국경제',      mediaType: 'Newspaper' },
-  'mk.co.kr':            { company: '매일경제',      mediaType: 'Newspaper' },
-  'sedaily.com':         { company: '서울경제',      mediaType: 'Newspaper' },
-  'fnnews.com':          { company: '파이낸셜뉴스',  mediaType: 'Newspaper' },
-  'heraldcorp.com':      { company: '헤럴드경제',    mediaType: 'Newspaper' },
-  'etoday.co.kr':        { company: '이투데이',      mediaType: 'Newspaper' },
-  'mt.co.kr':            { company: '머니투데이',    mediaType: 'Newspaper' },
-  'newsis.com':          { company: '뉴시스',        mediaType: 'Online' },
-  'news1.kr':            { company: '뉴스1',         mediaType: 'Online' },
-  'yonhapnews.co.kr':    { company: '연합뉴스',      mediaType: 'Online' },
-  'yna.co.kr':           { company: '연합뉴스',      mediaType: 'Online' },
-  'biz.chosun.com':      { company: '조선비즈',      mediaType: 'Online' },
-  'dealsite.co.kr':      { company: '딜사이트',      mediaType: 'Online' },
-  'joseilbo.com':        { company: '조세일보',      mediaType: 'Online' },
-}
 
 
 const rssParser = new Parser()
 
 type Article = { title: string; link: string; pubDate: string; description: string; keyword: string }
 
-async function searchGoogle(
+function extractBingUrl(bingLink: string): string {
+  try {
+    const match = bingLink.match(/[?&]url=([^&]+)/)
+    if (match) return decodeURIComponent(match[1])
+  } catch { /* ignore */ }
+  return bingLink
+}
+
+async function searchRss(
+  rssUrl: string,
   keyword: string,
   cutoff: Date,
   cutoffEnd: Date,
-  seen: Set<string>
+  seen: Set<string>,
+  extractLink?: (link: string) => string
 ): Promise<Article[]> {
   const results: Article[] = []
   try {
-    const q = encodeURIComponent(keyword)
-    const url = `https://news.google.com/rss/search?q=${q}&hl=ko&gl=KR&ceid=KR:ko`
     const feed = await Promise.race([
-      rssParser.parseURL(url),
+      rssParser.parseURL(rssUrl),
       new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
     ]) as Awaited<ReturnType<typeof rssParser.parseURL>>
 
@@ -129,11 +101,12 @@ async function searchGoogle(
       if (pub > cutoffEnd || pub < cutoff) continue
 
       const title = item.title
+      const link = extractLink ? extractLink(item.link) : item.link
       const key = title.replace(/[\s\W]/g, '').toLowerCase()
       if (seen.has(key)) continue
       seen.add(key)
 
-      results.push({ title, link: item.link, pubDate: pub.toISOString(), description: item.contentSnippet ?? '', keyword })
+      results.push({ title, link, pubDate: pub.toISOString(), description: item.contentSnippet ?? '', keyword })
     }
   } catch { /* ignore */ }
   return results
@@ -184,15 +157,15 @@ ${numbered}`,
   return results
 }
 
-function extractMediaInfo(url: string): MediaInfo {
+function extractMediaInfo(url: string): MediaInfo | null {
   try {
     const hostname = new URL(url).hostname.replace(/^www\./, '')
     for (const [domain, info] of Object.entries(DOMAIN_MAP)) {
-      if (hostname.includes(domain)) return info
+      if (hostname === domain || hostname.endsWith('.' + domain)) return info
     }
-    return { company: hostname, mediaType: 'Online' }
+    return null
   } catch {
-    return { company: '', mediaType: '' }
+    return null
   }
 }
 
@@ -204,7 +177,21 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url)
-  const { start: cutoff, end: cutoffEnd } = getBriefingWindow()
+  const now = new Date()
+  const supabase = createServiceClient()
+
+  // 마지막 다운로드 시점 읽기
+  const { data: lastDlData } = await supabase
+    .from('configs')
+    .select('value')
+    .eq('key', 'huawei_csv_last_download')
+    .single()
+  const lastDownloadAt: Date = lastDlData?.value?.timestamp
+    ? new Date(lastDlData.value.timestamp)
+    : getFallbackStart()
+
+  const cutoff = lastDownloadAt
+  const cutoffEnd = now
 
   const seen = new Set<string>()
   const articles: { title: string; link: string; pubDate: string; description: string; keyword: string }[] = []
@@ -244,7 +231,7 @@ export async function GET(req: Request) {
 
         for (const item of items) {
           const link = item.originallink || item.link
-          const title = stripHtml(item.title)
+          const title = stripMediaSuffix(stripHtml(item.title))
           const description = stripHtml(item.description)
 
           if (!title || !link) continue
@@ -273,19 +260,28 @@ export async function GET(req: Request) {
   const naverCount = articles.length
   console.log(`[huawei-csv] Naver 수집 완료: ${naverCount}건`)
 
-  // Google News 검색 병렬 실행
-  const googleResults = await Promise.all(
-    HUAWEI_KEYWORDS.map(kw => searchGoogle(kw, cutoff, cutoffEnd, seen))
-  )
+  // Google News + Bing News 병렬 수집
+  const [googleResults, bingResults] = await Promise.all([
+    Promise.all(HUAWEI_KEYWORDS.map(kw =>
+      searchRss(`https://news.google.com/rss/search?q=${encodeURIComponent(kw)}&hl=ko&gl=KR&ceid=KR:ko`, kw, cutoff, cutoffEnd, seen)
+    )),
+    Promise.all(HUAWEI_KEYWORDS.map(kw =>
+      searchRss(`https://www.bing.com/news/search?q=${encodeURIComponent(kw)}&format=rss`, kw, cutoff, cutoffEnd, seen, extractBingUrl)
+    )),
+  ])
+  const googleCount = googleResults.flat().length
   for (const results of googleResults) articles.push(...results)
-  console.log(`[huawei-csv] Google 수집 완료: ${articles.length - naverCount}건, 총 ${articles.length}건`)
+  for (const results of bingResults) articles.push(...results)
+  const bingCount = articles.length - naverCount - googleCount
+  console.log(`[huawei-csv] Google ${googleCount}건, Bing ${bingCount}건, 총 ${articles.length}건`)
 
   // debug=true 이면 수집 결과 JSON으로 반환
   if (url.searchParams.get('debug') === 'true') {
     return NextResponse.json({
       total: articles.length,
       naver: naverCount,
-      google: articles.length - naverCount,
+      google: googleCount,
+      bing: bingCount,
       window: { start: cutoff.toISOString(), end: cutoffEnd.toISOString() },
       titles: articles.map(a => ({ date: a.pubDate.slice(0, 10), title: a.title })),
     })
@@ -294,29 +290,12 @@ export async function GET(req: Request) {
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
 
-  const filtered = articles
+  // 허용 도메인 외 영문 매체 제거
+  const filtered = articles.filter(a => extractMediaInfo(a.link) !== null)
 
-  const todayKST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+  const todayKST = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   const yymmdd = todayKST.replace(/-/g, '').slice(2)
   const filename = `${yymmdd}_Huawei_articles.csv`
-
-  // 오늘 캐시 확인 (force=true면 무시)
-  const force = url.searchParams.get('force') === 'true'
-  const supabase = createServiceClient()
-  const { data: cached } = await supabase
-    .from('huawei_csv_cache')
-    .select('csv_content')
-    .eq('date', todayKST)
-    .single()
-
-  if (!force && cached?.csv_content) {
-    return new NextResponse(cached.csv_content, {
-      headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-      },
-    })
-  }
 
   // Claude AI로 Topic 영문번역 + Remarks 생성
   const aiFields = process.env.ANTHROPIC_API_KEY
@@ -326,7 +305,7 @@ export async function GET(req: Request) {
   // CSV 생성
   const headers = ['Date', 'Title', 'URL', 'Topic', 'Media Type', 'Company', 'Remarks']
   const rows = filtered.map((a, i) => {
-    const { company, mediaType } = extractMediaInfo(a.link)
+    const { company, mediaType } = extractMediaInfo(a.link)!
     const ai = aiFields[i] ?? { topicEn: '', remarksKo: '', remarksEn: '' }
     const topic = ai.topicEn ? `${a.title}\n${ai.topicEn}` : a.title
     const remarks = ai.remarksKo && ai.remarksEn ? `${ai.remarksKo}\n${ai.remarksEn}` : ''
@@ -343,8 +322,8 @@ export async function GET(req: Request) {
 
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
 
-  // 캐시 저장
-  await supabase.from('huawei_csv_cache').upsert({ date: todayKST, csv_content: csv, created_at: new Date().toISOString() })
+  // 마지막 다운로드 시점 저장
+  await supabase.from('configs').upsert({ key: 'huawei_csv_last_download', value: { timestamp: now.toISOString() } })
 
   return new NextResponse(csv, {
     headers: {

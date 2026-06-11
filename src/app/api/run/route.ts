@@ -45,7 +45,7 @@ function countPrecedingNonWorkingDays(): number {
 export async function GET() {
   const today = new Date()
   if (isNonWorkingDay(today)) {
-    return NextResponse.json({ message: '주말/공휴일 — 메인 브리핑 생략', date: getKstDateStr(today) })
+    return NextResponse.json({ message: '주말/공휴일 — 뉴스 클리핑 생략', date: getKstDateStr(today) })
   }
   const extraDays = countPrecedingNonWorkingDays()
   return POST(undefined, undefined, extraDays)

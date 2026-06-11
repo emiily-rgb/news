@@ -564,7 +564,7 @@ export default function Home() {
                     onClick={() => downloadCsv(articles, runLog)}
                     className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
                   >
-                    CSV 다운로드
+                    뉴스클리핑 리스트 CSV
                   </button>
                 )}
                 <button onClick={openPreview}
@@ -580,10 +580,10 @@ export default function Home() {
           </>
         )}
 
-        {/* 화웨이 CSV */}
+        {/* 화웨이 풀리스트 */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between flex-wrap gap-3">
           <div>
-            <p className="text-sm text-gray-600">화웨이 CSV</p>
+            <p className="text-sm text-gray-600">화웨이 풀리스트</p>
             {huaweiCacheInfo === null ? (
               <p className="text-xs text-gray-400 mt-0.5">확인 중...</p>
             ) : huaweiCacheInfo.cached && huaweiCacheInfo.createdAt ? (
