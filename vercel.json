@@ -12,6 +12,7 @@
     { "path": "/api/daily-alert/collect", "schedule": "50 11 * * 1-5"},
     { "path": "/api/daily-alert/send",    "schedule": "0 3 * * 1-5"  },
     { "path": "/api/daily-alert/send",    "schedule": "0 7 * * 1-5"  },
-    { "path": "/api/daily-alert/send",    "schedule": "0 12 * * 1-5" }
+    { "path": "/api/daily-alert/send",    "schedule": "0 12 * * 1-5" },
+    { "path": "/api/huawei-csv/holiday-alert", "schedule": "0 1 * * 1-5" }
   ]
 }
