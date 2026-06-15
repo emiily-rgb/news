@@ -14,6 +14,7 @@ export interface RawArticle {
   category: string
   keyword: string
   imageUrl?: string
+  description?: string
 }
 
 function normalizeTitle(title: string): string {
@@ -199,7 +200,68 @@ export async function collectArticles(
         const category = matched?.category ?? '업계'
         const kw = matched?.keyword ?? keyword
 
-        articles.push({ title: cleanTitle, link: item.link, pubDate: pub.toISOString(), media, category, keyword: kw })
+        const desc = (item as any).description ?? ''
+        const cleanDesc = typeof desc === 'string'
+          ? desc.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
+          : ''
+
+        articles.push({ title: cleanTitle, link: item.link, pubDate: pub.toISOString(), media, category, keyword: kw, description: cleanDesc })
+      }
+    } catch { /* ignore */ }
+    return articles
+  }
+
+  async function searchBing(keyword: string): Promise<RawArticle[]> {
+    const articles: RawArticle[] = []
+    try {
+      const q = encodeURIComponent(keyword)
+      const url = `https://www.bing.com/news/search?q=${q}&format=rss`
+      const feed = await Promise.race([
+        parser.parseURL(url),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
+      ]) as Awaited<ReturnType<typeof parser.parseURL>>
+
+      for (const item of feed.items?.slice(0, 50) ?? []) {
+        if (!item.title || !item.link) continue
+
+        // Bing 링크에서 실제 URL 추출
+        let realLink = item.link
+        try {
+          const match = item.link.match(/[?&]url=([^&]+)/)
+          if (match) realLink = decodeURIComponent(match[1])
+        } catch { /* ignore */ }
+
+        const media = getMediaFromUrl(realLink)
+        if (!media) continue
+
+        const pub = item.pubDate ? new Date(item.pubDate) : null
+        if (!pub || pub < cutoff) continue
+
+        // 제목 끝 매체명 제거
+        let cleanTitle = item.title
+        for (const name of [media]) {
+          if (!name) continue
+          cleanTitle = cleanTitle
+            .replace(new RegExp(`\\s*[-|]\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i'), '')
+            .replace(new RegExp(`\\s*[\\(\\[]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\)\\]]\\s*$`, 'i'), '')
+            .trim()
+        }
+
+        const key = normalizeTitle(cleanTitle)
+        if (seen.has(key)) continue
+        seen.add(key)
+
+        const desc = (item as any).description ?? item.contentSnippet ?? ''
+        const cleanDesc = typeof desc === 'string'
+          ? desc.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
+          : ''
+
+        const titleLower = cleanTitle.toLowerCase()
+        const matched = allKeywords.find(k => titleLower.includes(k.lower))
+        const category = matched?.category ?? '업계'
+        const kw = matched?.keyword ?? keyword
+
+        articles.push({ title: cleanTitle, link: realLink, pubDate: pub.toISOString(), media, category, keyword: kw, description: cleanDesc })
       }
     } catch { /* ignore */ }
     return articles
@@ -247,13 +309,17 @@ export async function collectArticles(
         const category = matched?.category ?? '업계'
         const kw = matched?.keyword ?? keyword
 
-        articles.push({ title, link, pubDate: pub.toISOString(), media, category, keyword: kw })
+        const cleanDesc = item.description
+          ? item.description.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 300)
+          : ''
+
+        articles.push({ title, link, pubDate: pub.toISOString(), media, category, keyword: kw, description: cleanDesc })
       }
     } catch { /* ignore */ }
     return articles
   }
 
-  // 구글: 5개씩 묶어 순차 실행 (rate limit 방지) + 네이버: 병렬
+  // 구글: 5개씩 묶어 순차 실행 (rate limit 방지)
   const GOOGLE_BATCH = 5
   const googleResults: RawArticle[] = []
   for (let i = 0; i < SEARCH_KEYWORDS.length; i += GOOGLE_BATCH) {
@@ -262,6 +328,10 @@ export async function collectArticles(
     googleResults.push(...batchResults.flat())
   }
 
+  // Bing: 화웨이 전용 키워드만 (자사 기사 보강 목적)
+  const BING_KEYWORDS = ['화웨이', 'Huawei']
+  const bingResults = await Promise.all(BING_KEYWORDS.map(kw => searchBing(kw)))
+
   const naverResults = await Promise.all(NAVER_SEARCH_KEYWORDS.map(kw => searchNaver(kw)))
-  return [...googleResults, ...naverResults.flat()]
+  return [...googleResults, ...bingResults.flat(), ...naverResults.flat()]
 }
