@@ -75,8 +75,8 @@ ${lines}
    - 정책: 정부·규제가 주제 (미국규제·중국정책·AI정책·수출통제·보안규제). 화웨이가 직접 언급되면 자사 또는 위기이슈 우선.
    - 위기이슈: 화웨이 관련 보안위협·제재·스파이·해킹·백도어·도청·정보유출·엔티티리스트·보이콧·배제
 
-3. tag: "AI" | "Cloud" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment" | "AI Semiconductor" | "Smart Campus" | "Smart Hospital" | "SSD" | "Digital Power" | "Smart Device" | "IAS"
-   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=반도체/NPU/AI칩/AI서버/엔비디아/HBM/TSMC/DRAM/NAND/파운드리 등 반도체 전반, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
+3. tag: "AI" | "Cloud" | "Network" | "Smartphone" | "Policy" | "US Sanctions" | "China" | "Data Center" | "Investment" | "AI Semiconductor" | "Smart Campus" | "Smart Hospital" | "SSD" | "Digital Power" | "Smart Device" | "IAS" | "Talent Development"
+   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=반도체/NPU/AI칩/AI서버/엔비디아/HBM/TSMC/DRAM/NAND/파운드리 등 반도체 전반, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행, Talent Development=인재양성/인재육성/SW인재/AI인재/개발자육성/교육프로그램
 
 4. impact_level: "HIGH" | "MEDIUM" | "LOW"
 
@@ -383,8 +383,8 @@ ${input.bodyText.trim()
 
 판단 및 작성:
 1. category: "자사"(화웨이 직접) | "업계"(시장/경쟁사/AI/반도체) | "정책"(정부/규제) | "위기이슈"(보안위협/제재/해킹/스파이/정보유출)
-2. tag: "AI"|"Cloud"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"|"AI Semiconductor"|"Smart Campus"|"Smart Hospital"|"SSD"|"Digital Power"|"Smart Device"|"IAS"
-   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=반도체/NPU/AI칩/AI서버/엔비디아/HBM/TSMC/DRAM/NAND/파운드리 등 반도체 전반, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행
+2. tag: "AI"|"Cloud"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"|"AI Semiconductor"|"Smart Campus"|"Smart Hospital"|"SSD"|"Digital Power"|"Smart Device"|"IAS"|"Talent Development"
+   태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=반도체/NPU/AI칩/AI서버/엔비디아/HBM/TSMC/DRAM/NAND/파운드리 등 반도체 전반, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행, Talent Development=인재양성/인재육성/SW인재/AI인재/개발자육성/교육프로그램
 3. impact_level: "HIGH"|"MEDIUM"|"LOW" (임원 관점 중요도)
 4. sentiment: "positive"|"negative"|"neutral" (화웨이 관점)
 5. title_zh: 제목 중국어 간체 번역

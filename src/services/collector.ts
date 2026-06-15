@@ -33,9 +33,10 @@ const SEARCH_KEYWORDS = [
   'Huawei 5G', '화웨이 네트워크',
   // 통신사 시장 전반
   'SK텔레콤 AI', 'KT 통신', 'LG유플러스 네트워크',
-  '이동통신 시장', '통신 정책',
+  '이동통신 시장', '통신 정책', '5G SA', '5G 단독모드',
+  'AI 팩토리', '피지컬 AI',
   // 6G / 차세대 네트워크
-  '6G 기술', '6G ISAC', '차세대 네트워크', '오픈랜',
+  '6G 기술', '6G ISAC', '차세대 네트워크', '오픈랜', 'IMT-2030', '6G 보안', '국제표준 6G',
   // Smart Campus / Smart Hospital
   '스마트 캠퍼스', '스마트 병원',
   '화웨이 스마트 캠퍼스', '화웨이 스마트 병원',
@@ -56,6 +57,8 @@ const SEARCH_KEYWORDS = [
   '중국 장비', '화웨이 장비 교체', '공급망 보안',
   // 반도체 경쟁
   '중국 반도체 기술', '메모리 반도체', 'DRAM 시장',
+  // 중국 AI·첨단산업
+  '중국 첨단산업', '중국 AI 산업', '중국 AI 굴기',
   // AI / 데이터센터 정책
   'AI 인프라', 'AI 국산화', '데이터센터 투자',
   // 한중 관계
@@ -75,9 +78,9 @@ const NAVER_SEARCH_KEYWORDS = [
   '화웨이 5G 장비',
   // 통신사 시장 전반
   'SKT AI 서비스', 'KT 네트워크 전략', 'LG유플러스 6G',
-  '이동통신 정책',
+  '이동통신 정책', '5G 단독모드', 'AI 팩토리 구축', '피지컬 AI 인프라',
   // 6G / 차세대 네트워크
-  '6G ISAC 기술', '차세대 네트워크 한국', '오픈랜 구축',
+  '6G ISAC 기술', '차세대 네트워크 한국', '오픈랜 구축', 'IMT-2030 표준', '6G 보안 표준',
   // Smart Campus / Smart Hospital
   '스마트 캠퍼스', '스마트 병원',
   '화웨이 스마트 캠퍼스', '화웨이 스마트 병원',
@@ -98,6 +101,8 @@ const NAVER_SEARCH_KEYWORDS = [
   '중국 통신장비 규제', '나토 중국 장비', '공급망 보안 정책',
   // 반도체 경쟁
   '중국 반도체 굴기', 'DRAM 경쟁', '메모리 반도체 시장',
+  // 중국 AI·첨단산업
+  '중국 첨단산업', '중국 AI 산업',
   // AI / 데이터센터 정책
   'AI 인프라 투자', 'AI 국산화 정책', '데이터센터 구축',
   // 한중 관계
@@ -163,17 +168,28 @@ export async function collectArticles(
         const pub = item.pubDate ? new Date(item.pubDate) : null
         if (!pub || pub < cutoff) continue
 
-        const key = normalizeTitle(item.title)
+        // 제목 끝 매체명 제거: "제목 - 매체명", "제목 | 매체명", "제목 (매체명)", "제목 [매체명]"
+        const candidates = [media, sourceName, ...Object.keys(SOURCE_NAME_MAP).filter(k => SOURCE_NAME_MAP[k] === media)]
+        let cleanTitle = item.title
+        for (const name of candidates) {
+          if (!name) continue
+          cleanTitle = cleanTitle
+            .replace(new RegExp(`\\s*[-|]\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i'), '')
+            .replace(new RegExp(`\\s*[\\(\\[]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\)\\]]\\s*$`, 'i'), '')
+            .trim()
+        }
+
+        const key = normalizeTitle(cleanTitle)
         if (seen.has(key)) continue
         seen.add(key)
 
         // 카테고리 매칭
-        const titleLower = item.title.toLowerCase()
+        const titleLower = cleanTitle.toLowerCase()
         const matched = allKeywords.find(k => titleLower.includes(k.lower))
         const category = matched?.category ?? '업계'
         const kw = matched?.keyword ?? keyword
 
-        articles.push({ title: item.title, link: item.link, pubDate: pub.toISOString(), media, category, keyword: kw })
+        articles.push({ title: cleanTitle, link: item.link, pubDate: pub.toISOString(), media, category, keyword: kw })
       }
     } catch { /* ignore */ }
     return articles
