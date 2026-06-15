@@ -9,7 +9,7 @@ interface Props {
   recipients: string[]
   isAdmin: boolean
   onClose: () => void
-  onSent?: () => void
+  onSent?: (draftSavedAt?: string) => void
 }
 
 export default function EmailPreviewModal({ html, runLog, recipients: initialRecipients, isAdmin, onClose, onSent }: Props) {
@@ -50,7 +50,7 @@ export default function EmailPreviewModal({ html, runLog, recipients: initialRec
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '발송 실패')
       setSent(true)
-      onSent?.()
+      onSent?.(data.draft_saved_at)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '발송 중 오류가 발생했습니다.')
     } finally {

@@ -658,7 +658,11 @@ export default function Home() {
           recipients={configRecipients.length > 0 ? configRecipients : runLog.recipients}
           isAdmin={isAdmin}
           onClose={() => setShowPreview(false)}
-          onSent={() => setRunLog(prev => prev ? { ...prev, sent_at: new Date().toISOString() } : prev)}
+          onSent={(draftSavedAt) => {
+            const now = new Date().toISOString()
+            setRunLog(prev => prev ? { ...prev, sent_at: now, draft_saved_at: draftSavedAt ?? now } : prev)
+            setDraftSaved(draftSavedAt ?? now)
+          }}
         />
       )}
     </div>

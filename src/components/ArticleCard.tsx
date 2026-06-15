@@ -276,25 +276,23 @@ export default function ArticleCard({
                 onChange={e => onUpdateTag(article.id, e.target.value as ArticleTag)}
                 className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
               >
-                {article.category === '업계' ? <>
-                  <option value="Network">Network</option>
-                  <option value="AI Semiconductor">AI Semiconductor</option>
-                  <option value="Smart Campus">Smart Campus</option>
-                  <option value="Smart Hospital">Smart Hospital</option>
-                  <option value="SSD">SSD</option>
-                  <option value="Digital Power">Digital Power</option>
-                  <option value="Smart Device">Smart Device</option>
-                  <option value="IAS">IAS</option>
-                </> : <>
-                  <option value="AI">AI</option>
-                  <option value="Cloud">Cloud</option>
-                  <option value="Smartphone">Smartphone</option>
-                  <option value="Policy">Policy</option>
-                  <option value="US Sanctions">US Sanctions</option>
-                  <option value="China">China</option>
-                  <option value="Data Center">Data Center</option>
-                  <option value="Investment">Investment</option>
-                </>}
+                <option value="AI">AI</option>
+                <option value="Cloud">Cloud</option>
+                <option value="Network">Network</option>
+                <option value="AI Semiconductor">AI Semiconductor</option>
+                <option value="Semiconductor">Semiconductor</option>
+                <option value="Smartphone">Smartphone</option>
+                <option value="Smart Campus">Smart Campus</option>
+                <option value="Smart Hospital">Smart Hospital</option>
+                <option value="SSD">SSD</option>
+                <option value="Digital Power">Digital Power</option>
+                <option value="Smart Device">Smart Device</option>
+                <option value="IAS">IAS</option>
+                <option value="Data Center">Data Center</option>
+                <option value="Investment">Investment</option>
+                <option value="China">China</option>
+                <option value="Policy">Policy</option>
+                <option value="US Sanctions">US Sanctions</option>
               </select>
             </>
           </div>

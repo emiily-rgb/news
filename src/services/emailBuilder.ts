@@ -139,7 +139,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
       </div>
     </td></tr>`
 
-  return `<!DOCTYPE html>
+  const raw = `<!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
@@ -219,6 +219,13 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
 </table>
 </body>
 </html>`
+
+  // Gmail clips emails over 102KB — minify whitespace to stay under the limit
+  return raw
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/>\s+</g, '><')
+    .trim()
 }
 
 export function buildMailtoLink(html: string, recipients: string[], subject: string): string {
