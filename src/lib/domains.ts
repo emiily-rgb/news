@@ -117,6 +117,20 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'ohmynews.com':           { company: '오마이뉴스',    mediaType: 'Online' },
   'pressian.com':           { company: '프레시안',      mediaType: 'Online' },
   'dhnews.co.kr':           { company: '대학저널',      mediaType: 'Online' },
+
+  // ── 추가 매체 ───────────────────────────────────────────
+  'widedaily.com':          { company: '와이드데일리',  mediaType: 'Online' },
+  'theasian.asia':          { company: '더아시안',      mediaType: 'Online' },
+  'starnewskorea.com':      { company: '스타뉴스',      mediaType: 'Online' },
+  'ziksir.com':             { company: '직썰',          mediaType: 'Online' },
+  'tokenpost.kr':           { company: '토큰포스트',    mediaType: 'IT/Tech' },
+  'financialpost.co.kr':   { company: '파이낸셜포스트', mediaType: 'Online' },
+  'g-enews.com':            { company: '글로벌이코노믹', mediaType: 'Online' },
+  'hansbiz.co.kr':          { company: '한스경제',      mediaType: 'Online' },
+  'jnilbo.com':             { company: '전남일보',      mediaType: 'Online' },
+  'autodaily.co.kr':        { company: '오토데일리',    mediaType: 'Online' },
+  'asiatime.co.kr':         { company: '아시아타임즈',  mediaType: 'Online' },
+  'cbci.co.kr':             { company: 'CBS노컷뉴스',   mediaType: 'Online' },
 }
 
 /** collector.ts용 단순 domain → company 이름 맵 */
