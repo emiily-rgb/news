@@ -117,6 +117,7 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'ohmynews.com':           { company: '오마이뉴스',    mediaType: 'Online' },
   'pressian.com':           { company: '프레시안',      mediaType: 'Online' },
   'dhnews.co.kr':           { company: '대학저널',      mediaType: 'Online' },
+  'enewstoday.co.kr':       { company: '이뉴스투데이',  mediaType: 'Online' },
 
   // ── 추가 매체 ───────────────────────────────────────────
   'widedaily.com':          { company: '와이드데일리',  mediaType: 'Online' },
@@ -131,6 +132,8 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'autodaily.co.kr':        { company: '오토데일리',    mediaType: 'Online' },
   'asiatime.co.kr':         { company: '아시아타임즈',  mediaType: 'Online' },
   'cbci.co.kr':             { company: 'CBS노컷뉴스',   mediaType: 'Online' },
+  'insight.co.kr':          { company: '인사이트',      mediaType: 'Online' },
+  'srtimes.kr':             { company: 'SR타임스',       mediaType: 'Online' },
 }
 
 /** collector.ts용 단순 domain → company 이름 맵 */
