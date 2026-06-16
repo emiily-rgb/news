@@ -7,7 +7,7 @@ export type ArticleTag =
   | 'Policy' | 'US Sanctions' | 'China' | 'Data Center' | 'Investment'
   | 'AI Semiconductor' | 'Smart Campus' | 'Smart Hospital' | 'SSD' | 'Digital Power' | 'Smart Device' | 'IAS' | 'Talent Development'
 
-// 업계(行业资讯) 내 태그 정렬 순서 — 여기 없는 태그는 Etc로 표기
+// 업계(行业资讯) 내 태그 정렬 순서 — 여기 없는 태그는 목록 뒤로 정렬
 export const INDUSTRY_TAG_ORDER: ArticleTag[] = [
   'Network',
   'AI Semiconductor',
@@ -20,13 +20,13 @@ export const INDUSTRY_TAG_ORDER: ArticleTag[] = [
   'Talent Development',
 ]
 
-// 업계 태그 표시명 — INDUSTRY_TAG_ORDER에 없으면 'Etc' 반환
+// 업계 태그 표시명 — 선택한 태그를 그대로 표시 (배열 형태면 첫 값만 추출)
 export function displayIndustryTag(tag: unknown): string {
   let t = tag as string
   if (typeof t === 'string' && t.startsWith('[')) {
     try { const arr = JSON.parse(t); if (Array.isArray(arr) && arr.length > 0) t = arr[0] } catch { /* pass */ }
   }
-  return INDUSTRY_TAG_ORDER.includes(t as ArticleTag) ? t : 'Etc'
+  return t
 }
 
 export interface Article {
