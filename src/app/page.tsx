@@ -184,21 +184,33 @@ export default function Home() {
   }
 
   async function updateCategory(id: string, category: string) {
+    // 낙관적 업데이트: 화면을 먼저 갱신
+    setArticles(prev => prev.map(a => a.id === id ? { ...a, category } : a))
     const res = await fetch(`/api/articles/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ category }),
     })
+    if (!res.ok) {
+      console.error('[updateCategory] 저장 실패', await res.text())
+      return
+    }
     const updated = await res.json()
     setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
   }
 
   async function updateTag(id: string, tag: string) {
+    // 낙관적 업데이트: 화면을 먼저 갱신
+    setArticles(prev => prev.map(a => a.id === id ? { ...a, tag: tag as Article['tag'] } : a))
     const res = await fetch(`/api/articles/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag }),
     })
+    if (!res.ok) {
+      console.error('[updateTag] 저장 실패', await res.text())
+      return
+    }
     const updated = await res.json()
     setArticles(prev => prev.map(a => a.id === updated.id ? updated : a))
   }
