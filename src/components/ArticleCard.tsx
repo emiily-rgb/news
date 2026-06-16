@@ -288,6 +288,7 @@ export default function ArticleCard({
                 <option value="Digital Power">Digital Power</option>
                 <option value="Smart Device">Smart Device</option>
                 <option value="IAS">IAS</option>
+                <option value="Talent Development">Talent Development</option>
                 <option value="Data Center">Data Center</option>
                 <option value="Investment">Investment</option>
                 <option value="China">China</option>
