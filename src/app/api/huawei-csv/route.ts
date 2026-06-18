@@ -6,6 +6,10 @@ import { DOMAIN_MAP, type MediaInfo } from '@/lib/domains'
 
 const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
+// 네이버 색인 지연 보완: 수집 시작점을 이만큼 앞으로 당겨 재수집(겹침)
+// 이미 직전 다운로드에 나온 기사는 huawei_csv_last_links로 제외하므로 중복 없음
+const OVERLAP_MS = 2 * 60 * 60 * 1000 // 2시간
+
 // 2026년 한국 공휴일 + 대체공휴일 (run/route.ts와 동일하게 유지)
 const HOLIDAYS_2026 = new Set([
   '2026-01-01',
@@ -190,8 +194,17 @@ export async function GET(req: Request) {
     ? new Date(lastDlData.value.timestamp)
     : getFallbackStart()
 
-  const cutoff = lastDownloadAt
+  // 색인 지연 보완: 시작점을 OVERLAP_MS 만큼 앞으로 당겨 재수집
+  const cutoff = new Date(lastDownloadAt.getTime() - OVERLAP_MS)
   const cutoffEnd = now
+
+  // 직전 다운로드에서 이미 내보낸 링크 (겹침 구간 중복 제거용)
+  const { data: lastLinksData } = await supabase
+    .from('configs')
+    .select('value')
+    .eq('key', 'huawei_csv_last_links')
+    .single()
+  const prevLinks = new Set<string>(lastLinksData?.value?.links ?? [])
 
   const seen = new Set<string>()
   const articles: { title: string; link: string; pubDate: string; description: string; keyword: string }[] = []
@@ -290,8 +303,10 @@ export async function GET(req: Request) {
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
 
-  // 허용 도메인 외 영문 매체 제거
-  const filtered = articles.filter(a => extractMediaInfo(a.link) !== null)
+  // 허용 도메인 외 영문 매체 제거 + 직전 다운로드에서 이미 내보낸 기사(겹침 구간) 제외
+  const filtered = articles.filter(
+    a => extractMediaInfo(a.link) !== null && !prevLinks.has(a.link)
+  )
 
   const todayKST = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   const yymmdd = todayKST.replace(/-/g, '').slice(2)
@@ -322,8 +337,9 @@ export async function GET(req: Request) {
 
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
 
-  // 마지막 다운로드 시점 저장
+  // 마지막 다운로드 시점 + 이번에 내보낸 링크 저장 (다음 겹침 구간 중복 제거용)
   await supabase.from('configs').upsert({ key: 'huawei_csv_last_download', value: { timestamp: now.toISOString() } })
+  await supabase.from('configs').upsert({ key: 'huawei_csv_last_links', value: { links: filtered.map(a => a.link) } })
 
   return new NextResponse(csv, {
     headers: {
