@@ -147,6 +147,14 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'thepublic.kr':           { company: '더퍼블릭',      mediaType: 'Online' },
   'the-biz.co.kr':          { company: '더비즈',        mediaType: 'Online' },
   'e-science.co.kr':        { company: '이코노미사이언스', mediaType: 'Online' },
+  'nongmin.com':            { company: '농민신문',      mediaType: 'Newspaper' },
+  'newstomato.com':         { company: '뉴스토마토',    mediaType: 'Online' },
+  'delighti.co.kr':         { company: '딜라이트닷넷',  mediaType: 'Online' },
+  'obsnews.co.kr':          { company: 'OBS경인TV',     mediaType: 'Online' },
+  'kbmaeil.com':            { company: '경북매일',      mediaType: 'Newspaper' },
+  'gokorea.kr':             { company: '공감신문',      mediaType: 'Online' },
+  'newdaily.co.kr':         { company: '뉴데일리',      mediaType: 'Online' },
+  'einfomax.co.kr':         { company: '연합인포맥스',  mediaType: 'Online' },
 }
 
 /** collector.ts용 단순 domain → company 이름 맵 */
