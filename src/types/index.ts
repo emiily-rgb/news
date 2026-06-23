@@ -147,6 +147,13 @@ export const MEDIA_DISPLAY: Record<string, string> = {
   '더스쿠프': 'The Scoop',
   '아주경제': 'Aju Business Daily',
   '글로벌이코노믹': 'Global Economic',
+  '데일리한국': 'Daily Hankook',
+  '뉴스워치': 'Newswatch',
+  '빅터뉴스': 'Bigta News',
+  '투데이신문': 'Today News',
+  'CEO스코어데일리': 'CEO Score Daily',
+  '시빅뉴스': 'Civic News',
+  '월요신문': 'Wolyo News',
 }
 
 export function formatMediaName(media: string, overrides?: Record<string, string>): string {

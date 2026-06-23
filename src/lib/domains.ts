@@ -155,6 +155,13 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'gokorea.kr':             { company: '공감신문',      mediaType: 'Online' },
   'newdaily.co.kr':         { company: '뉴데일리',      mediaType: 'Online' },
   'einfomax.co.kr':         { company: '연합인포맥스',  mediaType: 'Online' },
+  'daily.hankooki.com':     { company: '데일리한국',    mediaType: 'Online' },
+  'newswatch.kr':           { company: '뉴스워치',      mediaType: 'Online' },
+  'bigtanews.co.kr':        { company: '빅터뉴스',      mediaType: 'Online' },
+  'ntoday.co.kr':           { company: '투데이신문',    mediaType: 'Online' },
+  'ceoscoredaily.com':      { company: 'CEO스코어데일리', mediaType: 'Online' },
+  'civicnews.com':          { company: '시빅뉴스',      mediaType: 'Online' },
+  'wolyo.co.kr':            { company: '월요신문',      mediaType: 'Online' },
 }
 
 /** collector.ts용 단순 domain → company 이름 맵 */
