@@ -56,8 +56,10 @@ function extractFromHtml(html: string): { title: string; bodyText: string; media
 // 데이터센터 IP 차단(403 등)으로 직접 fetch가 막힌 사이트용 리더 프록시 폴백.
 // r.jina.ai 가 서버측에서 렌더링해 제목/발행시각/본문을 텍스트로 돌려준다.
 async function fetchViaReader(url: string): Promise<{ title: string; bodyText: string; pubDate: string }> {
+  // 기본 응답(Title:/Published Time:/Markdown Content: 메타 포함)을 받아야 제목 파싱이 됨.
+  // X-Return-Format:text 를 주면 메타가 빠지므로 설정하지 않는다.
   const res = await fetch(`https://r.jina.ai/${url}`, {
-    headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
+    headers: { 'Accept': 'text/plain' },
     signal: AbortSignal.timeout(25000),
   })
   if (!res.ok) throw new Error(`reader HTTP ${res.status}`)
