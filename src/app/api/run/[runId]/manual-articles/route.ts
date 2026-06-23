@@ -53,6 +53,30 @@ function extractFromHtml(html: string): { title: string; bodyText: string; media
   return { title, bodyText, media, pubDate }
 }
 
+// 데이터센터 IP 차단(403 등)으로 직접 fetch가 막힌 사이트용 리더 프록시 폴백.
+// r.jina.ai 가 서버측에서 렌더링해 제목/발행시각/본문을 텍스트로 돌려준다.
+async function fetchViaReader(url: string): Promise<{ title: string; bodyText: string; pubDate: string }> {
+  const res = await fetch(`https://r.jina.ai/${url}`, {
+    headers: { 'Accept': 'text/plain', 'X-Return-Format': 'text' },
+    signal: AbortSignal.timeout(25000),
+  })
+  if (!res.ok) throw new Error(`reader HTTP ${res.status}`)
+  const text = await res.text()
+
+  const title = text.match(/^Title:\s*(.+)$/m)?.[1]?.trim() ?? ''
+  const pubMatch = text.match(/^Published Time:\s*(.+)$/m)?.[1]?.trim()
+  const pubDate = pubMatch || new Date().toISOString()
+  const bodyStart = text.indexOf('Markdown Content:')
+  const bodyText = (bodyStart >= 0 ? text.slice(bodyStart + 'Markdown Content:'.length) : text)
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // 마크다운 링크 → 텍스트만
+    .replace(/[#*>`]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .slice(0, 5000)
+
+  return { title, bodyText, pubDate }
+}
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
   const { runId } = await params
   const { urls, forceCategory } = await req.json() as { urls: string[]; forceCategory?: string }
@@ -79,21 +103,31 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ run
 
   for (const url of urls) {
     try {
-      // 1. 기사 HTML 가져오기
-      const fetchRes = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml',
-          'Accept-Language': 'ko-KR,ko;q=0.9,zh-CN;q=0.8',
-        },
-        signal: AbortSignal.timeout(15000),
-      })
+      // 1. 기사 HTML 가져오기 (직접 fetch → 실패 시 리더 프록시 폴백)
+      let title = ''
+      let bodyText = ''
+      let pubDate = new Date().toISOString()
+      let ogMedia = ''
+      try {
+        const fetchRes = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'ko-KR,ko;q=0.9,zh-CN;q=0.8',
+          },
+          signal: AbortSignal.timeout(15000),
+        })
+        if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status}`)
+        const html = await fetchRes.text()
+        ;({ title, bodyText, pubDate, media: ogMedia } = extractFromHtml(html))
+      } catch (directErr) {
+        // 데이터센터 IP 차단(403 등) 또는 타임아웃 → 리더 프록시로 재시도
+        const msg = directErr instanceof Error ? directErr.message : String(directErr)
+        console.warn(`[manual-articles] 직접 fetch 실패(${msg}), 리더 프록시 폴백: ${url}`)
+        ;({ title, bodyText, pubDate } = await fetchViaReader(url))
+      }
 
-      if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status}`)
-      const html = await fetchRes.text()
-
-      // 2. 본문 추출
-      const { title, bodyText, pubDate, media: ogMedia } = extractFromHtml(html)
+      // 2. 매체명 결정
       const domain = new URL(url).hostname.replace(/^www\./, '')
       const MEDIA_MAP: Record<string, string> = {
         'sedaily.com': '서울경제',
