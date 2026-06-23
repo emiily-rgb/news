@@ -140,7 +140,20 @@ async function processPipeline(
   const catCount: Record<string, number> = {}
   const maxPerCat: Record<string, number> = { '자사': 10, '업계': 10, '정책': 10, '위기이슈': 10 }
 
+  // 정책 최소 보장: 임팩트가 낮아도 정책 기사가 자사·업계에 밀려 탈락하지 않도록
+  // 정렬 상위 정책 기사 일정 수를 먼저 확보한다 (정책 컷오프 완화)
+  const minPerCat: Record<string, number> = { '정책': 5 }
+  for (const [cat, min] of Object.entries(minPerCat)) {
+    for (const article of sorted) {
+      if ((catCount[cat] ?? 0) >= min) break
+      if (article.finalCategory !== cat || selected.includes(article)) continue
+      selected.push(article)
+      catCount[cat] = (catCount[cat] ?? 0) + 1
+    }
+  }
+
   for (const article of sorted) {
+    if (selected.includes(article)) continue
     if (selected.length >= MAX_TOTAL) break
     const cat = article.finalCategory
     if ((catCount[cat] ?? 0) >= (maxPerCat[cat] ?? 6)) continue
@@ -156,21 +169,30 @@ async function processPipeline(
     }
   }
 
-  // 요약 + 번역
-  await setStep('summarizing')
-  const processed = await summarizeAndTranslate(selected)
-
-  // DB 저장 (최종 중복 제거)
-  await setStep('saving')
+  // 요약 전 중복 제거: 제목(정규화) + 직전 런 URL
+  const { data: prevArticles } = await supabase
+    .from('articles')
+    .select('link')
+    .neq('run_id', runId)
+    .order('collected_at', { ascending: false })
+    .limit(500)
+  const prevLinks = new Set((prevArticles ?? []).map((a: { link: string }) => a.link))
   const seenTitles = new Set<string>()
-  const dedupedProcessed = processed.filter(a => {
+  const dedupedSelected = selected.filter(a => {
+    if (a.link && prevLinks.has(a.link)) return false
     const key = (a.title ?? '').replace(/[\s\W]/g, '').toLowerCase()
     if (seenTitles.has(key)) return false
     seenTitles.add(key)
     return true
   })
 
-  const articles = dedupedProcessed.map((a, i) => ({
+  // 요약 + 번역
+  await setStep('summarizing')
+  const processed = await summarizeAndTranslate(dedupedSelected)
+
+  // DB 저장
+  await setStep('saving')
+  const articles = processed.map((a, i) => ({
     id: uuidv4(),
     run_id: runId,
     order_index: i,
@@ -190,12 +212,12 @@ async function processPipeline(
 
   // Executive Brief
   await setStep('briefing')
-  const insight = await generateInsight(dedupedProcessed)
+  const insight = await generateInsight(processed)
 
   await supabase.from('run_logs').update({
     status: 'completed',
     current_step: 'completed',
-    total_after_filter: dedupedProcessed.length,
+    total_after_filter: processed.length,
     insight_ko: insight.ko,
     insight_zh: insight.zh,
     key_takeaways: insight.keyTakeaways,
@@ -207,5 +229,5 @@ async function processPipeline(
     raw_articles: null,
   }).eq('id', runId)
 
-  console.log(`[처리완료] runId=${runId}, 선택=${dedupedProcessed.length}건`)
+  console.log(`[처리완료] runId=${runId}, 선택=${processed.length}건`)
 }

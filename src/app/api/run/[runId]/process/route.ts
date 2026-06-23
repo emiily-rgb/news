@@ -78,20 +78,30 @@ async function processPipeline(
     }
   }
 
-  // 4. 요약 + 번역
-  await setStep('summarizing')
-  const processed = await summarizeAndTranslate(selected)
-
-  // 5. DB 저장 (최종 중복 제거)
-  await setStep('saving')
+  // 4. 요약 전 중복 제거: 제목(정규화) + 직전 런 URL
+  const { data: prevArticles } = await supabase
+    .from('articles')
+    .select('link')
+    .neq('run_id', runId)
+    .order('collected_at', { ascending: false })
+    .limit(500)
+  const prevLinks = new Set((prevArticles ?? []).map((a: { link: string }) => a.link))
   const seenTitles = new Set<string>()
-  const dedupedProcessed = processed.filter(a => {
+  const dedupedSelected = selected.filter(a => {
+    if (a.link && prevLinks.has(a.link)) return false
     const key = (a.title ?? '').replace(/[\s\W]/g, '').toLowerCase()
     if (seenTitles.has(key)) return false
     seenTitles.add(key)
     return true
   })
-  const articles = dedupedProcessed.map((a, i) => ({
+
+  // 5. 요약 + 번역
+  await setStep('summarizing')
+  const processed = await summarizeAndTranslate(dedupedSelected)
+
+  // 6. DB 저장
+  await setStep('saving')
+  const articles = processed.map((a, i) => ({
     id: uuidv4(),
     run_id: runId,
     order_index: i,
@@ -109,14 +119,14 @@ async function processPipeline(
     if (error) throw new Error(`기사 저장 실패: ${error.message}`)
   }
 
-  // 6. Executive Brief
+  // 7. Executive Brief
   await setStep('briefing')
-  const insight = await generateInsight(dedupedProcessed)
+  const insight = await generateInsight(processed)
 
   await supabase.from('run_logs').update({
     status: 'completed',
     current_step: 'completed',
-    total_after_filter: selected.length,
+    total_after_filter: processed.length,
     insight_ko: insight.ko,
     insight_zh: insight.zh,
     key_takeaways: insight.keyTakeaways,
@@ -128,5 +138,5 @@ async function processPipeline(
     raw_articles: null, // 정리
   }).eq('id', runId)
 
-  console.log(`[처리완료] runId=${runId}, 선택=${selected.length}건`)
+  console.log(`[처리완료] runId=${runId}, 선택=${processed.length}건`)
 }

@@ -290,8 +290,14 @@ export async function generateInsight(articles: Partial<Article>[]): Promise<{
 }> {
   const active = articles.filter(a => !a.excluded)
 
+  // 자사 기사를 앞에 배치하여 AI가 첫 문장에 자사 내용을 쓰도록 유도
+  const sorted = [
+    ...active.filter(a => a.category === '자사'),
+    ...active.filter(a => a.category !== '자사'),
+  ]
+
   const sanitize = (s?: string) => (s ?? '').replace(/["'\\]/g, ' ').replace(/\s+/g, ' ').trim()
-  const articleSummary = active
+  const articleSummary = sorted
     .map(a => `[${a.category}][${a.tag}][${a.impact_level}] ${sanitize(a.title)}\n  요약: ${sanitize(a.summary_ko?.join(' '))}`)
     .join('\n\n')
 
@@ -308,6 +314,7 @@ ${articleSummary}
 아래 항목을 작성하라.
 
 1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 핵심 메시지(Key Takeaways) 2~3개를 마지막에 불릿으로 포함. 반드시 명사형 종결로 작성 (예: "~급증", "~발표", "~전망", "~강화"). 존댓말·반말 동사형 종결 금지.
+   ※ 자사(화웨이) 관련 기사가 있는 경우, 반드시 첫 번째 문장에 자사 내용을 배치할 것. 자사 기사가 없더라도 화웨이 관점에서 가장 중요한 이슈를 첫 문장으로 작성.
 2. executive_summary_zh: executive_summary_ko의 중국어 간체 번역 (불릿 포함)
 3. emerging_signals: 반복적으로 나타나는 흐름
    - positive: 긍정 신호 최대 3개 (한국어, 명사형 종결)
