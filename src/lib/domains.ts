@@ -162,6 +162,10 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'ceoscoredaily.com':      { company: 'CEO스코어데일리', mediaType: 'Online' },
   'civicnews.com':          { company: '시빅뉴스',      mediaType: 'Online' },
   'wolyo.co.kr':            { company: '월요신문',      mediaType: 'Online' },
+  'worldkorean.net':        { company: '월드코리안뉴스', mediaType: 'Online' },
+  'laborplus.co.kr':        { company: '참여와혁신',    mediaType: 'Online' },
+  'kgnews.co.kr':           { company: '경기신문',      mediaType: 'Newspaper' },
+  'thelec.kr':              { company: '더일렉',        mediaType: 'IT/Tech' },
 }
 
 /** collector.ts용 단순 domain → company 이름 맵 */
