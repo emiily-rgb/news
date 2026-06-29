@@ -166,6 +166,20 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'laborplus.co.kr':        { company: '참여와혁신',    mediaType: 'Online' },
   'kgnews.co.kr':           { company: '경기신문',      mediaType: 'Newspaper' },
   'thelec.kr':              { company: '더일렉',        mediaType: 'IT/Tech' },
+  'vop.co.kr':              { company: '민중의소리',    mediaType: 'Online' },
+  'breaknews.com':          { company: '브레이크뉴스',  mediaType: 'Online' },
+  'joongboo.com':           { company: '중부일보',      mediaType: 'Newspaper' },
+  'nocutnews.co.kr':        { company: 'CBS노컷뉴스',   mediaType: 'Online' },
+  'tf.co.kr':               { company: '더팩트',        mediaType: 'Online' },
+  'viva100.com':            { company: '브릿지경제',    mediaType: 'Online' },
+  'sidae.com':              { company: '시대',          mediaType: 'Online' },
+  'getnews.co.kr':          { company: '글로벌경제신문', mediaType: 'Online' },
+  'joongangenews.com':      { company: '중앙이코노미뉴스', mediaType: 'Online' },
+  'm-i.kr':                 { company: '매일일보',      mediaType: 'Online' },
+  'weeklytoday.com':        { company: '위클리오늘',    mediaType: 'Online' },
+  'consumernews.co.kr':     { company: '소비자가만드는신문', mediaType: 'Online' },
+  'skbroadband.com':        { company: 'SK브로드밴드',  mediaType: 'Online' },
+  'abcn.kr':                { company: 'ABC뉴스',       mediaType: 'Online' },
 }
 
 /** collector.ts용 단순 domain → company 이름 맵 */
