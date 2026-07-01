@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getConfig } from '@/lib/config'
-import { filterArticles, summarizeAndTranslate, generateInsight } from '@/services/ai'
+import { filterArticles, summarizeAndTranslate } from '@/services/ai'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
@@ -119,23 +119,13 @@ async function processPipeline(
     if (error) throw new Error(`기사 저장 실패: ${error.message}`)
   }
 
-  // 7. Executive Brief
-  await setStep('briefing')
-  const insight = await generateInsight(processed)
-
   await supabase.from('run_logs').update({
     status: 'completed',
     current_step: 'completed',
     total_after_filter: processed.length,
-    insight_ko: insight.ko,
-    insight_zh: insight.zh,
-    key_takeaways: insight.keyTakeaways,
-    emerging_signals: insight.emergingSignals,
-    tomorrow_watchlist: insight.tomorrowWatchlist,
-    insight_generated_at: new Date().toISOString(),
     recipients: config.recipients,
     draft_saved_at: new Date().toISOString(),
-    raw_articles: null, // 정리
+    raw_articles: null,
   }).eq('id', runId)
 
   console.log(`[처리완료] runId=${runId}, 선택=${processed.length}건`)

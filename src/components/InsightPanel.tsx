@@ -88,7 +88,7 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
           {isAdmin && (
             <button onClick={regenerate} disabled={regenerating}
               className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition disabled:opacity-50">
-              {regenerating ? '재생성 중…' : '재생성'}
+              {regenerating ? '생성 중…' : hasContent ? '재생성' : '생성'}
             </button>
           )}
           {editing ? (
