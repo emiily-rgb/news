@@ -82,7 +82,7 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
       <div className="bg-[#c8102e] px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <span className="text-white font-semibold text-sm tracking-wide">오늘의 하이라이트</span>
-          <span className="text-red-300 text-xs">今日焦点新闻</span>
+          <span className="text-red-300 text-xs">今日要点</span>
         </div>
         <div className="flex gap-1.5">
           {isAdmin && (
