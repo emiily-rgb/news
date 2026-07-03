@@ -33,13 +33,12 @@ function getTransporter() {
 export async function POST(req: NextRequest) {
   const { runId, recipients, subject, html, senderEmail } = await req.json()
 
-  const senderAccount = senderEmail ? SENDER_ACCOUNTS[senderEmail.toLowerCase()] : undefined
+  const matchedAccount = senderEmail ? SENDER_ACCOUNTS[senderEmail.toLowerCase()] : undefined
+  // 매칭된 발신 계정의 설정(SMTP 비밀번호)이 없으면 기본 Gmail 발신자로 대체한다.
+  const senderAccount = matchedAccount && process.env[matchedAccount.passEnv] ? matchedAccount : undefined
 
   if (!senderAccount && (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD)) {
     return NextResponse.json({ error: 'Gmail 설정이 되지 않았습니다.' }, { status: 500 })
-  }
-  if (senderAccount && !process.env[senderAccount.passEnv]) {
-    return NextResponse.json({ error: `${senderAccount.user} 발신 설정이 되지 않았습니다. ${senderAccount.passEnv}를 확인해주세요.` }, { status: 500 })
   }
   if (!recipients || recipients.length === 0) {
     return NextResponse.json({ error: '수신자가 없습니다. 설정에서 수신자를 추가해주세요.' }, { status: 400 })
