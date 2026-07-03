@@ -13,7 +13,7 @@ function bulletItem(s: string, color = '#444', fontSize: number | string = '11pt
 }
 
 function renderInsightItems(items: string[], color: string) {
-  return items.map(s => bulletItem(s, color, '11pt')).join('')
+  return items.filter(s => !s.startsWith('•')).map(s => bulletItem(s, color, '11pt')).join('')
 }
 
 function formatDateEn(dateStr: string) {

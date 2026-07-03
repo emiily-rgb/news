@@ -43,9 +43,10 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
   const [editing, setEditing] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
 
+  const stripLegacyTakeaways = (arr?: string[]) => (arr ?? []).filter(s => !s.startsWith('•'))
   const toLines = (arr?: string[]) => (arr && arr.length > 0 ? arr : [''])
-  const [koNormal, setKoNormal] = useState<string[]>(() => toLines(runLog.insight_ko))
-  const [zhNormal, setZhNormal] = useState<string[]>(() => toLines(runLog.insight_zh))
+  const [koNormal, setKoNormal] = useState<string[]>(() => toLines(stripLegacyTakeaways(runLog.insight_ko)))
+  const [zhNormal, setZhNormal] = useState<string[]>(() => toLines(stripLegacyTakeaways(runLog.insight_zh)))
 
   async function save() {
     const ko = koNormal.filter(l => l.trim())
@@ -60,8 +61,8 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
     setRegenerating(false)
   }
 
-  const koLines = runLog.insight_ko ?? []
-  const zhLines = runLog.insight_zh ?? []
+  const koLines = stripLegacyTakeaways(runLog.insight_ko)
+  const zhLines = stripLegacyTakeaways(runLog.insight_zh)
   const hasContent = koLines.length > 0 || zhLines.length > 0
 
   return (
@@ -86,8 +87,8 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
             </>
           ) : (
             <button onClick={() => {
-              setKoNormal(toLines(runLog.insight_ko))
-              setZhNormal(toLines(runLog.insight_zh))
+              setKoNormal(toLines(stripLegacyTakeaways(runLog.insight_ko)))
+              setZhNormal(toLines(stripLegacyTakeaways(runLog.insight_zh)))
               setEditing(true)
             }} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition">
               편집
