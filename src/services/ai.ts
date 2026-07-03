@@ -314,9 +314,9 @@ ${articleSummary}
 
 아래 항목을 작성하라.
 
-1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 핵심 메시지(Key Takeaways) 2~3개를 마지막에 불릿으로 포함. 반드시 명사형 종결로 작성 (예: "~급증", "~발표", "~전망", "~강화"). 존댓말·반말 동사형 종결 금지.
+1. executive_summary_ko: 전체 시장 흐름과 전략적 함의를 3~5문장으로. 반드시 명사형 종결로 작성 (예: "~급증", "~발표", "~전망", "~강화"). 존댓말·반말 동사형 종결 금지.
    ※ 자사(화웨이) 관련 기사가 있는 경우, 반드시 첫 번째 문장에 자사 내용을 배치할 것. 자사 기사가 없더라도 화웨이 관점에서 가장 중요한 이슈를 첫 문장으로 작성.
-2. executive_summary_zh: executive_summary_ko의 중국어 간체 번역 (불릿 포함)
+2. executive_summary_zh: executive_summary_ko의 중국어 간체 번역
 3. emerging_signals: 반복적으로 나타나는 흐름
    - positive: 긍정 신호 최대 3개 (한국어, 명사형 종결)
    - positive_zh: positive의 중국어 간체 번역
@@ -327,8 +327,8 @@ ${articleSummary}
 
 응답 형식 (JSON만):
 {
-  "executive_summary_ko": ["문장1", "문장2", "• 핵심메시지1", "• 핵심메시지2"],
-  "executive_summary_zh": ["句子1", "句子2", "• 要点1", "• 要点2"],
+  "executive_summary_ko": ["문장1", "문장2"],
+  "executive_summary_zh": ["句子1", "句子2"],
   "emerging_signals": {
     "positive": ["• 긍정신호1", "• 긍정신호2"],
     "positive_zh": ["• 正面信号1", "• 正面信号2"],

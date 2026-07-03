@@ -12,16 +12,8 @@ function bulletItem(s: string, color = '#444', fontSize: number | string = '11pt
   return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fs};color:#111;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fs};color:${color};line-height:1.7">${text}</td></tr></table>`
 }
 
-function renderInsightItems(items: string[], color: string, subtitleKo: string, subtitleZh: string, isZh: boolean) {
-  const normalItems = items.filter(s => !s.startsWith('•'))
-  const bulletItems = items.filter(s => s.startsWith('•'))
-  return `
-    ${normalItems.map(s => bulletItem(s, color, '11pt')).join('')}
-    ${bulletItems.length > 0 ? `
-      <div style="font-size:11pt;font-weight:700;color:#c8102e;margin-top:14px;margin-bottom:8px">${isZh ? subtitleZh : subtitleKo}</div>
-      ${bulletItems.map(s => bulletItem(s, color, '11pt')).join('')}
-    ` : ''}
-  `
+function renderInsightItems(items: string[], color: string) {
+  return items.map(s => bulletItem(s, color, '11pt')).join('')
 }
 
 function formatDateEn(dateStr: string) {
@@ -44,12 +36,12 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
       ${runLog.insight_zh?.length > 0 ? `
       <div style="font-size:16px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">今日焦点新闻</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px;margin-bottom:16px">
-        ${renderInsightItems(runLog.insight_zh, '#333', 'Key Takeaways', '核心要点', true)}
+        ${renderInsightItems(runLog.insight_zh, '#333')}
       </div>` : ''}
       ${runLog.insight_ko?.length > 0 ? `
       <div style="font-size:16px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">오늘의 하이라이트</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px">
-        ${renderInsightItems(runLog.insight_ko, '#333', 'Key Takeaways', '核心要点', false)}
+        ${renderInsightItems(runLog.insight_ko, '#333')}
       </div>` : ''}
     </td></tr>` : ''
 

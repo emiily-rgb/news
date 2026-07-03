@@ -44,20 +44,12 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
   const [regenerating, setRegenerating] = useState(false)
 
   const toLines = (arr?: string[]) => (arr && arr.length > 0 ? arr : [''])
-  const [koNormal, setKoNormal] = useState<string[]>(() => toLines((runLog.insight_ko ?? []).filter(s => !s.startsWith('•'))))
-  const [zhNormal, setZhNormal] = useState<string[]>(() => toLines((runLog.insight_zh ?? []).filter(s => !s.startsWith('•'))))
-  const [koTakeaway, setKoTakeaway] = useState<string[]>(() => toLines((runLog.insight_ko ?? []).filter(s => s.startsWith('•')).map(s => s.slice(1).trim())))
-  const [zhTakeaway, setZhTakeaway] = useState<string[]>(() => toLines((runLog.insight_zh ?? []).filter(s => s.startsWith('•')).map(s => s.slice(1).trim())))
+  const [koNormal, setKoNormal] = useState<string[]>(() => toLines(runLog.insight_ko))
+  const [zhNormal, setZhNormal] = useState<string[]>(() => toLines(runLog.insight_zh))
 
   async function save() {
-    const ko = [
-      ...koNormal.filter(l => l.trim()),
-      ...koTakeaway.filter(l => l.trim()).map(l => `• ${l}`),
-    ]
-    const zh = [
-      ...zhNormal.filter(l => l.trim()),
-      ...zhTakeaway.filter(l => l.trim()).map(l => `• ${l}`),
-    ]
+    const ko = koNormal.filter(l => l.trim())
+    const zh = zhNormal.filter(l => l.trim())
     await onUpdate(ko, zh)
     setEditing(false)
   }
@@ -70,10 +62,6 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
 
   const koLines = runLog.insight_ko ?? []
   const zhLines = runLog.insight_zh ?? []
-  const koNormalView = koLines.filter(s => !s.startsWith('•'))
-  const zhNormalView = zhLines.filter(s => !s.startsWith('•'))
-  const koTakeawayView = koLines.filter(s => s.startsWith('•')).map(s => s.slice(1).trim())
-  const zhTakeawayView = zhLines.filter(s => s.startsWith('•')).map(s => s.slice(1).trim())
   const hasContent = koLines.length > 0 || zhLines.length > 0
 
   return (
@@ -98,10 +86,8 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
             </>
           ) : (
             <button onClick={() => {
-              setKoNormal(toLines((runLog.insight_ko ?? []).filter(s => !s.startsWith('•'))))
-              setZhNormal(toLines((runLog.insight_zh ?? []).filter(s => !s.startsWith('•'))))
-              setKoTakeaway(toLines((runLog.insight_ko ?? []).filter(s => s.startsWith('•')).map(s => s.slice(1).trim())))
-              setZhTakeaway(toLines((runLog.insight_zh ?? []).filter(s => s.startsWith('•')).map(s => s.slice(1).trim())))
+              setKoNormal(toLines(runLog.insight_ko))
+              setZhNormal(toLines(runLog.insight_zh))
               setEditing(true)
             }} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition">
               편집
@@ -127,24 +113,6 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
                 </div>
               </div>
             </div>
-
-            {/* 구분선 */}
-            <div className="border-t border-gray-100" />
-
-            {/* Key Takeaways */}
-            <div>
-              <p className="text-xs font-semibold text-[#c8102e] uppercase tracking-wider mb-3">Key Takeaways · 核心要点</p>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5">한국어</p>
-                  <BulletEditor lines={koTakeaway} onChange={setKoTakeaway} />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5">中文</p>
-                  <BulletEditor lines={zhTakeaway} onChange={setZhTakeaway} />
-                </div>
-              </div>
-            </div>
           </div>
         ) : !hasContent ? (
           <div className="text-center py-8">
@@ -157,42 +125,21 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
         ) : (
           <div>
             {/* 요약 문장 뷰 */}
-            <div className="space-y-3 mb-5">
-              {koNormalView.map((ko, i) => (
+            <div className="space-y-3">
+              {koLines.map((ko, i) => (
                 <div key={i} className="pb-3 border-b border-gray-100 last:border-0 last:pb-0">
                   <div className="flex items-start gap-1.5">
                     <span className="text-gray-300 text-sm shrink-0 mt-0.5">•</span>
                     <p className="text-sm text-gray-800 leading-relaxed">{ko}</p>
                   </div>
-                  {zhNormalView[i] && (
+                  {zhLines[i] && (
                     <div className="flex items-start gap-1.5 mt-1 ml-4">
-                      <p className="text-sm text-gray-400 leading-relaxed">{zhNormalView[i]}</p>
+                      <p className="text-sm text-gray-400 leading-relaxed">{zhLines[i]}</p>
                     </div>
                   )}
                 </div>
               ))}
             </div>
-
-            {/* Key Takeaways 뷰 */}
-            {koTakeawayView.length > 0 && (
-              <>
-                <div className="border-t border-gray-100 mb-4" />
-                <p className="text-xs font-semibold text-[#c8102e] uppercase tracking-wider mb-3">Key Takeaways · 核心要点</p>
-                <div className="space-y-2">
-                  {koTakeawayView.map((ko, i) => (
-                    <div key={i} className="pl-3 border-l-2 border-[#c8102e]/20">
-                      <div className="flex items-start gap-1.5">
-                        <span className="text-gray-300 text-sm shrink-0">•</span>
-                        <p className="text-sm text-gray-800 font-medium leading-relaxed">{ko}</p>
-                      </div>
-                      {zhTakeawayView[i] && (
-                        <p className="text-sm text-gray-400 leading-relaxed mt-0.5 ml-4">{zhTakeawayView[i]}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
         )}
       </div>
