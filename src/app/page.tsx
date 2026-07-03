@@ -669,6 +669,7 @@ export default function Home() {
           runLog={runLog}
           recipients={configRecipients.length > 0 ? configRecipients : runLog.recipients}
           isAdmin={isAdmin}
+          senderEmail={profile?.email}
           onClose={() => setShowPreview(false)}
           onSent={(draftSavedAt) => {
             const now = new Date().toISOString()

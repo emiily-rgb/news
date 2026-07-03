@@ -8,11 +8,12 @@ interface Props {
   runLog: RunLog
   recipients: string[]
   isAdmin: boolean
+  senderEmail?: string | null
   onClose: () => void
   onSent?: (draftSavedAt?: string) => void
 }
 
-export default function EmailPreviewModal({ html, runLog, recipients: initialRecipients, isAdmin, onClose, onSent }: Props) {
+export default function EmailPreviewModal({ html, runLog, recipients: initialRecipients, isAdmin, senderEmail, onClose, onSent }: Props) {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +46,7 @@ export default function EmailPreviewModal({ html, runLog, recipients: initialRec
       const res = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ runId: runLog.id, recipients, subject, html }),
+        body: JSON.stringify({ runId: runLog.id, recipients, subject, html, senderEmail }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '발송 실패')
