@@ -193,9 +193,16 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'wikitree.co.kr':         { company: '위키트리',      mediaType: 'Online' },
 }
 
+/** 풀리스트에는 포함하지만 클리핑 수집 대상에서는 제외할 도메인 */
+const CLIPPING_EXCLUDED_DOMAINS = new Set<string>([
+  'g-enews.com', // 글로벌이코노믹
+])
+
 /** collector.ts용 단순 domain → company 이름 맵 */
 export const ALLOWED_DOMAINS: Record<string, string> = Object.fromEntries(
-  Object.entries(DOMAIN_MAP).map(([domain, info]) => [domain, info.company])
+  Object.entries(DOMAIN_MAP)
+    .filter(([domain]) => !CLIPPING_EXCLUDED_DOMAINS.has(domain))
+    .map(([domain, info]) => [domain, info.company])
 )
 
 /** collector.ts SOURCE_NAME_MAP용 */
