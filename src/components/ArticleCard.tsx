@@ -327,7 +327,7 @@ export default function ArticleCard({
                 <span className="text-xs font-medium text-gray-500">한국어 요약</span>
                 <button onClick={() => setEditing('ko')} className="text-xs text-blue-400">편집</button>
               </div>
-              {article.summary_ko.map((s, i) => (
+              {article.summary_ko.slice(0, 2).map((s, i) => (
                 <div key={i} className="flex items-start gap-1.5 mb-0.5">
                   <span className="text-gray-400 text-sm leading-snug shrink-0">•</span>
                   <p className="text-sm text-gray-700 leading-snug">{s}</p>
@@ -353,7 +353,7 @@ export default function ArticleCard({
                 <button onClick={() => setEditing('zh')} className="text-xs text-blue-400">편집</button>
               </div>
               {article.summary_zh.length > 0
-                ? article.summary_zh.map((s, i) => (
+                ? article.summary_zh.slice(0, 2).map((s, i) => (
                     <div key={i} className="flex items-start gap-1.5 mb-0.5">
                       <span className="text-gray-400 text-sm leading-snug shrink-0">•</span>
                       <p className="text-sm text-gray-600 leading-snug">{s}</p>

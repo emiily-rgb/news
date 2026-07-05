@@ -69,7 +69,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
         ${a.image_url ? `<img src="${a.image_url}" alt="" width="100%" style="display:block;width:100%;max-height:220px;object-fit:cover;border-radius:3px;margin-bottom:10px" />` : ''}
         <a href="${a.link}" style="color:#111;font-size:16px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
         <div style="font-size:14px;color:#aaa;margin-bottom:8px">${formatMediaName(a.media, mediaDisplayOverrides)} &nbsp;·&nbsp; ${pubDate}</div>
-        ${summary.length > 0 ? `<div>${summary.map(s => bulletItem(s)).join('')}</div>` : ''}
+        ${summary.length > 0 ? `<div>${summary.slice(0, 2).map(s => bulletItem(s)).join('')}</div>` : ''}
       </td></tr>`
     }).join('')
   }
