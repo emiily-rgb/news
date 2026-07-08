@@ -457,17 +457,32 @@ export default function Home() {
         <DailyAlertPanel />
 
         {/* 최근 실행 이력 */}
-        {pastRuns.length > 0 && !runLog && (
+        {pastRuns.length > 0 && (
           <div className="bg-white rounded-lg border border-gray-200 p-6 mb-5">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">최근 실행 이력</h3>
             <div className="space-y-1.5">
-              {pastRuns.slice(0, 5).map(r => (
-                <button key={r.id} onClick={() => loadRun(r.id!)}
-                  className="w-full text-left px-4 py-2.5 rounded bg-gray-50 hover:bg-gray-100 transition text-sm flex items-center justify-between">
-                  <span className="text-gray-700">{new Date(r.run_at!).toLocaleString('ko-KR')}</span>
-                  <span className="text-gray-400 text-xs">{r.total_after_filter}건</span>
-                </button>
-              ))}
+              {pastRuns.slice(0, 10).map(r => {
+                const isActive = runId === r.id
+                return (
+                  <button key={r.id} onClick={() => loadRun(r.id!)}
+                    className={`w-full text-left px-4 py-2.5 rounded transition text-sm flex items-center justify-between ${
+                      isActive ? 'bg-[#c8102e]/10 border border-[#c8102e]/30' : 'bg-gray-50 hover:bg-gray-100'
+                    }`}>
+                    <span className="flex items-center gap-2">
+                      <span className={isActive ? 'text-[#c8102e] font-medium' : 'text-gray-700'}>
+                        {new Date(r.run_at!).toLocaleString('ko-KR')}
+                      </span>
+                      {r.sent_at && (
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                          발송 {new Date(r.sent_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                      {isActive && <span className="text-[10px] text-[#c8102e]">보는 중</span>}
+                    </span>
+                    <span className="text-gray-400 text-xs">{r.total_after_filter}건</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
