@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Article, RunLog, INDUSTRY_TAG_ORDER } from '@/types'
+import { Article, RunLog, INDUSTRY_TAG_ORDER, displayIndustryTag } from '@/types'
 import { buildEmailHtml } from '@/services/emailBuilder'
 import ArticleCard from '@/components/ArticleCard'
 import InsightPanel from '@/components/InsightPanel'
@@ -240,8 +240,8 @@ export default function Home() {
         .filter(a => a.category === article.category)
         .sort((a, b) => {
           if (article.category === '업계') {
-            const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
-            const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+            const tagA = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(a.tag) as typeof INDUSTRY_TAG_ORDER[number])
+            const tagB = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(b.tag) as typeof INDUSTRY_TAG_ORDER[number])
             const idxA = tagA === -1 ? 999 : tagA
             const idxB = tagB === -1 ? 999 : tagB
             if (idxA !== idxB) return idxA - idxB
@@ -542,8 +542,8 @@ export default function Home() {
                   <div className="bg-white border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
                     {[...catArticles].sort((a, b) => {
                       if (cat === '업계') {
-                        const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
-                        const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+                        const tagA = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(a.tag) as typeof INDUSTRY_TAG_ORDER[number])
+                        const tagB = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(b.tag) as typeof INDUSTRY_TAG_ORDER[number])
                         const idxA = tagA === -1 ? 999 : tagA
                         const idxB = tagB === -1 ? 999 : tagB
                         if (idxA !== idxB) return idxA - idxB

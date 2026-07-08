@@ -79,8 +79,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
     const catArticles = [...activeArticles.filter(a => a.category === cat)]
       .sort((a, b) => {
         if (cat === '업계') {
-          const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
-          const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+          const tagA = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(a.tag) as typeof INDUSTRY_TAG_ORDER[number])
+          const tagB = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(b.tag) as typeof INDUSTRY_TAG_ORDER[number])
           const idxA = tagA === -1 ? 999 : tagA
           const idxB = tagB === -1 ? 999 : tagB
           if (idxA !== idxB) return idxA - idxB
@@ -102,8 +102,8 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
     const catArticles = [...activeArticles.filter(a => a.category === cat)]
       .sort((a, b) => {
         if (cat === '업계') {
-          const tagA = INDUSTRY_TAG_ORDER.indexOf(a.tag as typeof INDUSTRY_TAG_ORDER[number])
-          const tagB = INDUSTRY_TAG_ORDER.indexOf(b.tag as typeof INDUSTRY_TAG_ORDER[number])
+          const tagA = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(a.tag) as typeof INDUSTRY_TAG_ORDER[number])
+          const tagB = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(b.tag) as typeof INDUSTRY_TAG_ORDER[number])
           const idxA = tagA === -1 ? 999 : tagA
           const idxB = tagB === -1 ? 999 : tagB
           if (idxA !== idxB) return idxA - idxB
