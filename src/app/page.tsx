@@ -472,6 +472,11 @@ export default function Home() {
                       <span className={isActive ? 'text-[#c8102e] font-medium' : 'text-gray-700'}>
                         {new Date(r.run_at!).toLocaleString('ko-KR')}
                       </span>
+                      {r.draft_saved_at && (
+                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                          초안 {new Date(r.draft_saved_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
                       {r.sent_at && (
                         <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
                           발송 {new Date(r.sent_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
