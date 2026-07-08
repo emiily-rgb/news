@@ -10,11 +10,11 @@ export type ArticleTag =
 // 업계(行业资讯) 내 태그 정렬 순서 — 여기 없는 태그는 목록 뒤로 정렬
 export const INDUSTRY_TAG_ORDER: ArticleTag[] = [
   'Network',
+  'Digital Power',
   'AI Semiconductor',
   'Smart Campus',
   'Smart Hospital',
   'SSD',
-  'Digital Power',
   'Smart Device',
   'IAS',
   'Talent Development',
