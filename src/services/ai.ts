@@ -71,7 +71,8 @@ ${lines}
 
 2. category: "자사" | "업계" | "정책" | "위기이슈"
    ※ 우선순위: 자사 > 위기이슈 > 정책 > 업계 순으로 판단. 화웨이가 기사의 주인공이면 반드시 자사.
-   - 자사: 화웨이(Huawei)가 기사의 주체·주인공인 경우 (화웨이 제품 출시, 화웨이 실적, 화웨이 파트너십, 화웨이 사업 동향 등). 기사에 화웨이가 언급되더라도 주인공이 타사면 업계.
+   ※ 단, 화웨이 Ascend(어센드) AI 반도체 관련 기사는 화웨이가 주인공이더라도 반드시 "업계"로 분류. Ascend/어센드를 단순 언급하거나 주요 내용으로 다루는 기사 모두 "업계"로 분류할 것. (위기이슈·정책에 해당하면 그쪽 우선)
+   - 자사: 화웨이(Huawei)가 기사의 주체·주인공인 경우 (화웨이 제품 출시, 화웨이 실적, 화웨이 파트너십, 화웨이 사업 동향 등). 기사에 화웨이가 언급되더라도 주인공이 타사면 업계. ※ Ascend/어센드 반도체 기사는 예외적으로 업계.
      ※ 제목에 화웨이가 없더라도 요약(description)에서 화웨이/Huawei가 비중있게 언급되거나(2회 이상 또는 핵심 주어로 등장) 기사 내용의 주된 주제가 화웨이인 경우 자사로 판단.
    - 업계: 화웨이 외 기업/시장 동향 (NVIDIA·삼성·SK하이닉스·LGU+·퀄컴 등 타사, AI서버·반도체·5G·6G·주파수·NPU·스마트캠퍼스·병원·SSD·낸드·디지털파워·웨어러블·스마트카·차량반도체 업계 트렌드)
    - 정책: 정부·규제가 주제 (미국규제·중국정책·AI정책·수출통제·보안규제). 화웨이가 직접 언급되면 자사 또는 위기이슈 우선.
@@ -289,7 +290,12 @@ export async function generateInsight(articles: Partial<Article>[]): Promise<{
   emergingSignals: EmergingSignals
   tomorrowWatchlist: string[]
 }> {
-  const active = articles.filter(a => !a.excluded)
+  // 화웨이 요청: Ascend(어센드) 관련 기사는 '오늘의 하이라이트'에서 제외
+  const isAscend = (a: Partial<Article>) => {
+    const text = `${a.title ?? ''} ${a.summary_ko?.join(' ') ?? ''}`.toLowerCase()
+    return text.includes('ascend') || text.includes('어센드')
+  }
+  const active = articles.filter(a => !a.excluded && !isAscend(a))
 
   // 자사 기사를 앞에 배치하여 AI가 첫 문장에 자사 내용을 쓰도록 유도
   const sorted = [
@@ -392,6 +398,7 @@ ${input.bodyText.trim()
 
 판단 및 작성:
 1. category: "자사"(화웨이 직접) | "업계"(시장/경쟁사/AI/반도체) | "정책"(정부/규제) | "위기이슈"(보안위협/제재/해킹/스파이/정보유출)
+   ※ 화웨이 Ascend(어센드) AI 반도체 관련 기사는 화웨이가 주인공이더라도 반드시 "업계"로 분류. 단순 언급·주요 내용 모두 "업계". (위기이슈·정책 우선순위는 유지)
 2. tag: "AI"|"Cloud"|"Network"|"Smartphone"|"Policy"|"US Sanctions"|"China"|"Data Center"|"Investment"|"AI Semiconductor"|"Smart Campus"|"Smart Hospital"|"SSD"|"Digital Power"|"Smart Device"|"IAS"|"Talent Development"
    태그 가이드: Network=5G/6G/주파수/LGU+/통신망, AI Semiconductor=반도체/NPU/AI칩/AI서버/엔비디아/HBM/TSMC/DRAM/NAND/파운드리 등 반도체 전반, Smart Campus=스마트캠퍼스/캠퍼스솔루션, Smart Hospital=스마트병원/의료솔루션, SSD=SSD/낸드플래시/NAND, Digital Power=디지털파워/데이터센터전력/태양광/신재생에너지/ESS/썬그로우/Sungrow/루프엔지니어링/화웨이에너지, Smart Device=웨어러블/스마트워치, IAS=스마트카/차량용반도체/자율주행, Talent Development=인재양성/인재육성/SW인재/AI인재/개발자육성/교육프로그램
 3. impact_level: "HIGH"|"MEDIUM"|"LOW" (임원 관점 중요도)
