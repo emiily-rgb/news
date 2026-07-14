@@ -191,6 +191,23 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
   'choicenews.co.kr':       { company: '초이스경제',    mediaType: 'Online' },
   'beyondpost.co.kr':       { company: '비욘드포스트',  mediaType: 'Online' },
   'wikitree.co.kr':         { company: '위키트리',      mediaType: 'Online' },
+
+  // ── 7/9 누락 매체 ────────────────────────────────────────
+  'mstoday.co.kr':          { company: 'MS투데이',      mediaType: 'Online' },
+  'seoulfn.com':            { company: '서울파이낸스',  mediaType: 'Online' },
+  'econonews.co.kr':        { company: '이코노뉴스',    mediaType: 'Online' },
+  'kpenews.com':            { company: '한국정경신문',  mediaType: 'Online' },
+  'pinpointnews.co.kr':     { company: '핀포인트뉴스',  mediaType: 'Online' },
+  'metroseoul.co.kr':       { company: '메트로신문',    mediaType: 'Newspaper' },
+  'sjsori.com':             { company: '세종의소리',    mediaType: 'Online' },
+  'raonnews.com':           { company: '라온신문',      mediaType: 'Online' },
+  'lcnews.co.kr':           { company: '라이센스뉴스',  mediaType: 'Online' },
+  'popcornnews.net':        { company: '팝콘뉴스',      mediaType: 'Online' },
+  '4th.kr':                 { company: '포쓰저널',      mediaType: 'Online' },
+  'niceeconomy.co.kr':      { company: '나이스경제',    mediaType: 'Online' },
+  'opinionnews.co.kr':      { company: '오피니언뉴스',  mediaType: 'Online' },
+  'ekn.kr':                 { company: '에너지경제신문', mediaType: 'Online' },
+  'womentimes.co.kr':       { company: '우먼타임스',    mediaType: 'Online' },
 }
 
 /** 풀리스트에는 포함하지만 클리핑 수집 대상에서는 제외할 도메인 */
