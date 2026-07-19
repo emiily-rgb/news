@@ -34,7 +34,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
   const execSummary = (runLog.insight_zh?.length > 0 || runLog.insight_ko?.length > 0) ? `
     <tr><td style="padding:0 0 24px 0">
       ${runLog.insight_zh?.length > 0 ? `
-      <div style="font-size:16px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">今日焦点新闻</div>
+      <div style="font-size:16px;font-weight:700;color:#c8102e;letter-spacing:0.3px;margin-bottom:10px">今日要点</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px;margin-bottom:16px">
         ${renderInsightItems(runLog.insight_zh, '#333')}
       </div>` : ''}
