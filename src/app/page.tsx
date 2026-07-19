@@ -8,7 +8,6 @@ import InsightPanel from '@/components/InsightPanel'
 import SettingsPanel from '@/components/SettingsPanel'
 import EmailPreviewModal from '@/components/EmailPreviewModal'
 import ManualArticleModal from '@/components/ManualArticleModal'
-import DailyAlertPanel from '@/components/DailyAlertPanel'
 import { useAuth } from '@/context/AuthContext'
 
 function downloadCsv(articles: Article[], runLog: RunLog) {
@@ -452,9 +451,6 @@ export default function Home() {
             </div>
           )}
         </div>
-
-        {/* 데일리 알림 편집 */}
-        <DailyAlertPanel />
 
         {/* 최근 실행 이력 */}
         {pastRuns.length > 0 && (
