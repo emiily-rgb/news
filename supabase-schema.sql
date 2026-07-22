@@ -77,3 +77,12 @@ create table if not exists configs (
   value jsonb not null,
   updated_at timestamptz not null default now()
 );
+
+-- Media Domains (도메인 맵에 없는 매체를 자동으로 임시 등록)
+create table if not exists media_domains (
+  domain text primary key,
+  company text not null,
+  media_type text not null default 'Unknown',
+  status text not null default 'pending', -- pending | excluded
+  first_seen_at timestamptz not null default now()
+);

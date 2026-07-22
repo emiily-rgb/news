@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 import Parser from 'rss-parser'
-import { DOMAIN_MAP, type MediaInfo } from '@/lib/domains'
+import type { MediaInfo } from '@/lib/domains'
+import { resolveMedia } from '@/lib/mediaResolver'
 
 const HUAWEI_KEYWORDS = ['화웨이', 'Huawei']
 
@@ -161,18 +162,6 @@ ${numbered}`,
   return results
 }
 
-function extractMediaInfo(url: string): MediaInfo | null {
-  try {
-    const hostname = new URL(url).hostname.replace(/^www\./, '')
-    for (const [domain, info] of Object.entries(DOMAIN_MAP)) {
-      if (hostname === domain || hostname.endsWith('.' + domain)) return info
-    }
-    return null
-  } catch {
-    return null
-  }
-}
-
 export async function GET(req: Request) {
   const clientId = process.env.NAVER_CLIENT_ID
   const clientSecret = process.env.NAVER_CLIENT_SECRET
@@ -303,10 +292,22 @@ export async function GET(req: Request) {
   // 최신순 정렬
   articles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
 
-  // 허용 도메인 외 영문 매체 제거 + 직전 다운로드에서 이미 내보낸 기사(겹침 구간) 제외
-  const filtered = articles.filter(
-    a => extractMediaInfo(a.link) !== null && !prevLinks.has(a.link)
-  )
+  // 직전 다운로드에서 이미 내보낸 기사(겹침 구간) 제외 후, 도메인별 매체 정보 조회
+  // (모르는 도메인은 버리지 않고 'Unknown'으로 임시 등록 + 포함시킨다. status='excluded'인 도메인만 제외됨)
+  const candidates = articles.filter(a => !prevLinks.has(a.link))
+  const resolvedInfos = await Promise.all(candidates.map(a => resolveMedia(a.link)))
+  const filtered: { article: typeof candidates[0]; info: MediaInfo }[] = []
+  candidates.forEach((article, i) => {
+    const info = resolvedInfos[i]
+    if (info) filtered.push({ article, info })
+  })
+
+  // 등록된 매체 먼저, 미등록('Unknown') 매체는 맨 아래로 (각 그룹 내에서는 최신순 유지)
+  filtered.sort((a, b) => {
+    const pendingDiff = Number(a.info.mediaType === 'Unknown') - Number(b.info.mediaType === 'Unknown')
+    if (pendingDiff !== 0) return pendingDiff
+    return new Date(b.article.pubDate).getTime() - new Date(a.article.pubDate).getTime()
+  })
 
   const todayKST = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   const yymmdd = todayKST.replace(/-/g, '').slice(2)
@@ -314,13 +315,12 @@ export async function GET(req: Request) {
 
   // Claude AI로 Topic 영문번역 + Remarks 생성
   const aiFields = process.env.ANTHROPIC_API_KEY
-    ? await generateAIFields(filtered)
+    ? await generateAIFields(filtered.map(f => f.article))
     : filtered.map(() => ({ topicEn: '', remarksKo: '', remarksEn: '' }))
 
   // CSV 생성
   const headers = ['Date', 'Title', 'URL', 'Topic', 'Media Type', 'Company', 'Remarks']
-  const rows = filtered.map((a, i) => {
-    const { company, mediaType } = extractMediaInfo(a.link)!
+  const rows = filtered.map(({ article: a, info: { company, mediaType } }, i) => {
     const ai = aiFields[i] ?? { topicEn: '', remarksKo: '', remarksEn: '' }
     const topic = ai.topicEn ? `${a.title}\n${ai.topicEn}` : a.title
     const remarks = ai.remarksKo && ai.remarksEn ? `${ai.remarksKo}\n${ai.remarksEn}` : ''
@@ -339,7 +339,7 @@ export async function GET(req: Request) {
 
   // 마지막 다운로드 시점 + 이번에 내보낸 링크 저장 (다음 겹침 구간 중복 제거용)
   await supabase.from('configs').upsert({ key: 'huawei_csv_last_download', value: { timestamp: now.toISOString() } })
-  await supabase.from('configs').upsert({ key: 'huawei_csv_last_links', value: { links: filtered.map(a => a.link) } })
+  await supabase.from('configs').upsert({ key: 'huawei_csv_last_links', value: { links: filtered.map(f => f.article.link) } })
 
   return new NextResponse(csv, {
     headers: {

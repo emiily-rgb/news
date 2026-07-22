@@ -1,6 +1,7 @@
 import Parser from 'rss-parser'
 import { CategoryKeywords } from '@/types'
 import { ALLOWED_DOMAINS, SOURCE_NAME_MAP } from '@/lib/domains'
+import { resolveMedia } from '@/lib/mediaResolver'
 
 const parser = new Parser({
   customFields: { item: ['source', 'description'] },
@@ -174,6 +175,7 @@ export async function collectArticles(
             if (sourceName.includes(name) || name.includes(sourceName)) { media = name; break }
           }
         }
+        if (!media) media = (await resolveMedia(item.link))?.company ?? null
         if (!media) continue
 
         const pub = item.pubDate ? new Date(item.pubDate) : null
@@ -231,7 +233,7 @@ export async function collectArticles(
           if (match) realLink = decodeURIComponent(match[1])
         } catch { /* ignore */ }
 
-        const media = getMediaFromUrl(realLink)
+        const media = getMediaFromUrl(realLink) ?? (await resolveMedia(realLink))?.company ?? null
         if (!media) continue
 
         const pub = item.pubDate ? new Date(item.pubDate) : null
@@ -293,7 +295,7 @@ export async function collectArticles(
         const link = item.originallink || item.link
         if (!link) continue
 
-        const media = getMediaFromUrl(link)
+        const media = getMediaFromUrl(link) ?? (await resolveMedia(link))?.company ?? null
         if (!media) continue
 
         const pub = item.pubDate ? new Date(item.pubDate) : null

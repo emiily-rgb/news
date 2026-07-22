@@ -254,7 +254,7 @@ export const DOMAIN_MAP: Record<string, MediaInfo> = {
 }
 
 /** 풀리스트에는 포함하지만 클리핑 수집 대상에서는 제외할 도메인 */
-const CLIPPING_EXCLUDED_DOMAINS = new Set<string>([
+export const CLIPPING_EXCLUDED_DOMAINS = new Set<string>([
   'g-enews.com', // 글로벌이코노믹
 ])
 
