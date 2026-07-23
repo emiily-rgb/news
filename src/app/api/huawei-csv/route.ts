@@ -66,6 +66,11 @@ function stripMediaSuffix(title: string): string {
     .trim()
 }
 
+// 출처(구글/네이버/빙)가 달라도 같은 기사를 잡아내기 위한 정규화된 제목 중복 제거 키
+function dedupKey(title: string): string {
+  return title.replace(/[\s\W]/g, '').toLowerCase()
+}
+
 function toCsvRow(cells: string[]): string {
   return cells.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')
 }
@@ -105,11 +110,12 @@ async function searchRss(
       if (!pub || isNaN(pub.getTime())) continue
       if (pub > cutoffEnd || pub < cutoff) continue
 
-      const title = item.title
+      const title = stripMediaSuffix(item.title)
       const link = extractLink ? extractLink(item.link) : item.link
-      const key = title.replace(/[\s\W]/g, '').toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
+      // 매체가 다르면 제목이 같아도 별개 기사이므로, 여기서는 동일 링크 중복만 걸러낸다.
+      // 매체+제목 기준의 최종 중복 제거는 매체 정보 조회 이후 한 번에 처리한다.
+      if (seen.has(link)) continue
+      seen.add(link)
 
       results.push({ title, link, pubDate: pub.toISOString(), description: item.contentSnippet ?? '', keyword })
     }
@@ -244,9 +250,8 @@ export async function GET(req: Request) {
           // 윈도우 범위 밖 기사는 스킵 (수집은 계속)
           if (pub > cutoffEnd || pub < cutoff) continue
 
-          const key = link
-          if (seen.has(key)) continue
-          seen.add(key)
+          if (seen.has(link)) continue
+          seen.add(link)
 
           articles.push({ title, link, pubDate: pub.toISOString(), description, keyword })
         }
@@ -296,17 +301,17 @@ export async function GET(req: Request) {
   // (모르는 도메인은 버리지 않고 'Unknown'으로 임시 등록 + 포함시킨다. status='excluded'인 도메인만 제외됨)
   const candidates = articles.filter(a => !prevLinks.has(a.link))
   const resolvedInfos = await Promise.all(candidates.map(a => resolveMedia(a.link)))
+  // 매체+제목 기준 최종 중복 제거 (같은 매체가 같은 기사를 두 소스에서 가져온 경우만 제거,
+  // 다른 매체가 같은 제목을 낸 경우는 별개 기사이므로 유지)
+  const dedupSeen = new Set<string>()
   const filtered: { article: typeof candidates[0]; info: MediaInfo }[] = []
   candidates.forEach((article, i) => {
     const info = resolvedInfos[i]
-    if (info) filtered.push({ article, info })
-  })
-
-  // 등록된 매체 먼저, 미등록('Unknown') 매체는 맨 아래로 (각 그룹 내에서는 최신순 유지)
-  filtered.sort((a, b) => {
-    const pendingDiff = Number(a.info.mediaType === 'Unknown') - Number(b.info.mediaType === 'Unknown')
-    if (pendingDiff !== 0) return pendingDiff
-    return new Date(b.article.pubDate).getTime() - new Date(a.article.pubDate).getTime()
+    if (!info) return
+    const key = `${info.company}::${dedupKey(article.title)}`
+    if (dedupSeen.has(key)) return
+    dedupSeen.add(key)
+    filtered.push({ article, info })
   })
 
   const todayKST = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })

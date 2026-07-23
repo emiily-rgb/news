@@ -22,6 +22,20 @@ function normalizeTitle(title: string): string {
   return title.replace(/[\s\W]/g, '').toLowerCase()
 }
 
+// 제목 끝 매체명 제거: "제목 - 매체명", "제목 | 매체명", "제목 (매체명)", "제목 [매체명]"
+function stripTitleSuffix(title: string, candidates: (string | null | undefined)[]): string {
+  let cleanTitle = title
+  for (const name of candidates) {
+    if (!name) continue
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    cleanTitle = cleanTitle
+      .replace(new RegExp(`\\s*[-|]\\s*${escaped}\\s*$`, 'i'), '')
+      .replace(new RegExp(`\\s*[\\(\\[]${escaped}[\\)\\]]\\s*$`, 'i'), '')
+      .trim()
+  }
+  return cleanTitle
+}
+
 
 // Google News 검색 키워드 (핵심만, 병렬 처리)
 const SEARCH_KEYWORDS = [
@@ -181,18 +195,10 @@ export async function collectArticles(
         const pub = item.pubDate ? new Date(item.pubDate) : null
         if (!pub || pub < cutoff) continue
 
-        // 제목 끝 매체명 제거: "제목 - 매체명", "제목 | 매체명", "제목 (매체명)", "제목 [매체명]"
         const candidates = [media, sourceName, ...Object.keys(SOURCE_NAME_MAP).filter(k => SOURCE_NAME_MAP[k] === media)]
-        let cleanTitle = item.title
-        for (const name of candidates) {
-          if (!name) continue
-          cleanTitle = cleanTitle
-            .replace(new RegExp(`\\s*[-|]\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i'), '')
-            .replace(new RegExp(`\\s*[\\(\\[]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\)\\]]\\s*$`, 'i'), '')
-            .trim()
-        }
+        const cleanTitle = stripTitleSuffix(item.title, candidates)
 
-        const key = normalizeTitle(cleanTitle)
+        const key = `${media}::${normalizeTitle(cleanTitle)}`
         if (seen.has(key)) continue
         seen.add(key)
 
@@ -239,17 +245,9 @@ export async function collectArticles(
         const pub = item.pubDate ? new Date(item.pubDate) : null
         if (!pub || pub < cutoff) continue
 
-        // 제목 끝 매체명 제거
-        let cleanTitle = item.title
-        for (const name of [media]) {
-          if (!name) continue
-          cleanTitle = cleanTitle
-            .replace(new RegExp(`\\s*[-|]\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'i'), '')
-            .replace(new RegExp(`\\s*[\\(\\[]${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\)\\]]\\s*$`, 'i'), '')
-            .trim()
-        }
+        const cleanTitle = stripTitleSuffix(item.title, [media])
 
-        const key = normalizeTitle(cleanTitle)
+        const key = `${media}::${normalizeTitle(cleanTitle)}`
         if (seen.has(key)) continue
         seen.add(key)
 
@@ -301,8 +299,9 @@ export async function collectArticles(
         const pub = item.pubDate ? new Date(item.pubDate) : null
         if (!pub || pub < cutoff) continue
 
-        const title = item.title.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'")
-        const key = normalizeTitle(title)
+        const rawTitle = item.title.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'")
+        const title = stripTitleSuffix(rawTitle, [media])
+        const key = `${media}::${normalizeTitle(title)}`
         if (seen.has(key)) continue
         seen.add(key)
 
