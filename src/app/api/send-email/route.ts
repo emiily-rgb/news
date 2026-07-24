@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { createServiceClient } from '@/lib/supabase/server'
+import { buildEmailHtml } from '@/services/emailBuilder'
+import type { Article, RunLog } from '@/types'
 
 // 계정별 발신 설정. 로그인 이메일이 여기 없으면 기본 GMAIL_USER로 발송한다.
 const SENDER_ACCOUNTS: Record<string, { transport: () => nodemailer.Transporter; user: string; passEnv: string }> = {
@@ -31,7 +33,23 @@ function getTransporter() {
 
 
 export async function POST(req: NextRequest) {
-  const { runId, recipients, subject, html, senderEmail } = await req.json()
+  const { runId, recipients, subject, html: clientHtml, senderEmail } = await req.json()
+
+  // 클라이언트가 보낸 html은 신뢰하지 않는다 (오래된 브라우저 캐시로 구버전 템플릿을 계산해 보낼 수 있음).
+  // runId가 있으면 항상 서버에서 최신 코드로 다시 렌더링해서 발송한다.
+  let html = clientHtml
+  if (runId) {
+    const supabase = createServiceClient()
+    const [{ data: runLog }, { data: articles }, { data: configRow }] = await Promise.all([
+      supabase.from('run_logs').select('*').eq('id', runId).single(),
+      supabase.from('articles').select('*').eq('run_id', runId).order('order_index'),
+      supabase.from('configs').select('value').eq('key', 'main').single(),
+    ])
+    if (runLog && articles) {
+      const mediaDisplay = (configRow?.value as { media_display?: Record<string, string> } | undefined)?.media_display ?? {}
+      html = buildEmailHtml(articles as Article[], runLog as RunLog, mediaDisplay)
+    }
+  }
 
   const matchedAccount = senderEmail ? SENDER_ACCOUNTS[senderEmail.toLowerCase()] : undefined
   // 매칭된 발신 계정의 설정(SMTP 비밀번호)이 없으면 기본 Gmail 발신자로 대체한다.
