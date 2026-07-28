@@ -3,7 +3,6 @@
     "src/app/api/run/route.ts": { "maxDuration": 300 }
   },
   "crons": [
-    { "path": "/api/run",                 "schedule": "0 23 * * *"   },
 { "path": "/api/huawei-csv/holiday-alert", "schedule": "0 1 * * 1-5" },
 { "path": "/api/media-domains/weekly-report", "schedule": "0 23 * * 0" }
   ]
