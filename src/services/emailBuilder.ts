@@ -19,12 +19,14 @@ function renderInsightItems(items: string[], color: string) {
 function formatDateEn(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+    timeZone: 'Asia/Seoul',
   })
 }
 
 export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplayOverrides?: Record<string, string>): string {
   const date = new Date(runLog.run_at).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
+    timeZone: 'Asia/Seoul',
   })
 
   const activeArticles = articles.filter(a => !a.excluded)
@@ -202,7 +204,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
   <!-- 푸터 -->
   <tr><td class="email-footer" bgcolor="#fafafa" style="padding:16px 28px;background:#fafafa;border-top:1px solid #f0f0f0">
     <div style="font-size:13px;color:#ccc;text-align:center">
-      ${new Date(runLog.run_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;·&nbsp; Huawei Korea
+      ${new Date(runLog.run_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Seoul' })} &nbsp;·&nbsp; Huawei Korea
     </div>
   </td></tr>
 
