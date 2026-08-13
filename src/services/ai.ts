@@ -45,7 +45,7 @@ function normalizeTag(raw: unknown): ArticleTag {
 }
 
 function getClient() {
-  return new Anthropic({ apiKey: process.env['NEWS_AI_KEY'] })
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 }
 
 // ── 1단계: 필터링 + 카테고리 분류 + 태그/영향도 판단 ──
