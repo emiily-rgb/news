@@ -132,14 +132,17 @@ export async function filterArticles(
 ): Promise<(RawArticle & { mediaTier: number; sentiment: Sentiment; relevanceScore: number; finalCategory: string; tag: ArticleTag; impactLevel: ImpactLevel })[]> {
   if (articles.length === 0) return []
 
-  // 30개씩 배치 처리 (토큰 한도 초과 방지)
+  // 30개씩 배치 처리 (토큰 한도 초과 방지), 5개 배치씩 병렬 실행 (전체 처리 시간 단축)
   const BATCH_SIZE = 30
+  const BATCH_CONCURRENCY = 5
+  const batches: RawArticle[][] = []
+  for (let i = 0; i < articles.length; i += BATCH_SIZE) batches.push(articles.slice(i, i + BATCH_SIZE))
+
   const allResults: FilterResult[] = []
-  for (let i = 0; i < articles.length; i += BATCH_SIZE) {
-    const batch = articles.slice(i, i + BATCH_SIZE)
-    const results = await filterBatch(batch, i)
-    allResults.push(...results)
-    if (i + BATCH_SIZE < articles.length) await new Promise(r => setTimeout(r, 500))
+  for (let i = 0; i < batches.length; i += BATCH_CONCURRENCY) {
+    const group = batches.slice(i, i + BATCH_CONCURRENCY)
+    const groupResults = await Promise.all(group.map((batch, j) => filterBatch(batch, (i + j) * BATCH_SIZE)))
+    allResults.push(...groupResults.flat())
   }
 
   const filtered = articles
