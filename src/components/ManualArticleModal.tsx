@@ -10,10 +10,8 @@ interface Result {
   article?: Article
 }
 
-interface DailyAlertArticle {
+interface CollectedArticle {
   id: string
-  slot: number
-  slot_date: string
   title: string
   link: string
   pub_date: string
@@ -30,16 +28,6 @@ interface Props {
 
 type Tab = 'url' | 'collected'
 
-function getKstYesterday() {
-  const kst = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }))
-  kst.setDate(kst.getDate() - 1)
-  return kst.toLocaleDateString('en-CA')
-}
-
-function getKstToday() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toLocaleDateString('en-CA')
-}
-
 export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
   const [tab, setTab] = useState<Tab>('collected')
 
@@ -48,11 +36,12 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
   const [forceCategory, setForceCategory] = useState<string>('')
 
   // 수집 기사 탭
-  const [slotDate, setSlotDate] = useState(getKstYesterday())
-  const [collectedArticles, setCollectedArticles] = useState<DailyAlertArticle[]>([])
+  const [collectedArticles, setCollectedArticles] = useState<CollectedArticle[]>([])
   const [loadingCollected, setLoadingCollected] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [forceCategoryCollected, setForceCategoryCollected] = useState<string>('')
+  const [showIncluded, setShowIncluded] = useState(false)
+  const [search, setSearch] = useState('')
 
   // 공통
   const [results, setResults] = useState<Result[]>([])
@@ -62,11 +51,17 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
     if (tab !== 'collected') return
     setLoadingCollected(true)
     setSelected(new Set())
-    fetch(`/api/daily-alert/articles?slot_date=${slotDate}`)
+    fetch(`/api/run/${runId}/collected-articles`)
       .then(r => r.json())
       .then(data => setCollectedArticles(data.articles ?? []))
       .finally(() => setLoadingCollected(false))
-  }, [tab, slotDate])
+  }, [tab, runId])
+
+  const visibleArticles = collectedArticles.filter(a => {
+    if (!showIncluded && !a.excluded) return false
+    if (search.trim() && !a.title.toLowerCase().includes(search.trim().toLowerCase()) && !a.media.toLowerCase().includes(search.trim().toLowerCase())) return false
+    return true
+  })
 
   function parseUrls(raw: string): string[] {
     return raw.split(/[\n,]+/).map(s => s.trim()).filter(s => s.startsWith('http'))
@@ -83,10 +78,11 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
   }
 
   function toggleAll() {
-    if (selected.size === collectedArticles.length) {
+    const selectable = visibleArticles.filter(a => a.excluded)
+    if (selected.size === selectable.length && selectable.length > 0) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(collectedArticles.map(a => a.id)))
+      setSelected(new Set(selectable.map(a => a.id)))
     }
   }
 
@@ -122,7 +118,6 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
 
   const doneCount = results.filter(r => r.status === 'ok').length
   const failCount = results.filter(r => r.status === 'error').length
-  const selectedUrls = collectedArticles.filter(a => selected.has(a.id))
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -161,23 +156,22 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
           {tab === 'collected' && (
             <div className="px-5 py-4">
               <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-gray-600 shrink-0">날짜</label>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="제목·매체 검색"
+                  className="border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-700 flex-1 min-w-[140px]"
+                />
+                <label className="flex items-center gap-1.5 text-xs text-gray-600 shrink-0">
                   <input
-                    type="date"
-                    value={slotDate}
-                    onChange={e => setSlotDate(e.target.value)}
-                    className="border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-700"
+                    type="checkbox"
+                    checked={showIncluded}
+                    onChange={e => setShowIncluded(e.target.checked)}
+                    className="accent-[#c8102e] w-3.5 h-3.5"
                   />
-                  <button
-                    onClick={() => setSlotDate(getKstYesterday())}
-                    className={`text-xs px-2 py-1 rounded border transition ${slotDate === getKstYesterday() ? 'bg-gray-100 border-gray-300 text-gray-700' : 'border-gray-200 text-gray-400 hover:bg-gray-50'}`}
-                  >어제</button>
-                  <button
-                    onClick={() => setSlotDate(getKstToday())}
-                    className={`text-xs px-2 py-1 rounded border transition ${slotDate === getKstToday() ? 'bg-gray-100 border-gray-300 text-gray-700' : 'border-gray-200 text-gray-400 hover:bg-gray-50'}`}
-                  >오늘</button>
-                </div>
+                  브리핑에 포함된 기사도 보기
+                </label>
                 <select
                   value={forceCategoryCollected}
                   onChange={e => setForceCategoryCollected(e.target.value)}
@@ -194,26 +188,32 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
               {loadingCollected ? (
                 <p className="text-sm text-gray-400 text-center py-8">불러오는 중...</p>
               ) : collectedArticles.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">해당 날짜에 수집된 기사가 없습니다</p>
+                <p className="text-sm text-gray-400 text-center py-8">이번 run에 수집된 기사가 없습니다</p>
+              ) : visibleArticles.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">조건에 맞는 기사가 없습니다</p>
               ) : (
                 <>
                   <div className="flex items-center justify-between mb-2">
                     <button onClick={toggleAll} className="text-xs text-[#c8102e] hover:underline">
-                      {selected.size === collectedArticles.length ? '전체 해제' : '전체 선택'}
+                      전체 선택/해제
                     </button>
-                    <span className="text-xs text-gray-400">{collectedArticles.length}건 수집됨</span>
+                    <span className="text-xs text-gray-400">
+                      전체 {collectedArticles.length}건 · 탈락 {collectedArticles.filter(a => a.excluded).length}건
+                    </span>
                   </div>
-                  <div className="divide-y divide-gray-100 border border-gray-100 rounded-lg overflow-hidden">
-                    {collectedArticles.map(article => (
+                  <div className="divide-y divide-gray-100 border border-gray-100 rounded-lg overflow-hidden max-h-80 overflow-y-auto">
+                    {visibleArticles.map(article => (
                       <label
                         key={article.id}
-                        className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer transition ${
-                          selected.has(article.id) ? 'bg-red-50' : 'hover:bg-gray-50'
+                        className={`flex items-start gap-3 px-3 py-2.5 transition ${
+                          !article.excluded ? 'opacity-50 cursor-not-allowed' :
+                          selected.has(article.id) ? 'bg-red-50 cursor-pointer' : 'hover:bg-gray-50 cursor-pointer'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={selected.has(article.id)}
+                          disabled={!article.excluded}
                           onChange={() => toggleSelect(article.id)}
                           className="mt-0.5 shrink-0 accent-[#c8102e] w-4 h-4"
                         />
@@ -222,7 +222,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                           <p className="text-xs text-gray-400 mt-0.5">
                             {article.media} · {article.category} · {new Date(article.pub_date).toLocaleString('ko-KR', {
                               month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
-                            })} · {article.slot}시 슬롯
+                            })} {!article.excluded && <span className="text-green-600 font-medium">· 브리핑에 포함됨</span>}
                           </p>
                         </div>
                       </label>

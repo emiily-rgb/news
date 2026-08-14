@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse, after } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getConfig } from '@/lib/config'
-import { filterArticles, summarizeAndTranslate } from '@/services/ai'
+import { filterArticles, summarizeAndTranslate, generateInsight } from '@/services/ai'
 import { v4 as uuidv4 } from 'uuid'
+
+export const maxDuration = 300
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
   const { runId } = await params
@@ -17,6 +19,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ ru
 
   if (!runData) return NextResponse.json({ error: 'run을 찾을 수 없음' }, { status: 404 })
   if (runData.status === 'completed') return NextResponse.json({ message: '이미 완료됨' })
+  // collected/failed 상태에서만 새로 시작 — running 중 재요청(폴링 레이스 등)은 무시해 중복 처리 방지
+  if (runData.status !== 'collected' && runData.status !== 'failed') {
+    return NextResponse.json({ message: '이미 처리 중' })
+  }
 
   after(async () => {
     try {
@@ -31,7 +37,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ ru
 }
 
 const MIN_TOTAL = 15
-const MAX_TOTAL = 25
+const MAX_TOTAL = 30
 
 async function processPipeline(
   runId: string,
@@ -59,10 +65,22 @@ async function processPipeline(
 
   const selected: typeof filtered = []
   const catCount: Record<string, number> = {}
-  // 자사는 최대 10건, 나머지는 최대 6건
-  const maxPerCat: Record<string, number> = { '자사': 10, '업계': 6, '정책': 6, '위기이슈': 6 }
+  const maxPerCat: Record<string, number> = { '자사': 10, '업계': 10, '정책': 10, '위기이슈': 10 }
+
+  // 정책 최소 보장: 임팩트가 낮아도 정책 기사가 자사·업계에 밀려 탈락하지 않도록
+  // 정렬 상위 정책 기사 일정 수를 먼저 확보한다 (정책 컷오프 완화)
+  const minPerCat: Record<string, number> = { '정책': 5 }
+  for (const [cat, min] of Object.entries(minPerCat)) {
+    for (const article of sorted) {
+      if ((catCount[cat] ?? 0) >= min) break
+      if (article.finalCategory !== cat || selected.includes(article)) continue
+      selected.push(article)
+      catCount[cat] = (catCount[cat] ?? 0) + 1
+    }
+  }
 
   for (const article of sorted) {
+    if (selected.includes(article)) continue
     if (selected.length >= MAX_TOTAL) break
     const cat = article.finalCategory
     if ((catCount[cat] ?? 0) >= (maxPerCat[cat] ?? 6)) continue
@@ -119,13 +137,22 @@ async function processPipeline(
     if (error) throw new Error(`기사 저장 실패: ${error.message}`)
   }
 
+  // Executive Brief
+  await setStep('briefing')
+  const insight = await generateInsight(processed)
+
   await supabase.from('run_logs').update({
     status: 'completed',
     current_step: 'completed',
     total_after_filter: processed.length,
+    insight_ko: insight.ko,
+    insight_zh: insight.zh,
+    key_takeaways: insight.keyTakeaways,
+    emerging_signals: insight.emergingSignals,
+    tomorrow_watchlist: insight.tomorrowWatchlist,
+    insight_generated_at: new Date().toISOString(),
     recipients: config.recipients,
     draft_saved_at: new Date().toISOString(),
-    raw_articles: null,
   }).eq('id', runId)
 
   console.log(`[처리완료] runId=${runId}, 선택=${processed.length}건`)
