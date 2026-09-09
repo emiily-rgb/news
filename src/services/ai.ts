@@ -116,6 +116,23 @@ async function filterBatch(batch: RawArticle[], offset: number): Promise<FilterR
     parsed.forEach(r => { r.tag = normalizeTag(r.tag) })
     const trueCount = parsed.filter(r => r.relevant).length
     console.log(`[filterBatch] 파싱 결과: ${parsed.length}건, relevant=true: ${trueCount}건`)
+
+    // AI가 일부 index를 응답에서 빠뜨리면 그 기사는 조용히 제외(relevant:false 취급)되던 문제.
+    // 누락을 감지해서 로그로 남기고, "의심스러우면 포함" 원칙에 맞춰 relevant:true로 안전하게 채워넣는다.
+    const receivedIndices = new Set(parsed.map(r => r.index))
+    const missing = batch.map((_, i) => offset + i).filter(idx => !receivedIndices.has(idx))
+    if (missing.length > 0) {
+      console.warn(
+        `[filterBatch] ⚠️ AI 응답에 index 누락: [${missing.join(', ')}] ` +
+        `(배치 offset=${offset}, 요청 ${batch.length}건 중 응답 ${parsed.length}건) → 누락분은 relevant:true로 대체 처리`
+      )
+      for (const idx of missing) {
+        parsed.push({
+          index: idx, relevant: true, category: '업계', tag: 'AI' as ArticleTag,
+          impact_level: 'MEDIUM' as ImpactLevel, sentiment: 'neutral' as Sentiment, relevance_score: 0.4,
+        })
+      }
+    }
     return parsed
   } catch {
     console.error('[filterBatch] JSON 파싱 실패 → 전체 통과 처리')
@@ -147,7 +164,12 @@ export async function filterArticles(
 
   const filtered = articles
     .map((article, i) => {
-      const r = allResults.find(x => x.index === i) ?? {
+      const found = allResults.find(x => x.index === i)
+      if (!found) {
+        // filterBatch에서 누락 보정을 하는데도 여기서 못 찾으면 배치 자체가 유실된 것 — 원인 파악용으로 크게 로그.
+        console.warn(`[filterArticles] ⚠️ index=${i} 기사 결과 전체 유실, relevant:false 처리: "${article.title?.slice(0, 40)}"`)
+      }
+      const r = found ?? {
         relevant: false, category: '업계', tag: 'AI' as ArticleTag,
         impact_level: 'LOW' as ImpactLevel, sentiment: 'neutral' as Sentiment, relevance_score: 0
       }
