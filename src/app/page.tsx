@@ -77,6 +77,7 @@ export default function Home() {
   const [reprocessing, setReprocessing] = useState(false)
   const [huaweiCacheInfo, setHuaweiCacheInfo] = useState<{ cached: boolean; createdAt: string | null } | null>(null)
   const [huaweiRecollecting, setHuaweiRecollecting] = useState(false)
+  const [robotDownloading, setRobotDownloading] = useState(false)
 
   useEffect(() => {
     fetch('/api/config').then(r => r.json()).then(c => {
@@ -322,7 +323,30 @@ export default function Home() {
     setShowPreview(true)
   }
 
-  const categories = ['자사', '업계', '정책', '위기이슈'].filter(c => articles.some(a => a.category === c))
+  async function downloadRobotList() {
+    if (!confirm('로봇 풀리스트 수집은 1~2분 소요됩니다. 진행할까요?')) return
+    setRobotDownloading(true)
+    try {
+      const res = await fetch('/api/robot-csv')
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        alert(err?.error ?? '로봇 풀리스트 수집에 실패했습니다.')
+        return
+      }
+      const blob = await res.blob()
+      const disposition = res.headers.get('Content-Disposition') ?? ''
+      const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? 'robot.csv'
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+    } finally {
+      setRobotDownloading(false)
+    }
+  }
+
+  const categories =['자사', '업계', '정책', '위기이슈'].filter(c => articles.some(a => a.category === c))
   const activeCount = articles.filter(a => !a.excluded).length
 
   if (authLoading) {
@@ -658,6 +682,21 @@ export default function Home() {
               다운로드
             </button>
           </div>
+        </div>
+
+        {/* 로봇 풀리스트 (네이버 단독, 화웨이 풀리스트와 별도 관리) */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p className="text-sm text-gray-600">로봇 풀리스트</p>
+            <p className="text-xs text-gray-400 mt-0.5">네이버 검색 · 마지막 다운로드 이후 기사</p>
+          </div>
+          <button
+            onClick={downloadRobotList}
+            disabled={robotDownloading}
+            className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-50"
+          >
+            {robotDownloading ? '수집 중...' : '다운로드'}
+          </button>
         </div>
       </div>
 

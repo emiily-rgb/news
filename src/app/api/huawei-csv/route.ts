@@ -71,6 +71,11 @@ function dedupKey(title: string): string {
   return title.replace(/[\s\W]/g, '').toLowerCase()
 }
 
+// 영문(비한국어) 기사 제외용: 제목에 한글이 하나도 없으면 영문 기사로 본다.
+function hasHangul(title: string): boolean {
+  return /[가-힣]/.test(title)
+}
+
 function toCsvRow(cells: string[]): string {
   return cells.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')
 }
@@ -299,7 +304,7 @@ export async function GET(req: Request) {
 
   // 직전 다운로드에서 이미 내보낸 기사(겹침 구간) 제외 후, 도메인별 매체 정보 조회
   // (모르는 도메인은 버리지 않고 'Unknown'으로 임시 등록 + 포함시킨다. status='excluded'인 도메인만 제외됨)
-  const candidates = articles.filter(a => !prevLinks.has(a.link))
+  const candidates = articles.filter(a => !prevLinks.has(a.link) && hasHangul(a.title))
   const resolvedInfos = await Promise.all(candidates.map(a => resolveMedia(a.link)))
   // 매체+제목 기준 최종 중복 제거 (같은 매체가 같은 기사를 두 소스에서 가져온 경우만 제거,
   // 다른 매체가 같은 제목을 낸 경우는 별개 기사이므로 유지)
