@@ -14,9 +14,9 @@
 }
 
 @theme {
-  /* 포인트 컬러: 화웨이 레드(채도 낮춤) 하나만 사용 */
-  --color-accent: #bf1a33;
-  --color-accent-hover: #9f1429;
+  /* 포인트 컬러: 화웨이 레드 하나만 사용 */
+  --color-accent: #DB0000;
+  --color-accent-hover: #b30000;
 
   /* 회색 계열을 따뜻한 한 가지 톤으로 통일 */
   --color-gray-50: #f8f7f5;

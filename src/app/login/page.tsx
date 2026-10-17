@@ -26,7 +26,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 flex items-center justify-center px-5 bg-[radial-gradient(60rem_40rem_at_15%_-10%,rgb(191_26_51/0.07),transparent_60%),radial-gradient(40rem_30rem_at_100%_110%,rgb(60_50_40/0.06),transparent_60%)]">
+    <div className="min-h-dvh bg-gray-50 flex items-center justify-center px-5 bg-[radial-gradient(60rem_40rem_at_15%_-10%,rgb(219_0_0/0.07),transparent_60%),radial-gradient(40rem_30rem_at_100%_110%,rgb(60_50_40/0.06),transparent_60%)]">
       <div className="bg-white rounded-2xl shadow-float w-full max-w-sm p-9">
         <div className="mb-9">
           <img src="/Huawei_Standard_logo.svg" alt="Huawei" className="h-10 mb-6" />
@@ -65,7 +65,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white py-2.5 rounded-lg font-medium text-sm transition shadow-[0_1px_2px_rgb(191_26_51/0.3)]"
+            className="w-full bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white py-2.5 rounded-lg font-medium text-sm transition shadow-[0_1px_2px_rgb(219_0_0/0.3)]"
           >
             {loading ? '로그인 중...' : '로그인'}
           </button>
