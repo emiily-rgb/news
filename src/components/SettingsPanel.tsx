@@ -45,8 +45,8 @@ export default function SettingsPanel({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 bg-gray-900/45 backdrop-blur-[2px] z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-float w-full max-w-2xl max-h-[85vh] flex flex-col">
         <div className="flex items-center justify-between p-5 border-b">
           <h3 className="font-bold text-gray-800 text-lg">설정</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
@@ -227,7 +227,7 @@ export default function SettingsPanel({ onClose }: Props) {
           <button
             onClick={save}
             disabled={saving}
-            className="bg-[#c8102e] hover:bg-[#a00d24] disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition"
+            className="bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition"
           >
             {saving ? '저장 중...' : '저장'}
           </button>

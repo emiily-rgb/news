@@ -350,52 +350,62 @@ export default function Home() {
   const activeCount = articles.filter(a => !a.excluded).length
 
   if (authLoading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-gray-400 text-sm">로딩 중...</div>
+    return <div className="min-h-dvh bg-gray-50 flex items-center justify-center" role="status">
+      <div className="w-full max-w-4xl px-5 space-y-4">
+        <div className="skeleton h-5 w-48" />
+        <div className="skeleton h-28 w-full" />
+        <div className="skeleton h-28 w-full" />
+        <span className="sr-only">로딩 중...</span>
+      </div>
     </div>
   }
 
   if (!profile) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-gray-400 text-sm">로딩 중...</div>
+    return <div className="min-h-dvh bg-gray-50 flex items-center justify-center" role="status">
+      <div className="w-full max-w-4xl px-5 space-y-4">
+        <div className="skeleton h-5 w-48" />
+        <div className="skeleton h-28 w-full" />
+        <div className="skeleton h-28 w-full" />
+        <span className="sr-only">로딩 중...</span>
+      </div>
     </div>
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f7f8]">
+    <div className="min-h-dvh bg-gray-50">
       {/* 헤더 */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-gray-200/70 px-5 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-1 h-8 bg-[#c8102e] rounded-full" />
+          <div className="w-1 h-8 bg-accent rounded-[2px]" />
           <div>
-            <h1 className="text-base font-bold text-gray-900 leading-tight">Huawei Daily News Brief</h1>
-            <p className="text-xs text-gray-400">화웨이 한국법인 임직원용</p>
+            <h1 className="text-base font-semibold tracking-tight text-gray-900 leading-tight">Huawei Daily News Brief</h1>
+            <p className="text-xs text-gray-500">화웨이 한국법인 임직원용</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-right mr-1">
             <p className="text-sm font-medium text-gray-700">{profile?.name || profile?.email}</p>
-            <p className="text-xs text-gray-400">{isAdmin ? '최고 관리자' : '컨텐츠 관리자'}</p>
+            <p className="text-xs text-gray-500">{isAdmin ? '최고 관리자' : '컨텐츠 관리자'}</p>
           </div>
           {isAdmin && (
-            <button onClick={() => setShowSettings(true)} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-3 py-1.5 rounded text-sm transition">
+            <button onClick={() => setShowSettings(true)} className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm transition">
               설정
             </button>
           )}
-          <button onClick={signOut} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded text-sm transition">
+          <button onClick={signOut} className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm transition">
             로그아웃
           </button>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-5 sm:px-6 pt-10 pb-20">
         {/* 뉴스 수집 카드 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-5">
+        <div className="bg-white rounded-xl shadow-card p-6 sm:p-7 mb-6">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-gray-800">뉴스 수집</h2>
+              <h2 className="text-base font-semibold text-gray-900">뉴스 수집</h2>
               {runLog && (
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 mt-1 tabular-nums">
                   {new Date(runLog.run_at).toLocaleString('ko-KR')} · 수집 {runLog.total_collected}건 → 선택 {runLog.total_after_filter}건
                 </p>
               )}
@@ -405,7 +415,7 @@ export default function Home() {
                 <button
                   onClick={reprocessMissing}
                   disabled={running || reprocessing}
-                  className="border border-amber-300 hover:bg-amber-50 text-amber-700 px-4 py-2 rounded text-sm transition disabled:opacity-40"
+                  className="border border-amber-300 hover:bg-amber-50 text-amber-700 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40"
                 >
                   {reprocessing ? '재생성 중...' : '⟳ 요약 재생성'}
                 </button>
@@ -414,7 +424,7 @@ export default function Home() {
                 <button
                   onClick={() => setShowManualAdd(true)}
                   disabled={running}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-40"
+                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40"
                 >
                   + 기사 직접 추가
                 </button>
@@ -423,7 +433,7 @@ export default function Home() {
                 <button
                   onClick={startRun}
                   disabled={running}
-                  className="bg-[#c8102e] hover:bg-[#a00d24] disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
+                  className="bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
                 >
                   {running ? '수집 중...' : '▶ 뉴스 수집 시작'}
                 </button>
@@ -446,9 +456,9 @@ export default function Home() {
                 const progress = currentIdx < 0 ? 5 : Math.round(((currentIdx + 1) / steps.length) * 100)
                 return (
                   <>
-                    <div className="h-1 bg-gray-100 rounded-full overflow-hidden mb-3">
+                    <div className="h-1 bg-gray-100 rounded-full overflow-hidden mb-3" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
                       <div
-                        className="h-full bg-[#c8102e] rounded-full transition-all duration-700"
+                        className="h-full bg-accent rounded-full transition-[width] duration-700 ease-out"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -458,13 +468,13 @@ export default function Home() {
                         const active = currentIdx === i
                         return (
                           <span key={s.key} className="flex items-center gap-1">
-                            <span className={`text-xs px-2 py-0.5 rounded ${
-                              active ? 'bg-[#c8102e] text-white font-medium' :
-                              done ? 'text-gray-400' : 'text-gray-300'
+                            <span className={`text-xs px-2 py-0.5 rounded-md ${
+                              active ? 'bg-accent text-white font-medium' :
+                              done ? 'text-gray-500' : 'text-gray-400'
                             }`}>
                               {done ? '✓' : active ? '⟳' : ''} {s.label}
                             </span>
-                            {i < steps.length - 1 && <span className="text-gray-200 text-xs">→</span>}
+                            {i < steps.length - 1 && <span className="text-gray-300 text-xs" aria-hidden>→</span>}
                           </span>
                         )
                       })}
@@ -478,33 +488,33 @@ export default function Home() {
 
         {/* 최근 실행 이력 */}
         {pastRuns.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">최근 실행 이력</h3>
-            <div className="space-y-1.5">
+          <div className="bg-white rounded-xl shadow-card p-6 sm:p-7 mb-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">최근 실행 이력</h3>
+            <div className="space-y-1">
               {pastRuns.slice(0, 10).map(r => {
                 const isActive = runId === r.id
                 return (
                   <button key={r.id} onClick={() => loadRun(r.id!)}
-                    className={`w-full text-left px-4 py-2.5 rounded transition text-sm flex items-center justify-between ${
-                      isActive ? 'bg-[#c8102e]/10 border border-[#c8102e]/30' : 'bg-gray-50 hover:bg-gray-100'
+                    className={`w-full text-left px-4 py-3 rounded-lg transition text-sm flex items-center justify-between ${
+                      isActive ? 'bg-accent/[0.06]' : 'bg-gray-50 hover:bg-gray-100'
                     }`}>
                     <span className="flex items-center gap-2">
-                      <span className={isActive ? 'text-[#c8102e] font-medium' : 'text-gray-700'}>
+                      <span className={`tabular-nums ${isActive ? 'text-accent font-semibold' : 'text-gray-700'}`}>
                         {new Date(r.run_at!).toLocaleString('ko-KR')}
                       </span>
                       {r.draft_saved_at && (
-                        <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                        <span className="text-[11px] bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-sm tabular-nums">
                           초안 {new Date(r.draft_saved_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                       {r.sent_at && (
-                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                        <span className="text-[11px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded-sm tabular-nums">
                           발송 {new Date(r.sent_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
-                      {isActive && <span className="text-[10px] text-[#c8102e]">보는 중</span>}
+                      {isActive && <span className="text-[11px] text-accent font-medium">보는 중</span>}
                     </span>
-                    <span className="text-gray-400 text-xs">{r.total_after_filter}건</span>
+                    <span className="text-gray-500 text-xs tabular-nums">{r.total_after_filter}건</span>
                   </button>
                 )
               })}
@@ -549,17 +559,17 @@ export default function Home() {
               const catArticles = articles.filter(a => a.category === cat)
               const catLabel = cat === '자사' ? '华为动态' : cat === '업계' ? '行业资讯' : cat === '정책' ? '政策动向' : '危机事项'
               return (
-                <div key={cat} className="mb-5">
-                  <div className="flex items-center gap-2 px-1 mb-2">
-                    <div className="w-0.5 h-4 bg-[#c8102e] rounded-full" />
-                    <span className="text-sm font-bold text-gray-800">{cat}</span>
-                    <span className="text-xs text-gray-400">{catLabel}</span>
-                    <span className="ml-auto text-xs text-gray-400">
+                <div key={cat} className="mb-8">
+                  <div className="flex items-center gap-2.5 px-1 mb-3">
+                    <div className="w-[3px] h-4 bg-accent rounded-[2px]" />
+                    <span className="text-base font-semibold tracking-tight text-gray-900">{cat}</span>
+                    <span className="text-xs text-gray-500">{catLabel}</span>
+                    <span className="ml-auto text-xs text-gray-500 tabular-nums">
                       {catArticles.filter(a => !a.excluded).length}건
                       {catArticles.some(a => a.excluded) && ` · 제외 ${catArticles.filter(a => a.excluded).length}건`}
                     </span>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
+                  <div className="bg-white shadow-card rounded-xl overflow-hidden divide-y divide-gray-100">
                     {[...catArticles].sort((a, b) => {
                       if (cat === '업계') {
                         const tagA = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(a.tag) as typeof INDUSTRY_TAG_ORDER[number])
@@ -594,9 +604,9 @@ export default function Home() {
             })}
 
             {/* 하단 액션 바 */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between flex-wrap gap-3">
+            <div className="bg-white rounded-xl shadow-card p-6 sm:p-7 mb-6 flex items-center justify-between flex-wrap gap-3">
               <div>
-                <p className="text-sm text-gray-600">발송 대상 <strong className="text-gray-900">{activeCount}건</strong></p>
+                <p className="text-sm text-gray-600">발송 대상 <strong className="text-gray-900 font-semibold tabular-nums">{activeCount}건</strong></p>
                 {(draftSaved || runLog?.draft_saved_at) && (
                   <p className="text-xs text-green-600 mt-0.5">
                     ✓ 초안 저장 {new Date(draftSaved ?? runLog!.draft_saved_at!).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -607,24 +617,24 @@ export default function Home() {
                 <button
                   onClick={saveDraft}
                   disabled={savingDraft}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-50"
+                  className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
                 >
                   {savingDraft ? '저장 중...' : '초안 저장'}
                 </button>
                 {runLog && (
                   <button
                     onClick={() => downloadCsv(articles, runLog)}
-                    className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
+                    className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg text-sm font-medium transition"
                   >
                     뉴스클리핑 리스트 CSV
                   </button>
                 )}
                 <button onClick={openPreview}
-                  className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm transition">
+                  className="border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
                   이메일 미리보기
                 </button>
                 <button onClick={openPreview}
-                  className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                  className="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition">
                   발송하기
                 </button>
               </div>
@@ -633,17 +643,17 @@ export default function Home() {
         )}
 
         {/* 화웨이 풀리스트 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between flex-wrap gap-3">
+        <div className="bg-white rounded-xl shadow-card p-6 sm:p-7 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div>
             <p className="text-sm text-gray-600">화웨이 풀리스트</p>
             {huaweiCacheInfo === null ? (
-              <p className="text-xs text-gray-400 mt-0.5">확인 중...</p>
+              <p className="text-xs text-gray-500 mt-0.5">확인 중...</p>
             ) : huaweiCacheInfo.cached && huaweiCacheInfo.createdAt ? (
               <p className="text-xs text-green-600 mt-0.5">
                 ✓ 오늘 수집 완료 {new Date(huaweiCacheInfo.createdAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </p>
             ) : (
-              <p className="text-xs text-gray-400 mt-0.5">오늘 미수집</p>
+              <p className="text-xs text-gray-500 mt-0.5">오늘 미수집</p>
             )}
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -670,14 +680,14 @@ export default function Home() {
                   }
                 }}
                 disabled={huaweiRecollecting}
-                className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-50"
+                className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
               >
                 {huaweiRecollecting ? '수집 중...' : '재수집'}
               </button>
             )}
             <button
               onClick={() => { window.location.href = '/api/huawei-csv' }}
-              className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition"
+              className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition"
             >
               다운로드
             </button>
@@ -685,15 +695,15 @@ export default function Home() {
         </div>
 
         {/* 로봇 풀리스트 (네이버 단독, 화웨이 풀리스트와 별도 관리) */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 flex items-center justify-between flex-wrap gap-3">
+        <div className="bg-white rounded-xl shadow-card p-6 sm:p-7 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div>
             <p className="text-sm text-gray-600">로봇 풀리스트</p>
-            <p className="text-xs text-gray-400 mt-0.5">네이버 검색 · 마지막 다운로드 이후 기사</p>
+            <p className="text-xs text-gray-500 mt-0.5">네이버 검색 · 마지막 다운로드 이후 기사</p>
           </div>
           <button
             onClick={downloadRobotList}
             disabled={robotDownloading}
-            className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded text-sm transition disabled:opacity-50"
+            className="border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
           >
             {robotDownloading ? '수집 중...' : '다운로드'}
           </button>

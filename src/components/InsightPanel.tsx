@@ -33,7 +33,7 @@ function BulletEditor({
         value={text}
         rows={Math.max(lines.length, 1)}
         onChange={e => onChange(e.target.value.split('\n'))}
-        className="w-full border border-gray-200 rounded pl-5 pr-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30 focus:border-[#c8102e] resize-none leading-[1.6rem]"
+        className="w-full border border-gray-200 rounded pl-5 pr-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent resize-none leading-[1.6rem]"
       />
     </div>
   )
@@ -66,31 +66,31 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
   const hasContent = koLines.length > 0 || zhLines.length > 0
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg mb-5 overflow-hidden">
+    <div className="bg-white shadow-card rounded-xl mb-6 overflow-hidden">
       {/* 헤더 */}
-      <div className="bg-[#c8102e] px-6 py-3.5 flex items-center justify-between">
+      <div className="bg-accent px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="text-white font-semibold text-sm tracking-wide">오늘의 하이라이트</span>
-          <span className="text-red-300 text-xs">今日要点</span>
+          <span className="text-white font-semibold text-sm tracking-tight">오늘의 하이라이트</span>
+          <span className="text-white/70 text-xs">今日要点</span>
         </div>
         <div className="flex gap-1.5">
           {isAdmin && (
             <button onClick={regenerate} disabled={regenerating}
-              className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition disabled:opacity-50">
+              className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-md transition disabled:opacity-50">
               {regenerating ? '생성 중…' : hasContent ? '재생성' : '생성'}
             </button>
           )}
           {editing ? (
             <>
-              <button onClick={save} className="text-xs bg-white text-[#c8102e] font-semibold px-3 py-1.5 rounded">저장</button>
-              <button onClick={() => setEditing(false)} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded">취소</button>
+              <button onClick={save} className="text-xs bg-white text-accent font-semibold px-3 py-1.5 rounded-md">저장</button>
+              <button onClick={() => setEditing(false)} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-md">취소</button>
             </>
           ) : (
             <button onClick={() => {
               setKoNormal(toLines(stripLegacyTakeaways(runLog.insight_ko)))
               setZhNormal(toLines(stripLegacyTakeaways(runLog.insight_zh)))
               setEditing(true)
-            }} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded transition">
+            }} className="text-xs bg-white/15 hover:bg-white/25 text-white px-3 py-1.5 rounded-md transition">
               편집
             </button>
           )}
@@ -102,14 +102,14 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
           <div className="space-y-6">
             {/* 요약 문장 */}
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">요약</p>
+              <p className="text-xs font-semibold text-gray-500 mb-3">요약</p>
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-gray-400 mb-1.5">한국어</p>
+                  <p className="text-xs text-gray-500 mb-1.5">한국어</p>
                   <BulletEditor lines={koNormal} onChange={setKoNormal} autoFocusFirst />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1.5">中文</p>
+                  <p className="text-xs text-gray-500 mb-1.5">中文</p>
                   <BulletEditor lines={zhNormal} onChange={setZhNormal} />
                 </div>
               </div>
@@ -117,9 +117,9 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
           </div>
         ) : !hasContent ? (
           <div className="text-center py-8">
-            <p className="text-sm text-gray-400 mb-3">오늘의 하이라이트가 없습니다</p>
+            <p className="text-sm text-gray-500 mb-3">오늘의 하이라이트가 없습니다</p>
             <button onClick={regenerate} disabled={regenerating}
-              className="text-sm bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-2 rounded transition disabled:opacity-50">
+              className="text-sm bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg font-medium transition disabled:opacity-50">
               {regenerating ? '생성 중…' : '생성하기'}
             </button>
           </div>
@@ -135,7 +135,7 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
                   </div>
                   {zhLines[i] && (
                     <div className="flex items-start gap-1.5 mt-1 ml-4">
-                      <p className="text-sm text-gray-400 leading-relaxed">{zhLines[i]}</p>
+                      <p className="text-sm text-gray-500 leading-relaxed">{zhLines[i]}</p>
                     </div>
                   )}
                 </div>

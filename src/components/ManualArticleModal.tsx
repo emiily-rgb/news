@@ -120,8 +120,8 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
   const failCount = results.filter(r => r.status === 'error').length
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-gray-900/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-float w-full max-w-lg flex flex-col max-h-[90vh]">
 
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -140,7 +140,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
               onClick={() => { setTab(key); setResults([]) }}
               className={`flex-1 py-2.5 text-sm font-medium transition border-b-2 ${
                 tab === key
-                  ? 'border-[#c8102e] text-[#c8102e]'
+                  ? 'border-accent text-accent'
                   : 'border-transparent text-gray-400 hover:text-gray-600'
               }`}
             >
@@ -168,7 +168,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                     type="checkbox"
                     checked={showIncluded}
                     onChange={e => setShowIncluded(e.target.checked)}
-                    className="accent-[#c8102e] w-3.5 h-3.5"
+                    className="accent-accent w-3.5 h-3.5"
                   />
                   브리핑에 포함된 기사도 보기
                 </label>
@@ -194,7 +194,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
               ) : (
                 <>
                   <div className="flex items-center justify-between mb-2">
-                    <button onClick={toggleAll} className="text-xs text-[#c8102e] hover:underline">
+                    <button onClick={toggleAll} className="text-xs text-accent hover:underline">
                       전체 선택/해제
                     </button>
                     <span className="text-xs text-gray-400">
@@ -215,7 +215,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                           checked={selected.has(article.id)}
                           disabled={!article.excluded}
                           onChange={() => toggleSelect(article.id)}
-                          className="mt-0.5 shrink-0 accent-[#c8102e] w-4 h-4"
+                          className="mt-0.5 shrink-0 accent-accent w-4 h-4"
                         />
                         <div className="min-w-0">
                           <p className="text-sm text-gray-800 leading-snug">{article.title}</p>
@@ -242,7 +242,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                   value={forceCategory}
                   onChange={e => setForceCategory(e.target.value)}
                   disabled={processing}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#c8102e]/30 focus:border-[#c8102e] disabled:bg-gray-50"
+                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:bg-gray-50"
                 >
                   <option value="">AI 자동 분류</option>
                   <option value="자사">자사 (华为动态)</option>
@@ -259,7 +259,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                 onChange={e => setText(e.target.value)}
                 disabled={processing}
                 placeholder={`https://www.example.com/news/article1\nhttps://www.example.com/news/article2`}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-[#c8102e]/30 focus:border-[#c8102e] disabled:bg-gray-50"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:bg-gray-50"
                 rows={5}
               />
               {urls.length > 0 && (
@@ -322,7 +322,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
             <button
               onClick={handleSubmit}
               disabled={processing || (tab === 'url' ? !urls.length : !selected.size)}
-              className="px-5 py-2 text-sm font-medium bg-[#c8102e] hover:bg-[#a00d24] disabled:bg-gray-300 text-white rounded-lg transition flex items-center gap-2"
+              className="px-5 py-2 text-sm font-medium bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white rounded-lg transition flex items-center gap-2"
             >
               {processing ? (
                 <><span className="animate-spin inline-block">⏳</span> AI 처리 중...</>

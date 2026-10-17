@@ -65,8 +65,8 @@ export default function EmailPreviewModal({ html, runLog, recipients: initialRec
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-gray-900/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-float w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-gray-800">이메일 미리보기</h3>
@@ -84,9 +84,9 @@ export default function EmailPreviewModal({ html, runLog, recipients: initialRec
                   onChange={e => setNewEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addRecipient()}
                   placeholder="이메일 추가"
-                  className="text-xs border border-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-1 focus:ring-[#c8102e]/30"
+                  className="text-xs border border-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-1 focus:ring-accent/30"
                 />
-                <button onClick={addRecipient} className="text-xs text-[#c8102e] hover:underline">+ 추가</button>
+                <button onClick={addRecipient} className="text-xs text-accent hover:underline">+ 추가</button>
               </div>
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function EmailPreviewModal({ html, runLog, recipients: initialRec
               <button
                 onClick={sendEmail}
                 disabled={sending || recipients.length === 0}
-                className="bg-[#c8102e] hover:bg-[#a00d24] disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
+                className="bg-accent hover:bg-accent-hover disabled:bg-gray-300 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
               >
                 {sending ? <><span className="animate-spin inline-block">⏳</span> 발송 중...</> : '✉ 발송하기'}
               </button>
