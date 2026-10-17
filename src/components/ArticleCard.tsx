@@ -185,7 +185,7 @@ export default function ArticleCard({
                   href={article.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-900 font-semibold hover:text-accent hover:underline underline-offset-2 text-[15px] leading-snug tracking-tight"
+                  className="text-gray-900 font-semibold hover:text-accent hover:underline underline-offset-2 text-[15px] leading-[1.45] tracking-tight break-keep [overflow-wrap:anywhere]"
                 >
                   {titleKo}
                 </a>
@@ -217,7 +217,7 @@ export default function ArticleCard({
                 value={article.title_zh ?? ''}
                 onEdit={() => setEditing('title_zh')}
                 placeholder="중국어 제목 (클릭하여 입력)"
-                className="text-gray-500 text-xs"
+                className="text-gray-500 text-xs leading-normal"
               />
             )}
           </div>
@@ -329,7 +329,7 @@ export default function ArticleCard({
               {article.summary_ko.slice(0, 2).map((s, i) => (
                 <div key={i} className="flex items-start gap-1.5 mb-0.5">
                   <span className="text-gray-300 text-sm leading-relaxed shrink-0">•</span>
-                  <p className="text-sm text-gray-700 leading-relaxed">{s}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed break-keep [overflow-wrap:anywhere]">{s}</p>
                 </div>
               ))}
             </div>

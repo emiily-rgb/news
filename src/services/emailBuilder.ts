@@ -6,14 +6,16 @@ const IMPACT_COLOR: Record<string, string> = {
   LOW: '#999999',
 }
 
-function bulletItem(s: string, color = '#444', fontSize: number | string = 15) {
+const KO_WRAP = 'word-break:keep-all;overflow-wrap:anywhere;'
+
+function bulletItem(s: string, color = '#444', fontSize: number | string = 15, ko = false) {
   const text = s.startsWith('•') ? s.slice(1).trim() : s
   const fs = typeof fontSize === 'number' ? `${fontSize}px` : fontSize
-  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fs};color:#111;line-height:1.7;padding-right:4px">•</td><td style="font-size:${fs};color:${color};line-height:1.7">${text}</td></tr></table>`
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px"><tr><td width="14" valign="top" style="font-size:${fs};color:#111;line-height:1.7;padding-right:4px">•</td><td style="${ko ? KO_WRAP : ''}font-size:${fs};color:${color};line-height:1.7">${text}</td></tr></table>`
 }
 
-function renderInsightItems(items: string[], color: string) {
-  return items.filter(s => !s.startsWith('•')).map(s => bulletItem(s, color, 15)).join('')
+function renderInsightItems(items: string[], color: string, ko = false) {
+  return items.filter(s => !s.startsWith('•')).map(s => bulletItem(s, color, 15, ko)).join('')
 }
 
 function escapeAttr(s: string) {
@@ -47,7 +49,7 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
       ${runLog.insight_ko?.length > 0 ? `
       <div style="font-size:16px;font-weight:700;color:#DB0000;letter-spacing:0.3px;margin-bottom:10px">오늘의 하이라이트</div>
       <div style="padding:16px 20px;border:1px solid #f0f0f0;border-radius:4px">
-        ${renderInsightItems(runLog.insight_ko, '#333')}
+        ${renderInsightItems(runLog.insight_ko, '#333', true)}
       </div>` : ''}
     </td></tr>` : ''
 
@@ -73,9 +75,9 @@ export function buildEmailHtml(articles: Article[], runLog: RunLog, mediaDisplay
           ${a.tag ? `<span style="font-size:13px;color:#666;padding-left:4px;letter-spacing:0.5px">| ${a.category === '업계' ? displayIndustryTag(a.tag) : a.tag}</span>` : ''}
         </div>
         ${a.image_url ? `<img src="${a.image_url}" alt="${escapeAttr(title)}" width="100%" style="display:block;width:100%;max-height:220px;object-fit:cover;border-radius:3px;margin-bottom:10px" />` : ''}
-        <a href="${a.link}" style="color:#111;font-size:16px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
+        <a href="${a.link}" style="${titleField === 'ko' ? KO_WRAP : ''}color:#111;font-size:16px;font-weight:600;text-decoration:none;line-height:1.5;display:block;margin-bottom:4px">${title}</a>
         <div style="font-size:14px;color:#767676;margin-bottom:8px">${formatMediaName(a.media, mediaDisplayOverrides)} &nbsp;·&nbsp; ${pubDate}</div>
-        ${summary.length > 0 ? `<div>${summary.slice(0, 2).map(s => bulletItem(s)).join('')}</div>` : ''}
+        ${summary.length > 0 ? `<div>${summary.slice(0, 2).map(s => bulletItem(s, '#444', 15, titleField === 'ko')).join('')}</div>` : ''}
       </td></tr>`
     }).join('')
   }

@@ -218,7 +218,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                           className="mt-0.5 shrink-0 accent-accent w-4 h-4"
                         />
                         <div className="min-w-0">
-                          <p className="text-sm text-gray-800 leading-snug">{article.title}</p>
+                          <p className="text-sm text-gray-800 leading-snug break-keep [overflow-wrap:anywhere]">{article.title}</p>
                           <p className="text-xs text-gray-400 mt-0.5">
                             {article.media} · {article.category} · {new Date(article.pub_date).toLocaleString('ko-KR', {
                               month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,

@@ -131,7 +131,7 @@ export default function InsightPanel({ runLog, isAdmin, onUpdate, onRegenerate }
                 <div key={i} className="pb-3 border-b border-gray-100 last:border-0 last:pb-0">
                   <div className="flex items-start gap-1.5">
                     <span className="text-gray-300 text-sm shrink-0 mt-0.5">•</span>
-                    <p className="text-sm text-gray-800 leading-relaxed">{ko}</p>
+                    <p className="text-sm text-gray-800 leading-relaxed break-keep [overflow-wrap:anywhere]">{ko}</p>
                   </div>
                   {zhLines[i] && (
                     <div className="flex items-start gap-1.5 mt-1 ml-4">
