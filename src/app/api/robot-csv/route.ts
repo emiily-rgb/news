@@ -9,7 +9,7 @@ export const maxDuration = 300
 // 로봇 산업 풀리스트: 화웨이 풀리스트(/api/huawei-csv)와 동일한 방식이되, 네이버 검색만 사용하고
 // 마지막 다운로드 시점·링크도 별도 키로 관리해서 화웨이 풀리스트와 서로 영향을 주지 않는다.
 const ROBOT_KEYWORDS = [
-  '화인로보틱스', '애지봇', '유니트리', '유비텍', '아이엘로보틱스',
+  '화인로보틱스', '애지봇', '유니트리', '유비테크', '아이엘로보틱스',
   '로보틱스', '피지컬 AI', '휴머노이드', '로봇 핸드', '로봇 데이터',
 ]
 
@@ -178,7 +178,9 @@ export async function GET(req: Request) {
   for (const keyword of ROBOT_KEYWORDS) {
     for (const sort of ['date', 'sim']) {
       try {
-        const q = encodeURIComponent(keyword)
+        // 띄어쓰기가 있는 키워드("피지컬 AI" 등)는 따옴표로 묶어 정확한 문구로 검색한다.
+        // 그렇지 않으면 네이버가 단어별(AND)로 찾아 무관한 기사가 많이 섞인다.
+        const q = encodeURIComponent(keyword.includes(' ') ? `"${keyword}"` : keyword)
         let start = 1
         let allOld = false
 
