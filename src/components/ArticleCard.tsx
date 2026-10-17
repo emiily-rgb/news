@@ -42,7 +42,7 @@ function BulletEditor({ lines, onChange, autoFocusFirst }: {
           const next = e.target.value.split('\n')
           onChange(next)
         }}
-        className="w-full border border-blue-300 rounded pl-5 pr-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-300 resize-none leading-[1.6rem]"
+        className="w-full border border-gray-300 rounded pl-5 pr-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent resize-none leading-[1.6rem]"
       />
     </div>
   )
@@ -172,7 +172,7 @@ export default function ArticleCard({
                   type="text"
                   value={titleKo}
                   onChange={e => setTitleKo(e.target.value)}
-                  className="flex-1 border border-blue-300 rounded px-2 py-1 text-sm text-gray-800 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-300"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent"
                   autoFocus
                   onKeyDown={e => { if (e.key === 'Enter') saveField('title_ko'); if (e.key === 'Escape') setEditing(null) }}
                 />
@@ -205,7 +205,7 @@ export default function ArticleCard({
                   type="text"
                   value={titleZh}
                   onChange={e => setTitleZh(e.target.value)}
-                  className="flex-1 border border-blue-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-300"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent"
                   placeholder="중국어 제목"
                   autoFocus
                 />
@@ -244,7 +244,7 @@ export default function ArticleCard({
                     onUpdateMedia(article.id, mediaInput.trim())
                     setEditingMedia(false)
                   }}
-                  className="border border-blue-300 rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-300 w-36"
+                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent w-36"
                 />
               ) : (
                 <span
@@ -259,12 +259,11 @@ export default function ArticleCard({
             </span>
             <span className="text-gray-300" aria-hidden>·</span>
             <span>{new Date(article.pub_date).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-            <>
-              <span className="text-gray-300" aria-hidden>·</span>
+            <span className="inline-flex items-center gap-2 flex-wrap">
               <select
                 value={article.category}
                 onChange={e => onUpdateCategory(article.id, e.target.value)}
-                className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-accent/30"
+                className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-accent/25"
               >
                 <option value="자사">자사 (华为动态)</option>
                 <option value="업계">업계 (行业资讯)</option>
@@ -274,7 +273,7 @@ export default function ArticleCard({
               <select
                 value={article.tag as string ?? ''}
                 onChange={e => onUpdateTag(article.id, e.target.value as ArticleTag)}
-                className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-accent/30"
+                className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-accent/25"
               >
                 <option value="AI">AI</option>
                 <option value="Cloud">Cloud</option>
@@ -295,7 +294,7 @@ export default function ArticleCard({
                 <option value="Policy">Policy</option>
                 <option value="US Sanctions">US Sanctions</option>
               </select>
-            </>
+            </span>
           </div>
 
           {/* 요약 재생성 버튼 (요약 없을 때만, 관리자만) */}
@@ -367,7 +366,7 @@ export default function ArticleCard({
         </div>
 
         {/* 우측: 이미지 + 버튼 */}
-        <div className="flex flex-col gap-2 shrink-0 items-end">
+        <div className="flex flex-col gap-2 shrink-0 items-stretch w-28">
 
           {/* 이미지 */}
           <div className={`w-28 h-20 rounded-lg overflow-hidden bg-gray-50 border relative group shrink-0 ${article.image_url ? 'border-gray-100' : 'border-dashed border-gray-300'}`}>
@@ -399,30 +398,30 @@ export default function ArticleCard({
             href={article.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium text-gray-600 hover:text-accent hover:underline underline-offset-2 whitespace-nowrap"
+            className="text-xs font-medium text-gray-600 hover:text-accent hover:underline underline-offset-2 whitespace-nowrap text-center"
           >
             원문 보기 →
           </a>
 
           {/* 순서 변경 */}
-          <div className="flex gap-1">
+          <div className="grid grid-cols-2 gap-1">
             <button
               onClick={onMoveUp}
               disabled={isFirst}
-              className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition text-xs"
+              className="w-full h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition text-xs"
               title="위로"
             >▲</button>
             <button
               onClick={onMoveDown}
               disabled={isLast}
-              className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition text-xs"
+              className="w-full h-8 flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition text-xs"
               title="아래로"
             >▼</button>
           </div>
 
           {/* 삭제 */}
           {confirmDelete ? (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-stretch">
               <span className="text-xs text-red-500 text-center">삭제?</span>
               <button
                 onClick={() => onDelete(article.id)}
@@ -436,7 +435,7 @@ export default function ArticleCard({
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="text-xs px-2 py-1 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition whitespace-nowrap"
+              className="text-xs px-2 py-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 transition whitespace-nowrap text-center"
             >
               삭제
             </button>

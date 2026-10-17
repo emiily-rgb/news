@@ -47,9 +47,9 @@ export default function SettingsPanel({ onClose }: Props) {
   return (
     <div className="fixed inset-0 bg-gray-900/45 backdrop-blur-[2px] z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-float w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b">
-          <h3 className="font-bold text-gray-800 text-lg">설정</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="font-semibold tracking-tight text-gray-900 text-lg">설정</h3>
+          <button onClick={onClose} aria-label="닫기" className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 w-8 h-8 rounded-md flex items-center justify-center text-lg leading-none transition">✕</button>
         </div>
 
         <div className="flex-1 overflow-auto p-5 space-y-6">
@@ -59,7 +59,7 @@ export default function SettingsPanel({ onClose }: Props) {
             <select
               value={config.collection_hours}
               onChange={e => setConfig(c => ({ ...c, collection_hours: Number(e.target.value) }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-40"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent w-40"
             >
               <option value={6}>6시간</option>
               <option value={12}>12시간</option>
@@ -79,10 +79,10 @@ export default function SettingsPanel({ onClose }: Props) {
                 <span>{senderInfo.address}</span>
               </div>
             ) : (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-sm text-yellow-800">
-                ⚠️ 발신자 미설정 — <code className="bg-yellow-100 px-1 rounded">.env.local</code>에{' '}
-                <code className="bg-yellow-100 px-1 rounded">GMAIL_USER</code>,{' '}
-                <code className="bg-yellow-100 px-1 rounded">GMAIL_APP_PASSWORD</code>를 확인해주세요.
+              <div className="bg-amber-50 border border-amber-100 rounded-lg px-4 py-3 text-sm text-amber-700">
+                ⚠️ 발신자 미설정 — <code className="bg-amber-100 px-1 rounded">.env.local</code>에{' '}
+                <code className="bg-amber-100 px-1 rounded">GMAIL_USER</code>,{' '}
+                <code className="bg-amber-100 px-1 rounded">GMAIL_APP_PASSWORD</code>를 확인해주세요.
               </div>
             )}
           </div>
@@ -97,11 +97,11 @@ export default function SettingsPanel({ onClose }: Props) {
                 onChange={e => setNewRecipient(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addRecipient()}
                 placeholder="email@example.com"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm flex-1"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent flex-1"
               />
               <button
                 onClick={addRecipient}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm"
+                className="bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg text-sm transition"
               >추가</button>
             </div>
             <div className="space-y-1.5">
@@ -129,7 +129,7 @@ export default function SettingsPanel({ onClose }: Props) {
                 value={newMediaKo}
                 onChange={e => setNewMediaKo(e.target.value)}
                 placeholder="한글 매체명 (예: 아주경제)"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm flex-1"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent flex-1"
               />
               <input
                 type="text"
@@ -143,7 +143,7 @@ export default function SettingsPanel({ onClose }: Props) {
                   }
                 }}
                 placeholder="영문 표기 (예: Aju Business Daily)"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm flex-1"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400 transition focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent flex-1"
               />
               <button
                 onClick={() => {
@@ -152,7 +152,7 @@ export default function SettingsPanel({ onClose }: Props) {
                   setNewMediaKo('')
                   setNewMediaEn('')
                 }}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm whitespace-nowrap"
+                className="bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg text-sm transition whitespace-nowrap"
               >추가</button>
             </div>
             {/* 사용자 추가 항목 */}
@@ -222,8 +222,8 @@ export default function SettingsPanel({ onClose }: Props) {
           </div>
         </div>
 
-        <div className="p-5 border-t flex justify-end gap-3">
-          <button onClick={onClose} className="border border-gray-200 px-5 py-2 rounded-lg text-sm text-gray-600">취소</button>
+        <div className="p-5 border-t border-gray-100 flex justify-end gap-3">
+          <button onClick={onClose} className="border border-gray-300 hover:bg-gray-50 px-5 py-2 rounded-lg text-sm font-medium text-gray-700 transition">취소</button>
           <button
             onClick={save}
             disabled={saving}

@@ -84,7 +84,7 @@ export default function EmailPreviewModal({ html, runLog, recipients: initialRec
                   onChange={e => setNewEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addRecipient()}
                   placeholder="이메일 추가"
-                  className="text-xs border border-gray-200 rounded px-2 py-0.5 w-36 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                  className="text-xs border border-gray-300 rounded-md px-2 py-0.5 w-36 focus:outline-none focus:ring-2 focus:ring-accent/25"
                 />
                 <button onClick={addRecipient} className="text-xs text-accent hover:underline">+ 추가</button>
               </div>
@@ -110,7 +110,7 @@ export default function EmailPreviewModal({ html, runLog, recipients: initialRec
                 {sending ? <><span className="animate-spin inline-block">⏳</span> 발송 중...</> : '✉ 발송하기'}
               </button>
             ))}
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 px-2 text-xl">✕</button>
+            <button onClick={onClose} aria-label="닫기" className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 w-8 h-8 rounded-md flex items-center justify-center text-lg leading-none transition">✕</button>
           </div>
         </div>
 

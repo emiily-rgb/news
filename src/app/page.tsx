@@ -383,8 +383,8 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="text-right mr-1">
-            <p className="text-sm font-medium text-gray-700">{profile?.name || profile?.email}</p>
+          <div className="text-right mr-1 min-w-0">
+            <p className="text-sm font-medium text-gray-700 truncate max-w-[10rem]">{profile?.name || profile?.email}</p>
             <p className="text-xs text-gray-500">{isAdmin ? '최고 관리자' : '컨텐츠 관리자'}</p>
           </div>
           {isAdmin && (
@@ -392,7 +392,7 @@ export default function Home() {
               설정
             </button>
           )}
-          <button onClick={signOut} className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm transition">
+          <button onClick={signOut} className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm transition whitespace-nowrap shrink-0">
             로그아웃
           </button>
         </div>
@@ -503,12 +503,12 @@ export default function Home() {
                         {new Date(r.run_at!).toLocaleString('ko-KR')}
                       </span>
                       {r.draft_saved_at && (
-                        <span className="text-[11px] bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-sm tabular-nums">
+                        <span className="text-[11px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-sm tabular-nums">
                           초안 {new Date(r.draft_saved_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                       {r.sent_at && (
-                        <span className="text-[11px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded-sm tabular-nums">
+                        <span className="text-[11px] bg-green-100 text-green-800 font-semibold px-1.5 py-0.5 rounded-sm tabular-nums">
                           발송 {new Date(r.sent_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
@@ -569,7 +569,7 @@ export default function Home() {
                       {catArticles.some(a => a.excluded) && ` · 제외 ${catArticles.filter(a => a.excluded).length}건`}
                     </span>
                   </div>
-                  <div className="bg-white shadow-card rounded-xl overflow-hidden divide-y divide-gray-100">
+                  <div className="bg-white shadow-card rounded-xl overflow-hidden divide-y divide-gray-200/80">
                     {[...catArticles].sort((a, b) => {
                       if (cat === '업계') {
                         const tagA = INDUSTRY_TAG_ORDER.indexOf(displayIndustryTag(a.tag) as typeof INDUSTRY_TAG_ORDER[number])
@@ -645,7 +645,7 @@ export default function Home() {
         {/* 화웨이 풀리스트 */}
         <div className="bg-white rounded-xl shadow-card p-6 sm:p-7 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div>
-            <p className="text-sm text-gray-600">화웨이 풀리스트</p>
+            <p className="text-base font-semibold text-gray-900">화웨이 풀리스트</p>
             {huaweiCacheInfo === null ? (
               <p className="text-xs text-gray-500 mt-0.5">확인 중...</p>
             ) : huaweiCacheInfo.cached && huaweiCacheInfo.createdAt ? (
@@ -697,7 +697,7 @@ export default function Home() {
         {/* 로봇 풀리스트 (네이버 단독, 화웨이 풀리스트와 별도 관리) */}
         <div className="bg-white rounded-xl shadow-card p-6 sm:p-7 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div>
-            <p className="text-sm text-gray-600">로봇 풀리스트</p>
+            <p className="text-base font-semibold text-gray-900">로봇 풀리스트</p>
             <p className="text-xs text-gray-500 mt-0.5">네이버 검색 · 마지막 다운로드 이후 기사</p>
           </div>
           <button

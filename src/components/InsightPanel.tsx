@@ -33,7 +33,7 @@ function BulletEditor({
         value={text}
         rows={Math.max(lines.length, 1)}
         onChange={e => onChange(e.target.value.split('\n'))}
-        className="w-full border border-gray-200 rounded pl-5 pr-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-accent/30 focus:border-accent resize-none leading-[1.6rem]"
+        className="w-full border border-gray-200 rounded pl-5 pr-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent resize-none leading-[1.6rem]"
       />
     </div>
   )

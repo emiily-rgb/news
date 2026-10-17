@@ -126,10 +126,10 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
-            <h2 className="font-bold text-gray-800">기사 추가</h2>
+            <h2 className="font-semibold tracking-tight text-gray-900">기사 추가</h2>
             <p className="text-xs text-gray-400 mt-0.5">AI가 요약·번역·분류해서 브리핑에 추가합니다</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+          <button onClick={onClose} aria-label="닫기" className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 w-8 h-8 rounded-md flex items-center justify-center text-lg leading-none transition">✕</button>
         </div>
 
         {/* 탭 */}
@@ -141,7 +141,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
               className={`flex-1 py-2.5 text-sm font-medium transition border-b-2 ${
                 tab === key
                   ? 'border-accent text-accent'
-                  : 'border-transparent text-gray-400 hover:text-gray-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
               {label}
@@ -161,7 +161,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="제목·매체 검색"
-                  className="border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-700 flex-1 min-w-[140px]"
+                  className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm text-gray-900 bg-white transition focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent flex-1 min-w-[140px]"
                 />
                 <label className="flex items-center gap-1.5 text-xs text-gray-600 shrink-0">
                   <input
@@ -175,7 +175,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                 <select
                   value={forceCategoryCollected}
                   onChange={e => setForceCategoryCollected(e.target.value)}
-                  className="border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-700 ml-auto"
+                  className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm text-gray-900 bg-white transition focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent ml-auto"
                 >
                   <option value="">AI 자동 분류</option>
                   <option value="자사">자사</option>
@@ -186,7 +186,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
               </div>
 
               {loadingCollected ? (
-                <p className="text-sm text-gray-400 text-center py-8">불러오는 중...</p>
+                <div className="space-y-2 py-4" role="status"><div className="skeleton h-12 w-full" /><div className="skeleton h-12 w-full" /><div className="skeleton h-12 w-full" /><span className="sr-only">불러오는 중...</span></div>
               ) : collectedArticles.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-8">이번 run에 수집된 기사가 없습니다</p>
               ) : visibleArticles.length === 0 ? (
@@ -242,7 +242,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                   value={forceCategory}
                   onChange={e => setForceCategory(e.target.value)}
                   disabled={processing}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:bg-gray-50"
+                  className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm text-gray-900 bg-white transition focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent disabled:bg-gray-50"
                 >
                   <option value="">AI 자동 분류</option>
                   <option value="자사">자사 (华为动态)</option>
@@ -259,7 +259,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
                 onChange={e => setText(e.target.value)}
                 disabled={processing}
                 placeholder={`https://www.example.com/news/article1\nhttps://www.example.com/news/article2`}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent disabled:bg-gray-50"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 bg-white transition resize-none focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent disabled:bg-gray-50"
                 rows={5}
               />
               {urls.length > 0 && (
@@ -314,7 +314,7 @@ export default function ManualArticleModal({ runId, onAdded, onClose }: Props) {
         <div className="px-5 py-4 border-t border-gray-100 flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg transition"
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition"
           >
             {results.some(r => r.status === 'ok') ? '닫기' : '취소'}
           </button>
