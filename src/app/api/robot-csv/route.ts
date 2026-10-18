@@ -83,15 +83,15 @@ function toCsvRow(cells: string[]): string {
 }
 
 type Article = { title: string; link: string; pubDate: string; description: string; keyword: string }
-type ArticleAI = { remarksKo: string; remarksEn: string }
+type ArticleAI = { topicEn: string; remarksKo: string; remarksEn: string }
 
-const EMPTY_AI: ArticleAI = { remarksKo: '', remarksEn: '' }
+const EMPTY_AI: ArticleAI = { topicEn: '', remarksKo: '', remarksEn: '' }
 
-// 리마크: 한국어 한 줄 요약 + 영문 번역 (Topic 영문 제목은 이번 양식에 없으므로 생성하지 않는다)
-async function generateRemarks(articles: { title: string; description: string }[]): Promise<ArticleAI[]> {
+// Topic(영문 제목) + 리마크(한국어 한 줄 요약 / 영문 번역) — 화웨이 풀리스트와 동일한 구성
+async function generateAIFields(articles: { title: string; description: string }[]): Promise<ArticleAI[]> {
   const client = new Anthropic()
   const BATCH = 10
-  const CONCURRENCY = 5
+  const CONCURRENCY = 10
 
   const batches: { title: string; description: string }[][] = []
   for (let i = 0; i < articles.length; i += BATCH) batches.push(articles.slice(i, i + BATCH))
@@ -109,6 +109,7 @@ async function generateRemarks(articles: { title: string; description: string }[
           content: `You are a Korean tech news analyst. For each article below, return a JSON array with exactly ${batch.length} objects in order.
 
 Each object must have:
+- "topicEn": English translation of the Korean title (concise, natural)
 - "remarksKo": One-line Korean summary (different wording from the title, max 30 chars)
 - "remarksEn": English translation of remarksKo
 
@@ -274,15 +275,24 @@ export async function GET(req: Request) {
   const filename = `${yymmdd}_Robot_articles.csv`
 
   const ai = process.env.ANTHROPIC_API_KEY
-    ? await generateRemarks(filtered.map(f => f.article))
+    ? await generateAIFields(filtered.map(f => f.article))
     : filtered.map(() => EMPTY_AI)
 
-  // 컬럼 순서: 미디어명 - 기사 제목 - URL - 미디어타입 - 리마크
-  const headers = ['미디어명', '기사 제목', 'URL', '미디어타입', '리마크']
+  // 컬럼 구성은 화웨이 풀리스트와 동일: Date, Title, URL, Topic, Media Type, Company(미디어명), Remarks
+  const headers = ['Date', 'Title', 'URL', 'Topic', 'Media Type', 'Company', 'Remarks']
   const rows = filtered.map(({ article: a, info: { company, mediaType } }, i) => {
     const r = ai[i] ?? EMPTY_AI
+    const topic = r.topicEn ? `${a.title}\n${r.topicEn}` : a.title
     const remarks = r.remarksKo && r.remarksEn ? `${r.remarksKo}\n${r.remarksEn}` : (r.remarksKo || '')
-    return toCsvRow([company, a.title, a.link, mediaType, remarks])
+    return toCsvRow([
+      new Date(a.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }),
+      a.title,
+      a.link,
+      topic,
+      mediaType,
+      company,
+      remarks,
+    ])
   })
 
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
