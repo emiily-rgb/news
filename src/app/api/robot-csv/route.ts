@@ -87,6 +87,10 @@ type ArticleAI = { topicEn: string; remarksKo: string; remarksEn: string }
 
 const EMPTY_AI: ArticleAI = { topicEn: '', remarksKo: '', remarksEn: '' }
 
+const filledCount = (r?: ArticleAI) =>
+  [r?.topicEn, r?.remarksKo, r?.remarksEn].filter(v => typeof v === 'string' && v.trim()).length
+const isCompleteAI = (r?: ArticleAI) => filledCount(r) === 3
+
 // Topic(영문 제목) + 리마크(한국어 한 줄 요약 / 영문 번역) — 화웨이 풀리스트와 동일한 구성
 async function generateAIFields(articles: { title: string; description: string }[]): Promise<ArticleAI[]> {
   const client = new Anthropic()
@@ -103,6 +107,7 @@ async function generateAIFields(articles: { title: string; description: string }
     // 응답이 깨졌거나(JSON 오류·개수 불일치) 호출이 실패하면 같은 배치를 다시 요청해서 빈칸을 막는다.
     // (네트워크·429·5xx는 SDK가 자체적으로도 재시도한다)
     const MAX_ATTEMPTS = 3
+    let best: ArticleAI[] | null = null // 시도마다 항목별로 가장 완전한 결과를 모아둔다
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
         const msg = await client.messages.create({
@@ -128,11 +133,21 @@ ${numbered}`,
         if (!Array.isArray(parsed) || parsed.length !== batch.length) {
           throw new Error(`응답 개수 불일치: 요청 ${batch.length}건 / 응답 ${Array.isArray(parsed) ? parsed.length : 'n/a'}건`)
         }
-        return parsed
+        // 항목 중 일부가 비어 있어도(예: 영문 번역 누락) 이미 받은 완전한 항목은 유지하고, 빈 항목만 새 응답으로 채운다.
+        best = best
+          ? best.map((old, i) => (isCompleteAI(old) || filledCount(old) >= filledCount(parsed[i]) ? old : parsed[i]))
+          : parsed
+        const incomplete = best.filter(r => !isCompleteAI(r)).length
+        if (incomplete === 0) return best
+        throw new Error(`빈 항목 ${incomplete}건`)
       } catch (err) {
         console.warn(`[robot-csv] AI 응답 실패 [시도 ${attempt}/${MAX_ATTEMPTS}]:`, err instanceof Error ? err.message : err)
         if (attempt < MAX_ATTEMPTS) await new Promise(r => setTimeout(r, 1000 * attempt))
       }
+    }
+    if (best) {
+      console.error(`[robot-csv] AI 응답 일부 항목 비어 있음(${MAX_ATTEMPTS}회 시도 후): "${batch[0]?.title?.slice(0, 30)}" 외`)
+      return best
     }
     console.error(`[robot-csv] AI 응답 최종 실패 → ${batch.length}건 빈 값 처리 ("${batch[0]?.title?.slice(0, 30)}" 외)`)
     return batch.map(() => EMPTY_AI)
