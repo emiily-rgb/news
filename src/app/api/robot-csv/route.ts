@@ -100,13 +100,17 @@ async function generateAIFields(articles: { title: string; description: string }
     const numbered = batch
       .map((a, j) => `[${j + 1}]\nTitle: ${a.title}\nDescription: ${a.description}`)
       .join('\n\n')
-    try {
-      const msg = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
-        messages: [{
-          role: 'user',
-          content: `You are a Korean tech news analyst. For each article below, return a JSON array with exactly ${batch.length} objects in order.
+    // 응답이 깨졌거나(JSON 오류·개수 불일치) 호출이 실패하면 같은 배치를 다시 요청해서 빈칸을 막는다.
+    // (네트워크·429·5xx는 SDK가 자체적으로도 재시도한다)
+    const MAX_ATTEMPTS = 3
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const msg = await client.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 2048,
+          messages: [{
+            role: 'user',
+            content: `You are a Korean tech news analyst. For each article below, return a JSON array with exactly ${batch.length} objects in order.
 
 Each object must have:
 - "topicEn": English translation of the Korean title (concise, natural)
@@ -116,19 +120,22 @@ Each object must have:
 Return ONLY the JSON array, no explanation.
 
 ${numbered}`,
-        }],
-      })
-      const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
-      const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim()) as ArticleAI[]
-      // 개수가 안 맞으면 리마크가 엉뚱한 기사 행에 붙으므로 이 배치는 비워둔다.
-      if (!Array.isArray(parsed) || parsed.length !== batch.length) {
-        console.warn(`[robot-csv] 리마크 응답 개수 불일치: 요청 ${batch.length}건 / 응답 ${Array.isArray(parsed) ? parsed.length : 'n/a'}건 → 빈 값 처리`)
-        return batch.map(() => EMPTY_AI)
+          }],
+        })
+        const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
+        const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim()) as ArticleAI[]
+        // 개수가 안 맞으면 리마크가 엉뚱한 기사 행에 붙으므로 실패로 보고 다시 시도한다.
+        if (!Array.isArray(parsed) || parsed.length !== batch.length) {
+          throw new Error(`응답 개수 불일치: 요청 ${batch.length}건 / 응답 ${Array.isArray(parsed) ? parsed.length : 'n/a'}건`)
+        }
+        return parsed
+      } catch (err) {
+        console.warn(`[robot-csv] AI 응답 실패 [시도 ${attempt}/${MAX_ATTEMPTS}]:`, err instanceof Error ? err.message : err)
+        if (attempt < MAX_ATTEMPTS) await new Promise(r => setTimeout(r, 1000 * attempt))
       }
-      return parsed
-    } catch {
-      return batch.map(() => EMPTY_AI)
     }
+    console.error(`[robot-csv] AI 응답 최종 실패 → ${batch.length}건 빈 값 처리 ("${batch[0]?.title?.slice(0, 30)}" 외)`)
+    return batch.map(() => EMPTY_AI)
   }
 
   const results: ArticleAI[] = []
