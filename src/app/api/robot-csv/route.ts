@@ -83,15 +83,13 @@ function toCsvRow(cells: string[]): string {
 }
 
 type Article = { title: string; link: string; pubDate: string; description: string; keyword: string }
-type ArticleAI = { topicEn: string; remarksKo: string; remarksEn: string }
+type ArticleAI = { topicEn: string }
 
-const EMPTY_AI: ArticleAI = { topicEn: '', remarksKo: '', remarksEn: '' }
+const EMPTY_AI: ArticleAI = { topicEn: '' }
 
-const filledCount = (r?: ArticleAI) =>
-  [r?.topicEn, r?.remarksKo, r?.remarksEn].filter(v => typeof v === 'string' && v.trim()).length
-const isCompleteAI = (r?: ArticleAI) => filledCount(r) === 3
+const isCompleteAI = (r?: ArticleAI) => typeof r?.topicEn === 'string' && !!r.topicEn.trim()
 
-// Topic(영문 제목) + 리마크(한국어 한 줄 요약 / 영문 번역) — 화웨이 풀리스트와 동일한 구성
+// 영문 제목 번역 — 리마크 칸에 "한국어 제목 + 영문 제목"으로 들어간다
 async function generateAIFields(articles: { title: string; description: string }[]): Promise<ArticleAI[]> {
   const client = new Anthropic()
   const BATCH = 10
@@ -119,8 +117,6 @@ async function generateAIFields(articles: { title: string; description: string }
 
 Each object must have:
 - "topicEn": English translation of the Korean title (concise, natural)
-- "remarksKo": One-line Korean summary (different wording from the title, max 30 chars)
-- "remarksEn": English translation of remarksKo
 
 Return ONLY the JSON array, no explanation.
 
@@ -129,14 +125,12 @@ ${numbered}`,
         })
         const text = msg.content[0].type === 'text' ? msg.content[0].text : ''
         const parsed = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim()) as ArticleAI[]
-        // 개수가 안 맞으면 리마크가 엉뚱한 기사 행에 붙으므로 실패로 보고 다시 시도한다.
+        // 개수가 안 맞으면 영문 제목이 엉뚱한 기사 행에 붙으므로 실패로 보고 다시 시도한다.
         if (!Array.isArray(parsed) || parsed.length !== batch.length) {
           throw new Error(`응답 개수 불일치: 요청 ${batch.length}건 / 응답 ${Array.isArray(parsed) ? parsed.length : 'n/a'}건`)
         }
-        // 항목 중 일부가 비어 있어도(예: 영문 번역 누락) 이미 받은 완전한 항목은 유지하고, 빈 항목만 새 응답으로 채운다.
-        best = best
-          ? best.map((old, i) => (isCompleteAI(old) || filledCount(old) >= filledCount(parsed[i]) ? old : parsed[i]))
-          : parsed
+        // 항목 중 일부가 비어 있어도 이미 받은 완전한 항목은 유지하고, 빈 항목만 새 응답으로 채운다.
+        best = best ? best.map((old, i) => (isCompleteAI(old) ? old : parsed[i])) : parsed
         const incomplete = best.filter(r => !isCompleteAI(r)).length
         if (incomplete === 0) return best
         throw new Error(`빈 항목 ${incomplete}건`)
@@ -300,21 +294,13 @@ export async function GET(req: Request) {
     ? await generateAIFields(filtered.map(f => f.article))
     : filtered.map(() => EMPTY_AI)
 
-  // 컬럼 구성은 화웨이 풀리스트와 동일: Date, Title, URL, Topic, Media Type, Company(미디어명), Remarks
-  const headers = ['Date', 'Title', 'URL', 'Topic', 'Media Type', 'Company', 'Remarks']
+  // 컬럼 구성(요청 시트 양식, 화웨이 풀리스트와 다름): 미디어명 - 기사 제목 - URL - 미디어타입 - 리마크
+  // 리마크 = 한국어 제목 + 줄바꿈 + (공백 한 칸) 영문 제목 — 시트의 기존 행과 같은 모양
+  const headers = ['미디어명', '기사 제목', 'URL', '미디어타입', '리마크']
   const rows = filtered.map(({ article: a, info: { company, mediaType } }, i) => {
     const r = ai[i] ?? EMPTY_AI
-    const topic = r.topicEn ? `${a.title}\n${r.topicEn}` : a.title
-    const remarks = r.remarksKo && r.remarksEn ? `${r.remarksKo}\n${r.remarksEn}` : (r.remarksKo || '')
-    return toCsvRow([
-      new Date(a.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }),
-      a.title,
-      a.link,
-      topic,
-      mediaType,
-      company,
-      remarks,
-    ])
+    const remarks = r.topicEn ? `${a.title}\n ${r.topicEn}` : a.title
+    return toCsvRow([company, a.title, a.link, mediaType, remarks])
   })
 
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
