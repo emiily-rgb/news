@@ -294,13 +294,15 @@ export async function GET(req: Request) {
     ? await generateAIFields(filtered.map(f => f.article))
     : filtered.map(() => EMPTY_AI)
 
-  // 컬럼 구성(요청 시트 양식, 화웨이 풀리스트와 다름): 미디어명 - 기사 제목 - URL - 미디어타입 - 리마크
+  // 컬럼 구성(요청 시트 양식, 화웨이 풀리스트와 다름): 일자 - 미디어명 - 기사 제목 - URL - 미디어타입 - 리마크
+  // 일자 = 기사 발행일(KST, YYYY-MM-DD)
   // 리마크 = 한국어 제목 + 줄바꿈 + (공백 한 칸) 영문 제목 — 시트의 기존 행과 같은 모양
-  const headers = ['미디어명', '기사 제목', 'URL', '미디어타입', '리마크']
+  const headers = ['일자', '미디어명', '기사 제목', 'URL', '미디어타입', '리마크']
   const rows = filtered.map(({ article: a, info: { company, mediaType } }, i) => {
     const r = ai[i] ?? EMPTY_AI
     const remarks = r.topicEn ? `${a.title}\n ${r.topicEn}` : a.title
-    return toCsvRow([company, a.title, a.link, mediaType, remarks])
+    const date = new Date(a.pubDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
+    return toCsvRow([date, company, a.title, a.link, mediaType, remarks])
   })
 
   const csv = ['﻿' + toCsvRow(headers), ...rows].join('\n')
