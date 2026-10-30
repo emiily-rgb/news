@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { MediaInfo } from '@/lib/domains'
 import { resolveMedia } from '@/lib/mediaResolver'
+import { buildSearchKeywords, judgeTitle } from '@/lib/robotRules'
 
 export const maxDuration = 300
 
@@ -191,13 +192,21 @@ export async function GET(req: Request) {
   const seen = new Set<string>()
   const articles: Article[] = []
 
+  // 수집 기준 1단계(?rules=v2): 새 키워드 + 제목 기준 포함·제외. 기본은 기존 동작 그대로.
+  const useRules = url.searchParams.get('rules') === 'v2'
+  const startedAt = Date.now()
+  const rejected: Record<string, number> = {}
+  // 띄어쓰기가 있는 키워드("피지컬 AI" 등)는 따옴표로 묶어 정확한 문구로 검색한다.
+  // 그렇지 않으면 네이버가 단어별(AND)로 찾아 무관한 기사가 많이 섞인다.
+  const searchList = useRules
+    ? buildSearchKeywords()
+    : ROBOT_KEYWORDS.map(k => ({ keyword: k, query: k.includes(' ') ? `"${k}"` : k, own: true }))
+
   // 네이버 뉴스 검색 API만 사용 (구글/빙 RSS 제외)
-  for (const keyword of ROBOT_KEYWORDS) {
+  for (const { keyword, query, own } of searchList) {
     for (const sort of ['date', 'sim']) {
       try {
-        // 띄어쓰기가 있는 키워드("피지컬 AI" 등)는 따옴표로 묶어 정확한 문구로 검색한다.
-        // 그렇지 않으면 네이버가 단어별(AND)로 찾아 무관한 기사가 많이 섞인다.
-        const q = encodeURIComponent(keyword.includes(' ') ? `"${keyword}"` : keyword)
+        const q = encodeURIComponent(query)
         let start = 1
         let allOld = false
 
@@ -241,6 +250,14 @@ export async function GET(req: Request) {
             if (pub > cutoffEnd || pub < cutoff) continue
 
             if (seen.has(link)) continue
+            if (useRules) {
+              // 탈락한 기사는 seen에 넣지 않아, 다른 키워드로 다시 걸렸을 때 한 번 더 판단받는다
+              const verdict = judgeTitle(title, own)
+              if (!verdict.keep) {
+                rejected[verdict.reason] = (rejected[verdict.reason] ?? 0) + 1
+                continue
+              }
+            }
             seen.add(link)
 
             articles.push({ title, link, pubDate: pub.toISOString(), description, keyword })
@@ -262,6 +279,10 @@ export async function GET(req: Request) {
     for (const a of articles) byKeyword[a.keyword] = (byKeyword[a.keyword] ?? 0) + 1
     return NextResponse.json({
       total: articles.length,
+      rules: useRules ? 'v2' : 'default',
+      queries: searchList.length,
+      collectMs: Date.now() - startedAt,
+      rejected,
       byKeyword,
       window: { start: cutoff.toISOString(), end: cutoffEnd.toISOString() },
       titles: articles.map(a => ({ date: a.pubDate.slice(0, 10), keyword: a.keyword, title: a.title })),
