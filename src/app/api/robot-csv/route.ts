@@ -193,7 +193,8 @@ export async function GET(req: Request) {
   const articles: Article[] = []
 
   // 수집 기준 1단계(?rules=v2): 새 키워드 + 제목 기준 포함·제외. 기본은 기존 동작 그대로.
-  const useRules = url.searchParams.get('rules') === 'v2'
+  // v2(새 기준)가 기본. ?rules=v1 이면 예전 키워드·기준
+  const useRules = url.searchParams.get('rules') !== 'v1'
   const startedAt = Date.now()
   const rejected: Record<string, number> = {}
   // 띄어쓰기가 있는 키워드("피지컬 AI" 등)는 따옴표로 묶어 정확한 문구로 검색한다.
@@ -279,7 +280,7 @@ export async function GET(req: Request) {
     for (const a of articles) byKeyword[a.keyword] = (byKeyword[a.keyword] ?? 0) + 1
     return NextResponse.json({
       total: articles.length,
-      rules: useRules ? 'v2' : 'default',
+      rules: useRules ? 'v2' : 'v1',
       queries: searchList.length,
       collectMs: Date.now() - startedAt,
       rejected,
