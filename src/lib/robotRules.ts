@@ -42,7 +42,15 @@ function has(text: string, word: string): boolean {
 
 const hasAny = (text: string, words: string[]) => words.some(w => has(text, w))
 
-export type SearchKeyword = { keyword: string; query: string; own: boolean }
+// 네이버가 "마음 AI"처럼 띄어 검색해 무관한 기사가 대량으로 걸리는 이름 — 제목·요약문에 실제로 있어야 1번 기업 검색 결과로 인정한다
+const AMBIGUOUS_OWN_NAMES = ['마음AI', '페르소나AI']
+
+export function confirmOwnHit(keyword: string, title: string, description: string): boolean {
+  if (!AMBIGUOUS_OWN_NAMES.includes(keyword)) return true
+  return `${title} ${description}`.replace(/\s+/g, '').includes(keyword)
+}
+
+export type SearchKeyword ={ keyword: string; query: string; own: boolean }
 
 // 네이버 검색 쿼리. 띄어쓰기 키워드는 정확한 문구로, "이름 로봇" 조합은 AND 검색으로 보낸다.
 export function buildSearchKeywords(): SearchKeyword[] {

@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { MediaInfo } from '@/lib/domains'
 import { resolveMedia } from '@/lib/mediaResolver'
-import { buildSearchKeywords, judgeTitle } from '@/lib/robotRules'
+import { buildSearchKeywords, confirmOwnHit, judgeTitle } from '@/lib/robotRules'
 
 export const maxDuration = 300
 
@@ -252,7 +252,7 @@ export async function GET(req: Request) {
             if (seen.has(link)) continue
             if (useRules) {
               // 탈락한 기사는 seen에 넣지 않아, 다른 키워드로 다시 걸렸을 때 한 번 더 판단받는다
-              const verdict = judgeTitle(title, own)
+              const verdict = judgeTitle(title, own && confirmOwnHit(keyword, title, description))
               if (!verdict.keep) {
                 rejected[verdict.reason] = (rejected[verdict.reason] ?? 0) + 1
                 continue
